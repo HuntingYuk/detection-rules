@@ -14,3 +14,9 @@ alert icmp any any -> any any (msg:"PROTO-ANOMALY oversized ICMP echo payload - 
 # illegal TCP combination no legitimate stack emits -> attacker-unique scan/evasion.
 # Single-event. Negative: a normal RST (connection reset, RST only) is legal -> silent.
 alert tcp any any -> any any (msg:"PROTO-ANOMALY illegal TCP flags SYN+RST (scan/evasion) [high]"; flags:RS; classtype:protocol-command-decode; metadata: asset_category infra, owasp none, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1046, mitre_technique_name Network-Service-Discovery, kill_chain Recon, confidence high, signature_severity Minor, deployment Perimeter, network_mode any, cve none, poc_ref tests/poc/9500005_tcp-syn-rst/poc.sh, tag tcp-flags-anomaly, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9500005; rev:1;)
+# FP-reasoning: MEDIUM, any, L3/L4, NON-payload. A SYN-family segment carrying a
+# data payload is abnormal (handshake SYN should be dataless); used for IDS evasion
+# and some scanners. detection_filter 3/60s by_src tolerates the rare legitimate
+# TCP-Fast-Open case. Negative: ONE SYN-with-data (decisive condition met once) but
+# below the threshold -> silent.
+alert tcp any any -> any any (msg:"PROTO-ANOMALY TCP SYN segment carrying data payload - evasion/TFO abuse [medium]"; flags:S; dsize:>0; detection_filter:track by_src, count 3, seconds 60; classtype:protocol-command-decode; metadata: asset_category infra, owasp none, attack_target Server, mitre_tactic_id TA0005, mitre_tactic_name Defense-Evasion, mitre_technique_id T1205, mitre_technique_name Traffic-Signaling, kill_chain Delivery, confidence medium, signature_severity Minor, deployment Perimeter, network_mode any, cve none, poc_ref tests/poc/9500006_tcp-syn-with-data/poc.sh, tag tcp-anomaly, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9500006; rev:1;)
