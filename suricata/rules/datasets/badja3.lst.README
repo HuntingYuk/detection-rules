@@ -1,0 +1,10 @@
+badja3.lst — Suricata `type string` dataset (base64 of the 32-hex JA3 md5).
+NO comments allowed inside the .lst (Suricata base64-decodes every line).
+
+Provenance / TTL (JA3 is low-half-life, spec §22 D6 — review & expire):
+  8ac245d5438d504fc1947376190c723a
+    base64: OGFjMjQ1ZDU0MzhkNTA0ZmMxOTQ3Mzc2MTkwYzcyM2E=
+    source: huntingyuk lab fixture (tests/fixtures/tls-anomaly/ja3mal.pcap)
+    first_seen: 2026-05-18   review_by: 2026-08-18
+    note: replace lab JA3 with real tooling/malware JA3s in production;
+          re-review every ~90d; stale JA3 entries are an FP source.

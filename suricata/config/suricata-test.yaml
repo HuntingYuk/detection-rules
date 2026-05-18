@@ -19,7 +19,7 @@ reference-config-file: /opt/homebrew/share/suricata/reference.config
 app-layer:
   protocols:
     http: { enabled: yes }
-    tls:  { enabled: yes }
+    tls:  { enabled: yes, ja3-fingerprints: yes, ja4-fingerprints: yes }
     dns:  { enabled: yes }
     ssh:  { enabled: yes }
     smb:  { enabled: yes }
