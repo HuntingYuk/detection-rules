@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""rulectl — HuntingYuk Suricata rule authoring CLI.
+
+Uses idstools.rule for parsing (no hand-rolled rule parser — spec §19 F3).
+Implemented: sid-next, new, validate-meta, lint, test, check.
+Stubbed (clear roadmap): stats, list, export, deprecate, diff.
+"""
+import os, re, sys, json, glob, shutil, subprocess, tempfile, datetime, argparse
+
+try:
+    from idstools import rule as idsrule
+except Exception:
+    idsrule = None
+
+SUR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # .../suricata
+RULES = os.path.join(SUR, "rules")
+TESTS = os.path.join(SUR, "tests", "poc")
+CFG = os.path.join(SUR, "config", "suricata-test.yaml")
+
+# category -> (sid_base, default_network_mode)
+CAT = {
+    "sqli": (9_100_000, "plain"), "xss": (9_110_000, "plain"),
+    "cmdi": (9_120_000, "plain"), "traversal": (9_130_000, "plain"),
+    "xxe": (9_140_000, "plain"), "ssrf": (9_150_000, "plain"),
+    "deserialization": (9_160_000, "plain"), "access-control": (9_170_000, "plain"),
+    "auth-bruteforce": (9_180_000, "plain"), "webshell": (9_190_000, "plain"),
+    "recon-http": (9_200_000, "plain"), "info-leak": (9_210_000, "plain"),
+    "known-cve": (9_300_000, "plain"), "tls-anomaly": (9_400_000, "tls-meta"),
+    "dns-tunnel": (9_410_000, "tls-meta"), "l34-recon": (9_420_000, "tls-meta"),
+    "infra-bruteforce": (9_430_000, "tls-meta"), "protocol-anomaly": (9_500_000, "any"),
+    "misc": (9_600_000, "plain"),
+}
+SPAN = 10_000
+REQUIRED_META = ["asset_category","owasp","attack_target","mitre_tactic_id",
+    "mitre_tactic_name","mitre_technique_id","mitre_technique_name","kill_chain",
+    "confidence","signature_severity","deployment","network_mode","cve","poc_ref",
+    "tag","created_at","updated_at","author"]
+VOCAB = {
+    "confidence": {"high","medium"},
+    "network_mode": {"plain","tls-meta","any"},
+    "signature_severity": {"Critical","Major","Minor"},
+    "attack_target": {"Server","Client"},
+    "asset_category": {"web-modern","web-classic","web-mixed","infra","dns","tls","generic"},
+    "deployment": {"Perimeter","Internal","Datacenter"},
+    "kill_chain": {"Recon","Weaponization","Delivery","Exploitation","Installation",
+                   "C2","Actions-on-Objectives"},
+}
+
+def die(m): print("ERROR: " + m, file=sys.stderr); sys.exit(1)
+def ok(m): print("\033[32mOK\033[0m  " + m)
+def bad(m): print("\033[31mFAIL\033[0m " + m)
+def warn(m): print("\033[33mWARN\033[0m " + m)
+
+def rule_files():
+    return sorted(glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True))
+
+def iter_rules():
+    """Yield (path, parsed_rule) for every rule, idstools-parsed."""
+    if idsrule is None:
+        die("idstools not importable; `pip3 install --user idstools`")
+    for p in rule_files():
+        with open(p) as fh:
+            for r in idsrule.parse_fileobj(fh):
+                yield p, r
+
+def folder_for(mode):
+    return "plaintext" if mode == "plain" else "tls-meta"
+
+def cat_of_file(path):
+    return os.path.splitext(os.path.basename(path))[0]
+
+# ---------- sid-next ----------
+def cmd_sid_next(a):
+    if a.category not in CAT: die("unknown category %r (see CLAUDE.md §4)" % a.category)
+    base, _ = CAT[a.category]
+    used = [r.sid for _, r in iter_rules() if r.sid and base <= r.sid < base + SPAN]
+    nxt = (max(used) + 1) if used else base + 1
+    if nxt >= base + SPAN:
+        die("partition %d full for %s — overflow to 9_60x_xxx per CLAUDE.md §4" % (base, a.category))
+    print(nxt)
+    return nxt
+
+# ---------- new ----------
+RULE_TMPL = ('# FP-reasoning: TODO explain why this will not false-positive '
+ '(required for medium-confidence).\n'
+ 'alert {proto} any any -> any any (msg:"REDAC7D {CAT} TODO-technique [{conf}]"; '
+ 'flow:established,to_server; '
+ 'content:"__AUTHOR_ME_{sid}__"; fast_pattern; '
+ 'classtype:{classtype}; '
+ 'metadata: asset_category web-mixed, owasp none, attack_target Server, '
+ 'mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, '
+ 'mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, '
+ 'kill_chain Exploitation, confidence {conf}, signature_severity Major, '
+ 'deployment Perimeter, network_mode {mode}, cve none, '
+ 'poc_ref tests/poc/{sid}_{slug}/poc.sh, tag {cat}, '
+ 'created_at {d}, updated_at {d}, author redac7d; '
+ 'sid:{sid}; rev:1;)\n')
+
+CLASSTYPE = {"sqli":"web-application-attack","xss":"web-application-attack",
+ "cmdi":"web-application-attack","traversal":"web-application-attack",
+ "xxe":"web-application-attack","ssrf":"web-application-attack",
+ "deserialization":"web-application-attack","access-control":"attempted-admin",
+ "auth-bruteforce":"attempted-recon","webshell":"trojan-activity",
+ "recon-http":"attempted-recon","info-leak":"web-application-activity",
+ "known-cve":"attempted-admin","tls-anomaly":"bad-unknown","dns-tunnel":"trojan-activity",
+ "l34-recon":"attempted-recon","infra-bruteforce":"attempted-recon",
+ "protocol-anomaly":"protocol-command-decode","misc":"misc-activity"}
+
+POC_SH = ('#!/usr/bin/env bash\n# PoC for SID {sid} — MUST make this exact SID fire.\n'
+ '# Convention: write a pcap to "$1" (rulectl passes the target path).\n'
+ '# Uses scapy to synthesise the flow (deterministic, no server, no root).\n'
+ 'set -euo pipefail\nOUT="${{1:?usage: poc.sh <out.pcap>}}"\n'
+ 'python3 - "$OUT" <<\'PY\'\nimport sys\n'
+ 'try:\n    from scapy.all import wrpcap, Ether, IP, TCP, Raw\n'
+ 'except Exception:\n    sys.exit("scapy missing: pip3 install --user scapy")\n'
+ '# TODO: craft the malicious request that triggers SID {sid}.\n'
+ 'req=(b"GET /__AUTHOR_ME_{sid}__ HTTP/1.1\\r\\nHost: t\\r\\n\\r\\n")\n'
+ 'p=Ether()/IP(src="1.2.3.4",dst="5.6.7.8")/TCP(sport=44444,dport=80,flags="PA",seq=1)/Raw(req)\n'
+ 'wrpcap(sys.argv[1],[p])\nPY\n')
+
+NEG_SH = POC_SH.replace("MUST make this exact SID fire",
+    "benign lookalike — MUST exercise the fast_pattern but NOT fire SID {sid}")
+
+POC_README = ('# PoC — SID {sid} ({slug})\n\n'
+ '- Rule file: `rules/{folder}/{cat}.rules`\n- Expected: `poc.sh` fires SID '
+ '`{sid}`; `negative.sh` does NOT (but DOES hit the fast_pattern).\n'
+ '- Suricata gate version: record `suricata -V` output when first green.\n'
+ '- Type: single-event | threshold | flowbit | tls-fixture (delete as appropriate).\n')
+
+def cmd_new(a):
+    if a.category not in CAT: die("unknown category %r" % a.category)
+    slug = re.sub(r"[^a-z0-9-]+","-", a.slug.lower()).strip("-")
+    if not slug: die("bad --slug")
+    mode = a.network_mode or CAT[a.category][1]
+    if mode not in VOCAB["network_mode"]: die("bad --network-mode")
+    sid = cmd_sid_next(argparse.Namespace(category=a.category))
+    folder = folder_for(mode)
+    proto = "http" if mode == "plain" else ("tls" if a.category=="tls-anomaly" else
+            ("dns" if a.category=="dns-tunnel" else "ip"))
+    d = datetime.date.today().strftime("%Y_%m_%d")
+    rf = os.path.join(RULES, folder, a.category + ".rules")
+    os.makedirs(os.path.dirname(rf), exist_ok=True)
+    block = RULE_TMPL.format(proto=proto, CAT=a.category.upper(), conf=a.conf,
+        classtype=CLASSTYPE.get(a.category,"misc-activity"), sid=sid, slug=slug,
+        mode=mode, cat=a.category, d=d)
+    with open(rf, "a") as fh: fh.write(block)
+    pd = os.path.join(TESTS, "%d_%s" % (sid, slug)); os.makedirs(pd, exist_ok=True)
+    for name, tmpl in (("poc.sh",POC_SH),("negative.sh",NEG_SH)):
+        fp = os.path.join(pd,name)
+        open(fp,"w").write(tmpl.format(sid=sid,slug=slug))
+        os.chmod(fp,0o755)
+    open(os.path.join(pd,"README.md"),"w").write(
+        POC_README.format(sid=sid,slug=slug,folder=folder,cat=a.category))
+    ok("created SID %d  rule:%s  poc:%s" % (sid, os.path.relpath(rf,SUR),
+        os.path.relpath(pd,SUR)))
+    print("   next: edit the rule's detection logic, fill poc.sh/negative.sh, "
+          "then `rulectl check %d`" % sid)
+
+# ---------- validate-meta ----------
+def _meta_dict(r):
+    out={}
+    for ent in (r.metadata or []):
+        ps=ent.strip().split(None,1)
+        if ps: out[ps[0]]=ps[1] if len(ps)>1 else ""
+    return out
+
+def cmd_validate_meta(a):
+    paths = a.paths or rule_files()
+    seen={}; fails=0
+    for p in paths:
+        with open(p) as fh: raw=fh.read()
+        # naive '#'-after-keyword scan, quote-aware, per logical (continued) rule
+        for logical in re.split(r"(?<!\\)\n", raw.replace("\\\n"," ")):
+            s=logical.strip()
+            if not s or s.startswith("#"): continue
+            if not re.match(r"^(alert|drop|reject|pass)\b", s): continue
+            inq=False; i=0
+            while i < len(s):
+                c=s[i]
+                if c=='"' and s[i-1:i]!='\\': inq=not inq
+                if c=='#' and not inq:
+                    bad("%s: '#' inside rule body (breaks Suricata parse, spec F1)" % p); fails+=1; break
+                i+=1
+        for _, r in [(p,x) for x in idsrule.parse(raw)] if False else []:
+            pass
+    for p, r in iter_rules():
+        ctx="%s sid:%s" % (os.path.basename(p), r.sid)
+        if not r.sid: bad(ctx+" no sid"); fails+=1; continue
+        if r.sid in seen:
+            bad("DUPLICATE SID %s in %s and %s (silent rule loss!)" %
+                (r.sid, seen[r.sid], p)); fails+=1
+        seen[r.sid]=p
+        cat=cat_of_file(p)
+        if cat in CAT:
+            base=CAT[cat][0]
+            if not (base <= r.sid < base+SPAN):
+                bad("%s: SID %s outside %s partition %d" % (ctx,r.sid,cat,base)); fails+=1
+        md=_meta_dict(r)
+        for k in REQUIRED_META:
+            if k not in md: bad("%s: missing metadata %s" % (ctx,k)); fails+=1
+        for k,allowed in VOCAB.items():
+            if k in md and md[k] not in allowed:
+                bad("%s: %s=%r not in %s" % (ctx,k,md[k],sorted(allowed))); fails+=1
+        # folder <-> network_mode
+        nm=md.get("network_mode"); fld=os.path.basename(os.path.dirname(p))
+        if nm=="plain" and fld!="plaintext":
+            bad("%s: network_mode plain but not in rules/plaintext/" % ctx); fails+=1
+        if nm in ("tls-meta","any") and fld!="tls-meta":
+            bad("%s: network_mode %s but not in rules/tls-meta/" % (ctx,nm)); fails+=1
+        # comma-in-value heuristic: any meta token whose key is unknown => a value
+        # got comma-split by Suricata's metadata parser
+        known=set(REQUIRED_META)
+        for ent in (r.metadata or []):
+            key=ent.strip().split(None,1)[0]
+            if key not in known:
+                bad("%s: stray metadata token %r — comma inside a value? (spec G4)"
+                    % (ctx,ent.strip())); fails+=1
+    if fails: die("validate-meta: %d problem(s)" % fails)
+    ok("validate-meta: %d rule(s) clean" % len(seen))
+
+def _combined_rules(td):
+    """Concatenate all existing .rules into one temp file (avoids Suricata 8
+    hard-fail on empty rule-files globs). Returns path or None if no rules."""
+    files=rule_files()
+    if not files: return None
+    cp=os.path.join(td,"_combined.rules")
+    with open(cp,"w") as out:
+        for f in files:
+            out.write("# === %s ===\n"%os.path.relpath(f,SUR))
+            out.write(open(f).read().rstrip()+"\n")
+    return cp
+
+# ---------- lint ----------
+def cmd_lint(a):
+    suri=shutil.which("suricata") or die("suricata not on PATH")
+    with tempfile.TemporaryDirectory() as td:
+        cp=_combined_rules(td)
+        if cp is None: ok("lint: no rules yet (nothing to load)"); return
+        r=subprocess.run([suri,"-T","-c",CFG,"-S",cp,"-l",td],cwd=SUR,
+            capture_output=True,text=True)
+        out=(r.stdout+r.stderr).strip()
+        tail="\n".join(out.splitlines()[-15:])
+        if r.returncode!=0:
+            print(tail); die("suricata -T failed (rc=%d)" % r.returncode)
+    ok("suricata -T clean")
+    if a and getattr(a,"verbose",False): print(tail)
+
+# ---------- test ----------
+def _run_suri_pcap(pcap):
+    suri=shutil.which("suricata")
+    td=tempfile.mkdtemp(prefix="_runtmp_")
+    cp=_combined_rules(td) or os.path.join(td,"_empty.rules")
+    if not os.path.exists(cp): open(cp,"w").close()
+    subprocess.run([suri,"-c",CFG,"-S",cp,"-r",pcap,"-l",td],cwd=SUR,
+        capture_output=True,text=True)
+    sids=set()
+    ev=os.path.join(td,"eve.json")
+    if os.path.exists(ev):
+        for line in open(ev):
+            try:
+                j=json.loads(line)
+                if j.get("event_type")=="alert":
+                    sids.add(int(j["alert"]["signature_id"]))
+            except Exception: pass
+    shutil.rmtree(td,ignore_errors=True)
+    return sids
+
+def _poc_dir(sid):
+    g=glob.glob(os.path.join(TESTS,"%d_*"%sid))
+    return g[0] if g else None
+
+def cmd_test(a):
+    sid=int(a.sid); pd=_poc_dir(sid)
+    if not pd: die("no tests/poc/%d_* dir (run `rulectl new` or create it)"%sid)
+    res={}
+    for kind in ("poc","negative"):
+        sh=os.path.join(pd,kind+".sh")
+        if not os.path.exists(sh): die("missing %s"%sh)
+        pcap=os.path.join(pd,kind+".generated.pcap")
+        try:
+            subprocess.run(["bash",sh,pcap],check=True,capture_output=True,text=True)
+        except subprocess.CalledProcessError as e:
+            die("%s.sh failed: %s"%(kind,(e.stderr or e.stdout)[-300:]))
+        res[kind]=_run_suri_pcap(pcap)
+    fired_poc = sid in res["poc"]
+    fired_neg = sid in res["negative"]
+    (ok if fired_poc else bad)("PoC: SID %d %s (all fired: %s)" %
+        (sid,"FIRED" if fired_poc else "did NOT fire",sorted(res["poc"])))
+    (ok if not fired_neg else bad)("Negative: SID %d %s" %
+        (sid,"correctly silent" if not fired_neg else "WRONGLY FIRED"))
+    warn("negative-adequacy (must hit fast_pattern) is roadmap — verify by hand for now")
+    if a.explain and (not fired_poc or fired_neg):
+        print("\n-- debug: see CLAUDE.md §11. poc fired=%s neg fired=%s" %
+              (sorted(res['poc']),sorted(res['negative'])))
+    return fired_poc and not fired_neg
+
+def cmd_check(a):
+    cmd_lint(argparse.Namespace(verbose=False))
+    cmd_validate_meta(argparse.Namespace(paths=None))
+    if cmd_test(argparse.Namespace(sid=a.sid,explain=True)):
+        ok("CHECK PASSED for SID %s"%a.sid)
+    else:
+        die("CHECK FAILED for SID %s"%a.sid)
+
+def cmd_stub(a):
+    die("`%s` not implemented yet (roadmap — CLAUDE.md §14). "
+        "Implemented: sid-next,new,validate-meta,lint,test,check." % a._name)
+
+def main():
+    ap=argparse.ArgumentParser(prog="rulectl")
+    sp=ap.add_subparsers(dest="cmd",required=True)
+    p=sp.add_parser("sid-next"); p.add_argument("category"); p.set_defaults(f=cmd_sid_next)
+    p=sp.add_parser("new"); p.add_argument("category"); p.add_argument("--slug",required=True)
+    p.add_argument("--conf",default="medium",choices=["high","medium"])
+    p.add_argument("--network-mode",dest="network_mode",default=None)
+    p.set_defaults(f=cmd_new)
+    p=sp.add_parser("validate-meta"); p.add_argument("paths",nargs="*"); p.set_defaults(f=cmd_validate_meta)
+    p=sp.add_parser("lint"); p.add_argument("-v","--verbose",action="store_true"); p.set_defaults(f=cmd_lint)
+    p=sp.add_parser("test"); p.add_argument("sid"); p.add_argument("--explain",action="store_true"); p.set_defaults(f=cmd_test)
+    p=sp.add_parser("check"); p.add_argument("sid"); p.set_defaults(f=cmd_check)
+    for s in ("stats","list","export","deprecate","diff"):
+        q=sp.add_parser(s); q.set_defaults(f=cmd_stub,_name=s)
+    a=ap.parse_args(); a.f(a)
+
+if __name__=="__main__":
+    main()

@@ -1,0 +1,40 @@
+# --- secrets (NEVER commit) ---
+oink
+*.oinkcode
+.secrets/
+*.pem
+*.key
+.env
+.env.*
+
+# --- internal brainstorming / design specs (org sees final files only) ---
+docs/superpowers/
+*-design.md
+*-autoplan-restore-*.md
+*.brainstorm.md
+
+# --- private / generated, never redistributed ---
+reference/            # offline ET PRO study material (licensed, private)
+intel/                # extracted IP/indicator artifacts (private, feeds IP-rep pipeline)
+suricata/bundles/     # generated export bundles for production
+!suricata/bundles/.gitkeep
+
+# --- test/runtime artifacts ---
+**/eve.json
+**/suricata.log
+**/stats.log
+**/.suricata-run/
+**/_runtmp/
+*.generated.pcap
+
+# committed PoC inputs that ARE tracked:
+#   suricata/tests/poc/<sid>_<slug>/{poc.sh,negative.sh,README.md}
+#   suricata/tests/fixtures/<family>/*.pcap   (golden fixtures — tracked)
+!suricata/tests/fixtures/**
+
+# --- OS / editor / python ---
+.DS_Store
+__pycache__/
+*.pyc
+.idea/
+.vscode/

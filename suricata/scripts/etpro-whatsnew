@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# LICENSE-GATED. The recurring weekly workflow: "what is NEW in ET PRO since our
+# last pull" -> diffed against our coverage = the gap list to brainstorm against.
+# (CLAUDE.md §13). Refuses to run until the license clause is recorded.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+LIC="config/ET-LICENSE.md"
+MARK=".etpro-last-pull"   # gitignored; records last fetched ET version/date
+if [ ! -s "$LIC" ]; then
+  echo "BLOCKED: record the ET PRO license clause in $LIC first (CLAUDE.md §13)." >&2
+  exit 2
+fi
+echo "Workflow (once implemented):" >&2
+echo "  1. etpro-fetch  (refresh private reference/etpro/)" >&2
+echo "  2. diff new ET SIDs/CVEs/techniques vs $(cat "$MARK" 2>/dev/null || echo '<no prior pull>')" >&2
+echo "  3. print the GAP list (new ET coverage we don't have) for brainstorming" >&2
+echo "  4. update $MARK with the new ET version/date" >&2
+echo "Not implemented until license cleared (autoplan S3)." >&2
+exit 3

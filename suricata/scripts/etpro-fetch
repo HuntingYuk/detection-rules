@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# LICENSE-GATED. Fetches ET PRO into a PRIVATE, gitignored reference/ tree for
+# offline study ONLY. Refuses to run until the ET PRO license clause is recorded.
+# Secret handling: oinkcode via curl --config from fd, NEVER argv/URL/logs (spec S1).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+LIC="config/ET-LICENSE.md"
+if [ ! -s "$LIC" ]; then
+  echo "BLOCKED: $LIC missing/empty." >&2
+  echo "Quote the verbatim ET PRO subscription clause on reference use AND derivative" >&2
+  echo "indicator extraction into $LIC first (spec §15 / autoplan AD2/S3)." >&2
+  exit 2
+fi
+OINK="${ETPRO_OINK_FILE:-$HOME/.config/etpro/oink}"
+[ -r "$OINK" ] || { echo "BLOCKED: oinkcode file not found at $OINK (set ETPRO_OINK_FILE)." >&2; exit 2; }
+PERM=$(stat -f '%Lp' "$OINK" 2>/dev/null || stat -c '%a' "$OINK" 2>/dev/null || echo 777)
+[ "$PERM" = "600" ] || { echo "BLOCKED: $OINK perms $PERM != 600 (chmod 600)." >&2; exit 2; }
+echo "TODO(implement): curl ET PRO using oinkcode via --config fd (never argv/URL)," >&2
+echo "write into ./reference/etpro/ (gitignored). Not implemented until license cleared." >&2
+exit 3

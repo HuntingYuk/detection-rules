@@ -1,0 +1,40 @@
+%YAML 1.1
+---
+# Minimal Suricata config for the PoC/-T gate ONLY (not a production config).
+vars:
+  address-groups:
+    HOME_NET: "any"
+    EXTERNAL_NET: "any"
+  port-groups:
+    HTTP_PORTS: "80"
+
+default-rule-path: rules
+rule-files:
+  - "plaintext/*.rules"
+  - "tls-meta/*.rules"
+
+classification-file: config/classification.config
+reference-config-file: /opt/homebrew/share/suricata/reference.config
+
+app-layer:
+  protocols:
+    http: { enabled: yes }
+    tls:  { enabled: yes }
+    dns:  { enabled: yes }
+    ssh:  { enabled: yes }
+    smb:  { enabled: yes }
+    ftp:  { enabled: yes }
+
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert:
+            metadata: yes
+
+logging:
+  default-log-level: error
+  outputs:
+    - console: { enabled: yes }

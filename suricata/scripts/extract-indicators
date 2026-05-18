@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# LICENSE-GATED + SECURITY-CRITICAL. Parses ET PRO content into PRIVATE, gitignored
+# intel/ artifacts that feed the SEPARATE IP-reputation pipeline (never a .rules
+# file, never committed). Treats all extractor output as adversarial (spec §22 S2):
+# strict IP validation, reject 0.0.0.0/broad CIDR/RFC1918-unless-intended, CSV-safe
+# writes, TTL/expiry on every iprep entry, fail-closed. Cut entirely if the license
+# clause in config/ET-LICENSE.md prohibits derivative indicator extraction.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+LIC="config/ET-LICENSE.md"
+if [ ! -s "$LIC" ]; then
+  echo "BLOCKED: $LIC missing — quote the ET PRO derivative-extraction clause first." >&2
+  echo "If it prohibits derivative indicator extraction, this script is CUT (spec S3)." >&2
+  exit 2
+fi
+echo "TODO(implement): validate-then-write intel/ip/etpro-iprep.list (TTL enforced)," >&2
+echo "intel/staging/ for non-IP indicators (manual triage). Fail-closed. Not built" >&2
+echo "until license cleared (autoplan S2/S3)." >&2
+exit 3
