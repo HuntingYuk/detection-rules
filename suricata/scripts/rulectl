@@ -83,7 +83,7 @@ def cmd_sid_next(a):
 # ---------- new ----------
 RULE_TMPL = ('# FP-reasoning: TODO explain why this will not false-positive '
  '(required for medium-confidence).\n'
- 'alert {proto} any any -> any any (msg:"REDAC7D {CAT} TODO-technique [{conf}]"; '
+ 'alert {proto} any any -> any any (msg:"{CAT} TODO-technique [{conf}]"; '
  'flow:established,to_server; '
  'content:"__AUTHOR_ME_{sid}__"; fast_pattern; '
  'classtype:{classtype}; '
@@ -93,7 +93,7 @@ RULE_TMPL = ('# FP-reasoning: TODO explain why this will not false-positive '
  'kill_chain Exploitation, confidence {conf}, signature_severity Major, '
  'deployment Perimeter, network_mode {mode}, cve none, '
  'poc_ref tests/poc/{sid}_{slug}/poc.sh, tag {cat}, '
- 'created_at {d}, updated_at {d}, author redac7d; '
+ 'created_at {d}, updated_at {d}, author huntingyuk; '
  'sid:{sid}; rev:1;)\n')
 
 CLASSTYPE = {"sqli":"web-application-attack","xss":"web-application-attack",
