@@ -1,0 +1,11 @@
+# FP-reasoning: MEDIUM, network_mode=any (works without decryption — DNS is plaintext
+# even on TLS-only segments). NON-PAYLOAD class per spec §22 C1: there is no stable
+# payload literal in tunnel data, so this rule has NO fast_pattern by design — the
+# decisive condition IS the structural pcre on dns.query. The pcre is BOUNDED
+# ([a-f0-9]{48,63}, DNS label max is 63) -> no catastrophic backtracking (§19 D5).
+# A single 48+ char pure-hex DNS label is attacker-shaped (legit domains do not do
+# this); detection_filter count 15/60s by_src is the FP compensator: an occasional
+# odd long label never alerts, sustained tunneling volume from one source does.
+# Negative exercises the decisive condition: ONE long-hex query (matches the pcre)
+# below the volume threshold -> correctly silent.
+alert dns any any -> any any (msg:"REDAC7D DNS Tunnel - long high-entropy hex label in dns.query [medium]"; dns.query; pcre:"/(?:^|\.)[a-f0-9]{48,63}(?:\.|$)/i"; detection_filter:track by_src, count 15, seconds 60; classtype:trojan-activity; metadata: asset_category dns, owasp none, attack_target Server, mitre_tactic_id TA0011, mitre_tactic_name Command-and-Control, mitre_technique_id T1071.004, mitre_technique_name Application-Layer-Protocol-DNS, kill_chain C2, confidence medium, signature_severity Major, deployment Perimeter, network_mode any, cve none, poc_ref tests/poc/9410001_long-hex-label/poc.sh, tag dns-tunnel, created_at 2026_05_18, updated_at 2026_05_18, author redac7d; sid:9410001; rev:1;)
