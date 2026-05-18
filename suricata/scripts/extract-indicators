@@ -8,9 +8,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 LIC="config/ET-LICENSE.md"
-if [ ! -s "$LIC" ]; then
-  echo "BLOCKED: $LIC missing — quote the ET PRO derivative-extraction clause first." >&2
-  echo "If it prohibits derivative indicator extraction, this script is CUT (spec S3)." >&2
+if [ ! -s "$LIC" ] || grep -q 'PASTE-VERBATIM-ET-PRO-CLAUSE' "$LIC" 2>/dev/null; then
+  echo "BLOCKED: $LIC missing or still has the placeholder sentinel — paste the" >&2
+  echo "verbatim ET PRO derivative-extraction clause first. If it prohibits" >&2
+  echo "derivative indicator extraction, this script is CUT (spec S3)." >&2
   exit 2
 fi
 echo "TODO(implement): validate-then-write intel/ip/etpro-iprep.list (TTL enforced)," >&2

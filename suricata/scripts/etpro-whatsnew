@@ -6,8 +6,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 LIC="config/ET-LICENSE.md"
 MARK=".etpro-last-pull"   # gitignored; records last fetched ET version/date
-if [ ! -s "$LIC" ]; then
-  echo "BLOCKED: record the ET PRO license clause in $LIC first (CLAUDE.md §13)." >&2
+if [ ! -s "$LIC" ] || grep -q 'PASTE-VERBATIM-ET-PRO-CLAUSE' "$LIC" 2>/dev/null; then
+  echo "BLOCKED: record the verbatim ET PRO license clause in $LIC (replace the" >&2
+  echo "placeholder sentinel) first (CLAUDE.md §13 / autoplan S3)." >&2
   exit 2
 fi
 echo "Workflow (once implemented):" >&2
