@@ -17,3 +17,12 @@ alert tls any any -> any any (msg:"TLS anomaly - SNI is a bare IPv4 literal (non
 # condition = ja3.hash IN the curated bad-list. Negative: a ClientHello with a
 # DIFFERENT JA3 (not in the list) exercises the same ja3.hash path -> silent.
 alert tls any any -> any any (msg:"TLS anomaly - client JA3 on curated bad-list [medium]"; flow:established,to_server; ja3.hash; dataset:isset,badja3, type string, load datasets/badja3.lst; tls.sni; bsize:>0; classtype:bad-unknown; metadata: asset_category tls, owasp none, attack_target Server, mitre_tactic_id TA0011, mitre_tactic_name Command-and-Control, mitre_technique_id T1071.001, mitre_technique_name Application-Layer-Protocol-Web, kill_chain C2, confidence medium, signature_severity Major, deployment Perimeter, network_mode tls-meta, cve none, poc_ref tests/poc/9400002_ja3-badlist/poc.sh, tag tls-ja3-badlist, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9400002; rev:1;)
+# FP-reasoning: MEDIUM, network_mode=tls-meta (cert is sent cleartext in the TLS
+# handshake; no decryption needed). NON-payload TLS-metadata class. Decisive
+# condition = the presented SERVER certificate is past its notAfter
+# (tls_cert_expired, engine-evaluated). An expired server cert is an abandoned-infra
+# / interception / sloppy-C2 indicator. Residual FP = a real service running an
+# expired cert -> suppress that dst via threshold.config (NOT deprecation). Negative
+# exercises the SAME cert-parse path with a VALID self-signed cert -> not expired
+# -> silent.
+alert tls any any -> any any (msg:"TLS anomaly - expired server certificate presented [medium]"; flow:established; tls_cert_expired; classtype:bad-unknown; metadata: asset_category tls, owasp none, attack_target Server, mitre_tactic_id TA0011, mitre_tactic_name Command-and-Control, mitre_technique_id T1071.001, mitre_technique_name Application-Layer-Protocol-Web, kill_chain C2, confidence medium, signature_severity Major, deployment Perimeter, network_mode tls-meta, cve none, poc_ref tests/poc/9400003_expired-cert/poc.sh, tag tls-cert-expired, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9400003; rev:1;)
