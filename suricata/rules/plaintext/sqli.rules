@@ -1,0 +1,10 @@
+# FP-reasoning: MEDIUM, canonical (unobfuscated) UNION SQLi only. Scope: http.uri,
+# to_server. fast_pattern "union select" is a 12-byte composite literal (selective;
+# NOT the bare hot "union"/"select" forbidden by CLAUDE.md §8). Structural pcre uses
+# an ATOMIC group + bounded char-classes (no unbounded .* / no nested quantifier over
+# alternation) -> no catastrophic backtracking (spec §19 D5). detection_filter
+# count 3/60s by_src is the FP compensator: a single benign request that happens to
+# contain "union select" (e.g. a user search) NEVER alerts; only scanner-like
+# repetition from one source does. Obfuscated/url-other-encoded and "UNION ALL
+# SELECT" variants are a separate companion rule (roadmap), deliberately not here.
+alert http any any -> any any (msg:"REDAC7D WEB SQLi UNION-based in http.uri (canonical) [medium]"; flow:established,to_server; http.uri; content:"union select"; nocase; fast_pattern; pcre:"/\bunion\b(?:\s|%20|\+|(?>\/\*+[^*]*?\*+\/))++select\b/i"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100001_union-select/poc.sh, tag sqli-union, created_at 2026_05_18, updated_at 2026_05_18, author redac7d; sid:9100001; rev:1;)
