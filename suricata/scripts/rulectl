@@ -201,6 +201,18 @@ def cmd_validate_meta(a):
         for k,allowed in VOCAB.items():
             if k in md and md[k] not in allowed:
                 bad("%s: %s=%r not in %s" % (ctx,k,md[k],sorted(allowed))); fails+=1
+        # cve convention: exactly one `cve` key; value 'none' or CVE-YYYY-NNNNN;
+        # 1 rule = 1 CVE (split multi-CVE); known-cve category must declare a CVE.
+        cve_entries=[e for e in (r.metadata or [])
+                     if e.strip().split(None,1)[0]=="cve"]
+        if len(cve_entries)!=1:
+            bad("%s: exactly one 'cve' key required (1 rule = 1 CVE; split "
+                "multi-CVE into separate rules)" % ctx); fails+=1
+        cvev=md.get("cve","")
+        if cvev!="none" and not re.match(r"^CVE-\d{4}-\d{4,}$", cvev):
+            bad("%s: cve=%r must be 'none' or CVE-YYYY-NNNNN" % (ctx,cvev)); fails+=1
+        if cat=="known-cve" and cvev=="none":
+            bad("%s: known-cve rule must declare a real CVE (cve != none)" % ctx); fails+=1
         # folder <-> network_mode
         nm=md.get("network_mode"); fld=os.path.basename(os.path.dirname(p))
         if nm=="plain" and fld!="plaintext":
