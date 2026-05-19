@@ -169,3 +169,12 @@ alert http any any -> any any (msg:"KNOWN-CVE Atlassian Confluence improper auth
 # attacker-unique (no benign client traverses out of the guacamole handler).
 # Negative: a normal Pulse /dana-na/ welcome path -> reaches pcre, rejected.
 alert http any any -> any any (msg:"KNOWN-CVE Pulse Connect Secure pre-auth file read (CVE-2019-11510) [high]"; flow:established,to_server; http.uri.raw; content:"/dana/html5acc/guacamole/"; nocase; fast_pattern; pcre:"/dana\/html5acc\/guacamole\/(?:\.\.(?:\/|%2f)){2,}/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-11510, poc_ref tests/poc/9300028_pulsesecure-cve-2019-11510/poc.sh, tag pulsesecure, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300028; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2023-4966 "Citrix Bleed" NetScaler/Gateway
+# session-token memory leak. Clean-room from advisory. The OIDC discovery
+# endpoint /oauth/idp/.well-known/openid-configuration is itself legitimate, so
+# fast_pattern on that URI alone would FP; the decisive condition is that same
+# request carrying an ABNORMALLY long Host header (the exploit pads Host to
+# ~24KB to over-read memory). Two buffers: uri.raw literal (fast_pattern) +
+# http.header pcre requiring a >=200-char Host value. A real OIDC discovery has
+# a short Host -> reaches the header pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE Citrix Bleed NetScaler session-token leak oversized Host (CVE-2023-4966) [high]"; flow:established,to_server; http.uri.raw; content:"/oauth/idp/.well-known/openid-configuration"; nocase; fast_pattern; http.header; pcre:"/Host\x3a\x20*[^\r\n]{200,4096}/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1212, mitre_technique_name Exploitation-for-Credential-Access, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-4966, poc_ref tests/poc/9300029_citrixbleed-cve-2023-4966/poc.sh, tag citrixbleed, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300029; rev:1;)

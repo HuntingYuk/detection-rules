@@ -38,22 +38,21 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 84
-GAP  ours fires / ET silent  : 66   <- custom corpus value-add (§17)
-OVERLAP both fire            : 18   (ET Open already covers; audited below)
+attack pcaps measured        : 94
+GAP  ours fires / ET silent  : 75   <- custom corpus value-add (§17)
+OVERLAP both fire            : 19   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0   (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 84  (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 94  (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 66/84 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. The 5 category-deepening rules added on
-2026-05-19 (9150003, 9160004, 9100005, 9190003, 9210003) landed 4 pure-GAP + 1
-audited OVERLAP, raising GAP 62→66. All 18 OVERLAP rules were individually audited
-(see "OVERLAP audit" below): each is kept with a recorded reason (ours strictly
-better, ET misclassifies, or deliberate ET-independent CVE backbone); one generic
-duplicate (9130003) was retired. `MISS=0` confirms the merged-traffic context does
-not regress any rule vs its isolated gate run, and that deprecated rules are
-correctly excluded from the benchmark.
+**Read:** 75/94 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Three category-deepening batches (2026-05-19)
+added 15 rules; 14 pure-GAP + 1 audited OVERLAP each batch on average, raising GAP
+62→75. All 19 OVERLAP rules were individually audited (see "OVERLAP audit" below):
+each is kept with a recorded reason (ours strictly better, ET misclassifies/only
+generic, or deliberate ET-independent CVE backbone); one generic duplicate (9130003)
+was retired. `MISS=0` confirms the merged-traffic context does not regress any rule
+vs its isolated gate run, and that deprecated rules are correctly excluded.
 
 ## Limitation — synthetic, not production
 
@@ -97,7 +96,7 @@ to retire, because that would re-introduce the dependency the corpus exists to
 avoid. A rule is retired only if it is a *generic, non-CVE-backbone* technique for
 which ET has a mature exact equivalent **and** there is no independence rationale.
 
-Result: **1 retired, 18 kept** (each with a recorded reason).
+Result: **1 retired, 19 kept** (each with a recorded reason).
 
 ### Retired
 
@@ -118,6 +117,7 @@ Result: **1 retired, 18 kept** (each with a recorded reason).
 | 9300014 | 2011768, 2060800 | ET 2060800 is only the soft-hyphen variant; ours covers the core PHP-CGI argument-injection family. |
 | 9410001 | 2018275/6 | ET's are single-malware-family signatures (Linux/Onimiki); ours is a generic DNS-tunnel heuristic. |
 | 9210003 | 2031502 | ET 2031502 is INFO-tier and fires on the *request* (`GET /.env` fetch attempt — could be a harmless 404 scan); ours fires on the **secret actually disclosed in the response body** — opposite direction, confirmed-leak vs scan-attempt, Critical vs INFO. Strictly higher fidelity. |
+| 9300029 | 2221028 | ET 2221028 is the generic SURICATA engine anomaly "HTTP Host header invalid" tripped by the oversized Host — no CVE context. Ours is the **CVE-2023-4966-specific** signature (OIDC discovery endpoint + oversized Host), giving actionable "Citrix Bleed exploitation" attribution vs a generic malformed-header anomaly. |
 | 9430001 | 2001219, 2003068 | ET's are *SCAN* (recon) rules; ours is an attempted-admin **brute-force** rate rule — different classtype/intent. Kept; same network signal but distinct alert semantics for the pipeline. |
 
 ### Kept — clean-room CVE backbone, deliberately ET-independent
