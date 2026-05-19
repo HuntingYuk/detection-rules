@@ -1,0 +1,8 @@
+# FP-reasoning: MEDIUM, plain. Decisive condition = a high rate of POST to a
+# login endpoint from ONE src (credential brute/spray; failed-login bodies aren't
+# reliably visible so volume is the signal). method=POST + uri contains 'login'
+# scopes it; threshold 20/60s by_src is the FP compensator (a human retrying a
+# few times never alerts). fast_pattern 'login' is a hot literal accepted here
+# ONLY because it is doubly gated (POST + threshold). Negative: 3 POST /login
+# (a user fat-fingering the password) -> below threshold -> silent.
+alert http any any -> any any (msg:"WEB Auth brute-force - high POST rate to login endpoint from one source [medium]"; flow:established,to_server; http.method; content:"POST"; http.uri; content:"login"; nocase; fast_pattern; threshold:type threshold, track by_src, count 20, seconds 60; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A07-Identification-and-Authentication-Failures, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1110, mitre_technique_name Brute-Force, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9180001_http-login-flood/poc.sh, tag auth-bruteforce, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9180001; rev:1;)
