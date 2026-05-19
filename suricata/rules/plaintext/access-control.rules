@@ -4,3 +4,9 @@
 # unauthenticated reach to a sensitive artefact.) Negative: a normal /api/config
 # request -> no /.git/config -> silent.
 alert http any any -> any any (msg:"WEB Exposure - /.git/config repository probe [high]"; flow:established,to_server; http.uri.raw; content:"/.git/config"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170001_git-config-exposure/poc.sh, tag exposure, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9170001; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 2 (9170002): cloud credential-file
+# exposure probe. Scope http.uri.raw. fast_pattern "/.aws/credentials" ->
+# requesting the AWS CLI credentials file over HTTP is attacker-unique; no
+# benign client does this. Negative: a normal /aws/ API path -> no fast_pattern
+# hit -> silent.
+alert http any any -> any any (msg:"WEB Exposure - /.aws/credentials cloud secret probe [high]"; flow:established,to_server; http.uri.raw; content:"/.aws/credentials"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170002_aws-cred-exposure/poc.sh, tag exposure, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9170002; rev:1;)
