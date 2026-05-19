@@ -128,6 +128,8 @@ def main():
     ap.add_argument("--audit-overlap", action="store_true",
                     help="for each OVERLAP attack, print our rule + the ET Open "
                          "rule(s) that co-fired (retire-vs-keep evidence)")
+    ap.add_argument("--emit-status", metavar="PATH",
+                    help="write {sid: GAP|OVERLAP} JSON for gen-docs §17 column")
     a=ap.parse_args()
     suri=shutil.which("suricata") or die("suricata not on PATH")
     if not os.path.exists(os.path.join(ETDIR,"suricata.rules")):
@@ -152,6 +154,11 @@ def main():
             if o and not e: gap.append(tag)
             elif o and e:  overlap.append(tag)
             elif not o:    miss.append(tag)
+        if a.emit_status:
+            st={t:"GAP" for t in gap}; st.update({t:"OVERLAP" for t in overlap})
+            json.dump(dict(sorted(st.items())), open(a.emit_status,"w"), indent=0)
+            print("emitted §17 status (%d GAP + %d OVERLAP) -> %s"
+                  % (len(gap),len(overlap),a.emit_status))
         nben=etb_total=0
         if nn:
             bm=_merge_unique(nn, os.path.join(td,"ben.pcap"), 5000)
