@@ -1,0 +1,6 @@
+# FP-reasoning: HIGH, plain. Scope http.request_body, to_server. fast_pattern
+# "@eval($_POST" -> the China-Chopper / PHP one-liner webshell interaction
+# pattern (eval of attacker-controlled POST var); attacker-unique, no benign app
+# sends this. Negative: a normal form POST (no @eval($_POST) -> no fast_pattern
+# hit -> silent.
+alert http any any -> any any (msg:"WEB Webshell PHP @eval($_POST ...) interaction (China Chopper-style) [high]"; flow:established,to_server; http.request_body; content:"@eval($_POST"; nocase; fast_pattern; pcre:"/@eval\s*\(\s*\$_(?:POST|REQUEST|GET)/i"; classtype:trojan-activity; metadata: asset_category web-classic, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0003, mitre_tactic_name Persistence, mitre_technique_id T1505.003, mitre_technique_name Web-Shell, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9190001_php-eval-post/poc.sh, tag webshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9190001; rev:1;)
