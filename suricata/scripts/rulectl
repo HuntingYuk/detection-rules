@@ -184,6 +184,7 @@ def cmd_validate_meta(a):
         for _, r in [(p,x) for x in idsrule.parse(raw)] if False else []:
             pass
     for p, r in iter_rules():
+        if not getattr(r,"enabled",True): continue   # skip deprecated/disabled rules
         ctx="%s sid:%s" % (os.path.basename(p), r.sid)
         if not r.sid: bad(ctx+" no sid"); fails+=1; continue
         if r.sid in seen:
@@ -314,9 +315,133 @@ def cmd_check(a):
     else:
         die("CHECK FAILED for SID %s"%a.sid)
 
-def cmd_stub(a):
-    die("`%s` not implemented yet (roadmap — CLAUDE.md §14). "
-        "Implemented: sid-next,new,validate-meta,lint,test,check." % a._name)
+def _rev(raw):
+    m=re.search(r'\brev:(\d+)', raw or ""); return int(m.group(1)) if m else 0
+
+def _tags(r):
+    return [e.strip().split(None,1)[1] for e in (r.metadata or [])
+            if e.strip().split(None,1)[0]=="tag" and len(e.strip().split(None,1))>1]
+
+def _enabled_rules():
+    return [(p,r,_meta_dict(r)) for p,r in iter_rules() if getattr(r,"enabled",True)]
+
+def _match(md,r,a):
+    if getattr(a,"asset",None) and md.get("asset_category")!=a.asset: return False
+    if getattr(a,"network_mode",None) and md.get("network_mode")!=a.network_mode: return False
+    if getattr(a,"owasp",None) and not md.get("owasp","").upper().startswith(a.owasp.upper()): return False
+    if getattr(a,"confidence",None) and md.get("confidence")!=a.confidence: return False
+    if getattr(a,"min_confidence",None):
+        order={"medium":0,"high":1}
+        if order.get(md.get("confidence"),0) < order.get(a.min_confidence,0): return False
+    if getattr(a,"tag",None) and a.tag not in _tags(r): return False
+    return True
+
+HOT_FP={"select","union","<script","../","get","post","http","script","alert","content"}
+def cmd_stats(a):
+    rules=_enabled_rules()
+    def tally(key):
+        d={}
+        for _,_,md in rules: d[md.get(key,"?")]=d.get(md.get(key,"?"),0)+1
+        return dict(sorted(d.items(),key=lambda x:-x[1]))
+    print("total active rules: %d" % len(rules))
+    for k in ("asset_category","owasp","confidence","network_mode"):
+        print("  by %-14s %s" % (k, tally(k)))
+    # partition utilisation
+    print("  partition utilisation:")
+    for cat,(base,_) in sorted(CAT.items(),key=lambda x:x[1][0]):
+        used=[r.sid for _,r,_ in rules if r.sid and base<=r.sid<base+SPAN]
+        if used:
+            pct=int(len(used)/SPAN*100)
+            print("    %-18s %d/%d (%d%%)%s" % (cat,len(used),SPAN,pct,
+                  "  WARN >=80%" if pct>=80 else ""))
+    # fast_pattern selectivity audit (payload rules)
+    weak=[]
+    for p,r,md in rules:
+        m=re.search(r'content:"((?:[^"\\]|\\.)*)"[^;]*;\s*(?:nocase;\s*)?fast_pattern',r.raw or "")
+        if m:
+            lit=m.group(1)
+            if len(lit)<5 or lit.lower() in HOT_FP:
+                weak.append((r.sid,lit))
+    if weak:
+        print("  weak/hot fast_pattern (review, §19 P1):")
+        for sid,lit in weak: print("    %s  %r" % (sid,lit))
+    else:
+        print("  fast_pattern audit: no weak/hot literals")
+
+def cmd_list(a):
+    n=0
+    for p,r,md in _enabled_rules():
+        if not _match(md,r,a): continue
+        print("%s  [%s/%s]  %s" % (r.sid, md.get("confidence","?"),
+              md.get("network_mode","?"), r.msg))
+        n+=1
+    print("(%d rule(s))" % n)
+
+def cmd_export(a):
+    sel=[(p,r,md) for p,r,md in _enabled_rules() if _match(md,r,a)]
+    if not sel: die("export: no rules matched the filter")
+    outp=a.out; os.makedirs(os.path.dirname(os.path.abspath(outp)),exist_ok=True)
+    with open(outp,"w") as o:
+        o.write("# HuntingYuk export %s | filter: %s | %d rules\n" %
+                (datetime.date.today(), vars(a), len(sel)))
+        for _,r,_ in sorted(sel,key=lambda x:x[1].sid): o.write(r.raw.rstrip()+"\n")
+    idx={}
+    for _,r,md in sel:
+        idx[str(r.sid)]={"msg":r.msg,"confidence":md.get("confidence"),
+            "network_mode":md.get("network_mode"),"asset_category":md.get("asset_category"),
+            "owasp":md.get("owasp"),"cve":md.get("cve"),
+            "mitre":"%s/%s"%(md.get("mitre_tactic_id"),md.get("mitre_technique_id")),
+            "kill_chain":md.get("kill_chain"),"poc_ref":md.get("poc_ref"),
+            "rev":_rev(r.raw),"tags":_tags(r),"deprecated":False,
+            "superseded_by":md.get("superseded_by","none")}
+    ixp=re.sub(r'\.rules$','',outp)+".index.json"
+    json.dump(idx,open(ixp,"w"),indent=2,sort_keys=True)
+    ok("export: %d rule(s) -> %s  (+ sidecar %s)" %
+       (len(sel),os.path.relpath(outp,SUR),os.path.relpath(ixp,SUR)))
+
+def cmd_deprecate(a):
+    sid=int(a.sid)
+    for p in rule_files():
+        lines=open(p).read().splitlines(True); changed=False; out=[]
+        for i,l in enumerate(lines):
+            if re.match(r'^\s*alert\b',l) and re.search(r'\bsid:%d;'%sid,l):
+                out.append("# DEPRECATED %s sid:%d reason: %s\n" %
+                            (datetime.date.today(),sid,a.reason))
+                out.append("# "+l if not l.startswith("#") else l)
+                changed=True
+            else: out.append(l)
+        if changed:
+            open(p,"w").writelines(out)
+            log=os.path.join(SUR,"config","deprecated.log")
+            open(log,"a").write("%s\tsid:%d\t%s\t%s\n" %
+                (datetime.date.today(),sid,os.path.relpath(p,SUR),a.reason))
+            ok("deprecated SID %d in %s (disabled + excluded from export; logged "
+               "to config/deprecated.log). NOT a threshold suppression (§22 C2)."
+               % (sid,os.path.relpath(p,SUR)))
+            return
+    die("deprecate: SID %d not found in any active rule" % sid)
+
+def _bundle_index(path):
+    """sid -> rev from a .rules bundle (or its .index.json sidecar if present)."""
+    ix=re.sub(r'\.rules$','',path)+".index.json"
+    if os.path.exists(ix):
+        j=json.load(open(ix)); return {int(k):v.get("rev",0) for k,v in j.items()}
+    d={}
+    for line in open(path):
+        if re.match(r'^\s*alert\b',line):
+            m=re.search(r'\bsid:(\d+);',line)
+            if m: d[int(m.group(1))]=_rev(line)
+    return d
+
+def cmd_diff(a):
+    A=_bundle_index(a.bundleA); B=_bundle_index(a.bundleB)
+    added=sorted(set(B)-set(A)); removed=sorted(set(A)-set(B))
+    bumped=sorted(s for s in set(A)&set(B) if A[s]!=B[s])
+    print("diff %s -> %s" % (a.bundleA,a.bundleB))
+    print("  added   (%d): %s" % (len(added),added))
+    print("  removed (%d): %s" % (len(removed),removed))
+    print("  rev-bumped (%d): %s" % (len(bumped),
+          [ "%s:%d->%d"%(s,A[s],B[s]) for s in bumped ]))
 
 def main():
     ap=argparse.ArgumentParser(prog="rulectl")
@@ -330,8 +455,16 @@ def main():
     p=sp.add_parser("lint"); p.add_argument("-v","--verbose",action="store_true"); p.set_defaults(f=cmd_lint)
     p=sp.add_parser("test"); p.add_argument("sid"); p.add_argument("--explain",action="store_true"); p.set_defaults(f=cmd_test)
     p=sp.add_parser("check"); p.add_argument("sid"); p.set_defaults(f=cmd_check)
-    for s in ("stats","list","export","deprecate","diff"):
-        q=sp.add_parser(s); q.set_defaults(f=cmd_stub,_name=s)
+    def filt(q):
+        q.add_argument("--asset"); q.add_argument("--network-mode",dest="network_mode")
+        q.add_argument("--owasp"); q.add_argument("--confidence",choices=["high","medium"])
+        q.add_argument("--min-confidence",dest="min_confidence",choices=["high","medium"])
+        q.add_argument("--tag")
+    p=sp.add_parser("stats"); p.set_defaults(f=cmd_stats)
+    p=sp.add_parser("list"); filt(p); p.set_defaults(f=cmd_list)
+    p=sp.add_parser("export"); filt(p); p.add_argument("-o","--out",required=True); p.set_defaults(f=cmd_export)
+    p=sp.add_parser("deprecate"); p.add_argument("sid"); p.add_argument("--reason",required=True); p.set_defaults(f=cmd_deprecate)
+    p=sp.add_parser("diff"); p.add_argument("bundleA"); p.add_argument("bundleB"); p.set_defaults(f=cmd_diff)
     a=ap.parse_args(); a.f(a)
 
 if __name__=="__main__":

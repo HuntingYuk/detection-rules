@@ -1,0 +1,155 @@
+{
+  "9130001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Exploitation",
+    "mitre": "TA0009/T1083",
+    "msg": "WEB Path Traversal to /etc/passwd in http.uri.raw [high]",
+    "network_mode": "plain",
+    "owasp": "A03-Injection",
+    "poc_ref": "tests/poc/9130001_dotdot-etc-passwd/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "path-traversal"
+    ]
+  },
+  "9140001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Exploitation",
+    "mitre": "TA0009/T1213",
+    "msg": "WEB XXE external entity (SYSTEM/PUBLIC) in request body [high]",
+    "network_mode": "plain",
+    "owasp": "A03-Injection",
+    "poc_ref": "tests/poc/9140001_doctype-entity-system/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "xxe"
+    ]
+  },
+  "9150001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Exploitation",
+    "mitre": "TA0007/T1552",
+    "msg": "WEB SSRF to cloud metadata 169.254.169.254 in http.uri [high]",
+    "network_mode": "plain",
+    "owasp": "A10-SSRF",
+    "poc_ref": "tests/poc/9150001_cloud-metadata-ip/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "ssrf-metadata"
+    ]
+  },
+  "9160001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Exploitation",
+    "mitre": "TA0002/T1059",
+    "msg": "WEB Insecure Deserialization - Java serialized object (base64 rO0AB) in request body [high]",
+    "network_mode": "plain",
+    "owasp": "A08-Software-and-Data-Integrity-Failures",
+    "poc_ref": "tests/poc/9160001_java-serialized-b64/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "deserialization"
+    ]
+  },
+  "9170001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Recon",
+    "mitre": "TA0007/T1083",
+    "msg": "WEB Exposure - /.git/config repository probe [high]",
+    "network_mode": "plain",
+    "owasp": "A05-Security-Misconfiguration",
+    "poc_ref": "tests/poc/9170001_git-config-exposure/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "exposure"
+    ]
+  },
+  "9190001": {
+    "asset_category": "web-classic",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Installation",
+    "mitre": "TA0003/T1505.003",
+    "msg": "WEB Webshell PHP @eval($_POST ...) interaction (China Chopper-style) [high]",
+    "network_mode": "plain",
+    "owasp": "A03-Injection",
+    "poc_ref": "tests/poc/9190001_php-eval-post/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "webshell"
+    ]
+  },
+  "9200001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Recon",
+    "mitre": "TA0043/T1595",
+    "msg": "WEB Recon - sqlmap scanner User-Agent [high]",
+    "network_mode": "plain",
+    "owasp": "none",
+    "poc_ref": "tests/poc/9200001_sqlmap-ua/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "scanner-ua"
+    ]
+  },
+  "9210001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "Actions-on-Objectives",
+    "mitre": "TA0006/T1552",
+    "msg": "WEB Info Leak - AWS access key id in HTTP response body [high]",
+    "network_mode": "plain",
+    "owasp": "A01-Broken-Access-Control",
+    "poc_ref": "tests/poc/9210001_aws-key-in-response/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "info-leak"
+    ]
+  },
+  "9300001": {
+    "asset_category": "web-mixed",
+    "confidence": "high",
+    "cve": "CVE-2021-44228",
+    "deprecated": false,
+    "kill_chain": "Exploitation",
+    "mitre": "TA0001/T1190",
+    "msg": "KNOWN-CVE Log4Shell JNDI lookup in HTTP header (CVE-2021-44228) [high]",
+    "network_mode": "plain",
+    "owasp": "A06-Vulnerable-and-Outdated-Components",
+    "poc_ref": "tests/poc/9300001_log4shell-jndi/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "log4shell"
+    ]
+  }
+}

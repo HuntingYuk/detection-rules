@@ -1,0 +1,53 @@
+{
+  "9400001": {
+    "asset_category": "tls",
+    "confidence": "medium",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "C2",
+    "mitre": "TA0011/T1071.001",
+    "msg": "TLS anomaly - SNI is a bare IPv4 literal (non-RFC6066, suspicious client) [medium]",
+    "network_mode": "tls-meta",
+    "owasp": "none",
+    "poc_ref": "tests/poc/9400001_sni-bare-ip/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "tls-sni-anomaly"
+    ]
+  },
+  "9400002": {
+    "asset_category": "tls",
+    "confidence": "medium",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "C2",
+    "mitre": "TA0011/T1071.001",
+    "msg": "TLS anomaly - client JA3 on curated bad-list [medium]",
+    "network_mode": "tls-meta",
+    "owasp": "none",
+    "poc_ref": "tests/poc/9400002_ja3-badlist/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "tls-ja3-badlist"
+    ]
+  },
+  "9400003": {
+    "asset_category": "tls",
+    "confidence": "medium",
+    "cve": "none",
+    "deprecated": false,
+    "kill_chain": "C2",
+    "mitre": "TA0011/T1071.001",
+    "msg": "TLS anomaly - expired server certificate presented [medium]",
+    "network_mode": "tls-meta",
+    "owasp": "none",
+    "poc_ref": "tests/poc/9400003_expired-cert/poc.sh",
+    "rev": 1,
+    "superseded_by": "none",
+    "tags": [
+      "tls-cert-expired"
+    ]
+  }
+}
