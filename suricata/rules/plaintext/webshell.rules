@@ -10,3 +10,11 @@ alert http any any -> any any (msg:"WEB Webshell PHP @eval($_POST ...) interacti
 # form posts Java code). pcre confirms the Runtime.getRuntime().exec( call.
 # Negative: a normal form POST -> no fast_pattern hit -> silent.
 alert http any any -> any any (msg:"WEB Webshell JSP Runtime.getRuntime().exec in request body [high]"; flow:established,to_server; http.request_body; content:"getRuntime().exec"; nocase; fast_pattern; pcre:"/Runtime\s*\.\s*getRuntime\s*\(\s*\)\s*\.\s*exec\s*\(/i"; classtype:trojan-activity; metadata: asset_category web-classic, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0003, mitre_tactic_name Persistence, mitre_technique_id T1505.003, mitre_technique_name Web-Shell, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9190002_jsp-runtime-exec/poc.sh, tag webshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9190002; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 3 (9190003): PHP code-injection webshell via
+# create_function() wired to attacker input. Scope http.request_body, to_server.
+# fast_pattern "create_function(" -> a request BODY carrying a create_function
+# call tied to a PHP superglobal is attacker-unique (apps do not POST PHP code).
+# pcre confirms create_function( ... $_POST/GET/REQUEST/COOKIE/SERVER within a
+# bounded window. Negative: a body with create_function( as docs text but no
+# superglobal -> reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"WEB Webshell PHP create_function code injection in request body [high]"; flow:established,to_server; http.request_body; content:"create_function("; nocase; fast_pattern; pcre:"/create_function\s*\([\s\S]{0,200}?\$_(?:POST|GET|REQUEST|COOKIE|SERVER)/i"; classtype:trojan-activity; metadata: asset_category web-classic, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0003, mitre_tactic_name Persistence, mitre_technique_id T1505.003, mitre_technique_name Web-Shell, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9190003_php-create-function/poc.sh, tag webshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9190003; rev:1;)
