@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+"""benchmark — spec §17 success metric: our custom corpus vs a tuned ET Open control.
+
+Method (honest): regenerate every rule's PoC (attack) + negative (benign) pcap;
+rewrite each pcap's client IP to a UNIQUE 10.99.x.y so a single merged pcap can be
+attributed per-attack (Suricata 8.0.4 does not emit pcap_filename in eve). Run BOTH
+our ruleset and the ET Open control over the merged attack pcap (each ruleset loaded
+ONCE), then per attack classify:
+
+  GAP    : our rule fires, ET Open SILENT  -> the custom rule's value-add (§17)
+  OVERLAP: both fire                        -> ET Open already covers it
+  MISS   : our rule did NOT fire            -> gate guarantees 0; >0 = bug
+
+Plus ET-Open firings on our benign negatives = a (caveated) FP signal.
+
+LIMITATION: synthetic PoC/negative corpus, not production traffic. Real COVERAGE-GAP
+signal; true FP rate needs real/replayed traffic -> --pcap-dir / --benign-dir.
+"""
+import os, re, sys, json, glob, shutil, ipaddress, subprocess, tempfile, argparse, collections
+
+SUR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RULES= os.path.join(SUR, "rules")
+TESTS= os.path.join(SUR, "tests", "poc")
+CFG  = os.path.join(SUR, "config", "suricata-test.yaml")
+ETDIR= os.path.join(os.path.dirname(SUR), "reference", "et-open")
+CLIENT_NET = "10.99."   # unique client IPs live here -> attribution key
+
+def die(m): print("ERROR: "+m, file=sys.stderr); sys.exit(1)
+
+def _uip(k): return "10.99.%d.%d" % (k//254, 1 + k % 254)
+
+def _combined_ours(td):
+    files=sorted(glob.glob(os.path.join(RULES,"**","*.rules"),recursive=True))
+    cp=os.path.join(td,"_ours.rules")
+    with open(cp,"w") as o:
+        for f in files: o.write(open(f).read().rstrip()+"\n")
+    return cp
+
+def _et_yaml(td):
+    y=open(CFG).read()
+    y=y.replace('default-rule-path: rules','default-rule-path: '+ETDIR)
+    y=re.sub(r'rule-files:\n(?:  - .*\n)+','rule-files:\n  - suricata.rules\n',y)
+    y=y.replace('classification-file: config/classification.config',
+                'classification-file: '+os.path.join(ETDIR,'classification.config'))
+    p=os.path.join(td,"et.yaml"); open(p,"w").write(y); return p
+
+def _merge_unique(pcaps, outpath, start=0):
+    """Each pcap -> rewrite its client IP (src of 1st pkt) to a unique 10.99.x.y,
+    everywhere it appears (src or dst), then concat all. Returns {uip: tag}."""
+    from scapy.all import rdpcap, wrpcap, IP
+    allp=[]; mapping={}
+    for i,(tag,pf) in enumerate(pcaps):
+        try: pk=rdpcap(pf)
+        except Exception: continue
+        if not pk or IP not in pk[0]: continue
+        cip=pk[0][IP].src; uip=_uip(start+i); mapping[uip]=tag
+        for p in pk:
+            if IP in p:
+                if p[IP].src==cip: p[IP].src=uip
+                if p[IP].dst==cip: p[IP].dst=uip
+                for ly in ('IP','TCP','UDP','ICMP'):
+                    try:
+                        if p.haslayer(ly) and hasattr(p[ly],'chksum'): del p[ly].chksum
+                    except Exception: pass
+        allp+=list(pk)
+    if allp: wrpcap(outpath, allp)
+    return mapping
+
+def _run(suri, pcap, td, ours_S=None, et_yaml=None):
+    out=tempfile.mkdtemp(dir=td)
+    cmd=[suri,"-k","none","-l",out,"-r",pcap] + (["-c",CFG,"-S",ours_S] if ours_S else ["-c",et_yaml])
+    subprocess.run(cmd,cwd=SUR,capture_output=True,text=True)
+    # client IP (the 10.99.x.y) -> set of sids fired in that flow
+    fired=collections.defaultdict(set)
+    ev=os.path.join(out,"eve.json")
+    if os.path.exists(ev):
+        for line in open(ev):
+            try:
+                j=json.loads(line)
+                if j.get("event_type")!="alert": continue
+                ci=next((x for x in (j.get("src_ip"),j.get("dest_ip"))
+                         if x and x.startswith(CLIENT_NET)), None)
+                if ci: fired[ci].add(int(j["alert"]["signature_id"]))
+            except Exception: pass
+    return fired
+
+def _gen(td):
+    pp=[]; nn=[]
+    for d in sorted(glob.glob(os.path.join(TESTS,"*_*"))):
+        m=re.match(r"(\d+)_",os.path.basename(d))
+        if not m: continue
+        sid=m.group(1)
+        for kind,acc in (("poc",pp),("negative",nn)):
+            sh=os.path.join(d,kind+".sh")
+            if os.path.exists(sh):
+                outp=os.path.join(td,"%s_%s.pcap"%(kind,sid))
+                r=subprocess.run(["bash",sh,outp],capture_output=True)
+                if r.returncode==0 and os.path.exists(outp): acc.append((sid,outp))
+    return pp,nn
+
+def main():
+    ap=argparse.ArgumentParser(prog="benchmark")
+    ap.add_argument("--pcap-dir"); ap.add_argument("--benign-dir")
+    a=ap.parse_args()
+    suri=shutil.which("suricata") or die("suricata not on PATH")
+    if not os.path.exists(os.path.join(ETDIR,"suricata.rules")):
+        die("ET Open control missing. Run: suricata-update --suricata "
+            "$(command -v suricata) -o %s --data-dir %s/data" % (ETDIR,ETDIR))
+    td=tempfile.mkdtemp(prefix="_bench_")
+    try:
+        if a.pcap_dir:
+            pp=[(os.path.basename(f),f) for f in sorted(glob.glob(os.path.join(a.pcap_dir,"*.pcap")))]
+            nn=[(os.path.basename(f),f) for f in sorted(glob.glob(os.path.join(a.benign_dir,"*.pcap")))] if a.benign_dir else []
+        else:
+            pp,nn=_gen(td)
+        am=_merge_unique(pp, os.path.join(td,"atk.pcap"), 0)
+        oS=_combined_ours(td); ey=_et_yaml(td)
+        print("merged %d attack pcaps; running OUR ruleset ..." % len(am))
+        ours=_run(suri,os.path.join(td,"atk.pcap"),td,ours_S=oS)
+        print("running ET Open control (50k rules, single load) ...")
+        et=_run(suri,os.path.join(td,"atk.pcap"),td,et_yaml=ey)
+        gap=[]; overlap=[]; miss=[]
+        for uip,tag in sorted(am.items()):
+            o=bool(ours.get(uip)); e=bool(et.get(uip))
+            if o and not e: gap.append(tag)
+            elif o and e:  overlap.append(tag)
+            elif not o:    miss.append(tag)
+        nben=etb_total=0
+        if nn:
+            bm=_merge_unique(nn, os.path.join(td,"ben.pcap"), 5000)
+            print("running ET Open over %d benign pcaps (FP signal) ..." % len(bm))
+            etb=_run(suri,os.path.join(td,"ben.pcap"),td,et_yaml=ey)
+            nben=sum(1 for u in bm if etb.get(u)); etb_total=len(bm)
+        tot=len(am)
+        print("\n================ §17 BENCHMARK  (control = ET Open) ================")
+        print("attack pcaps measured        : %d" % tot)
+        print("GAP  ours fires / ET silent  : %d   <- custom corpus value-add (§17)" % len(gap))
+        print("OVERLAP both fire            : %d   (ET Open already covers)" % len(overlap))
+        print("MISS ours did NOT fire       : %d   (gate guarantees 0)" % len(miss))
+        if nn: print("ET Open FP on our benign     : %d / %d  (caveat: negatives tuned to OUR rules)" % (nben,etb_total))
+        print("-- GAP sids (ours-only detections):")
+        print("   " + ", ".join(sorted(gap)))
+        if miss: print("-- MISS sids (investigate!): " + ", ".join(sorted(miss)))
+        print("===================================================================")
+        print("§17 read: GAP = attacks ONLY the custom corpus catches -> the evidence")
+        print("the custom set earns its keep. OVERLAP rules justify themselves only if")
+        print("measurably lower-FP than ET's equivalent (needs real traffic to judge).")
+        print("Synthetic corpus = coverage-gap signal, NOT production FP rate. Re-run")
+        print("with --pcap-dir/--benign-dir on real traffic for authoritative numbers.")
+    finally:
+        shutil.rmtree(td,ignore_errors=True)
+
+if __name__=="__main__": main()
