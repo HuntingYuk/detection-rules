@@ -1,0 +1,7 @@
+# FP-reasoning: HIGH, plain. Uses http.uri.RAW (Suricata normalises ../ out of
+# http.uri, so raw is required). fast_pattern "etc/passwd" (attacker-shaped,
+# selective). pcre requires a traversal token (../ or %2e%2e + sep) present ->
+# directory-traversal read of /etc/passwd is attacker-unique. Bounded quantifier,
+# no backtracking (§19 D5). Negative: a URI literally containing 'etc/passwd'
+# (hits fast_pattern) but with NO traversal token -> reaches pcre, rejected -> silent.
+alert http any any -> any any (msg:"WEB Path Traversal to /etc/passwd in http.uri.raw [high]"; flow:established,to_server; http.uri.raw; content:"etc/passwd"; nocase; fast_pattern; pcre:"/(?:\.\.|%2e%2e){1,8}(?:[\/\x5c]|%2f|%5c)/i"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130001_dotdot-etc-passwd/poc.sh, tag path-traversal, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9130001; rev:1;)
