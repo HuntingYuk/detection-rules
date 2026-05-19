@@ -96,12 +96,24 @@ def _sid_msg(paths):
             if sm: m[int(sm.group(1))]=mm.group(1) if mm else "(no msg)"
     return m
 
+def _enabled_sids():
+    """SIDs whose rule is on an active (non-commented) line — mirrors rulectl
+    _enabled_rules so deprecated rules' PoCs aren't counted as MISS."""
+    en=set()
+    for f in glob.glob(os.path.join(RULES,"**","*.rules"),recursive=True):
+        for ln in open(f, errors="replace"):
+            if re.match(r'^\s*alert\b',ln):
+                sm=re.search(r'\bsid:(\d+)',ln)
+                if sm: en.add(sm.group(1))
+    return en
+
 def _gen(td):
-    pp=[]; nn=[]
+    pp=[]; nn=[]; en=_enabled_sids()
     for d in sorted(glob.glob(os.path.join(TESTS,"*_*"))):
         m=re.match(r"(\d+)_",os.path.basename(d))
         if not m: continue
         sid=m.group(1)
+        if sid not in en: continue   # deprecated/disabled -> not benchmarked
         for kind,acc in (("poc",pp),("negative",nn)):
             sh=os.path.join(d,kind+".sh")
             if os.path.exists(sh):

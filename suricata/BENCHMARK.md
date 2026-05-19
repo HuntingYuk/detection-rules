@@ -35,21 +35,23 @@ sampled from production, so this is a smoke test, not a production FP rate).
    ~80 % of payload rules silently MISS — the original cause of a false `MISS=64`.
 4. **Diff** ours vs ET per attribution IP → GAP / OVERLAP / MISS.
 
-## Latest result (2026-05-19, ET Open 50,169 enabled rules)
+## Latest result (2026-05-19, post OVERLAP-audit, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 80
+attack pcaps measured        : 79
 GAP  ours fires / ET silent  : 62   <- custom corpus value-add (§17)
-OVERLAP both fire            : 18   (ET Open already covers)
+OVERLAP both fire            : 17   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0   (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 80  (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 79  (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 62/80 attacks are caught **only** by the custom corpus — that is the
-concrete §17 evidence the set is worth maintaining. The 18 OVERLAP rules duplicate
-ET Open on coverage; they justify themselves only if they are *measurably* lower-FP
-on real traffic (see limitation below). `MISS=0` confirms the merged-traffic context
-does not regress any rule vs its isolated gate run.
+**Read:** 62/79 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. The 17 OVERLAP rules were individually
+audited (see "OVERLAP audit" below): each is kept with a recorded reason (ours
+strictly better, ET misclassifies, or deliberate ET-independent CVE backbone); one
+generic duplicate (9130003) was retired. `MISS=0` confirms the merged-traffic
+context does not regress any rule vs its isolated gate run, and that deprecated
+rules are correctly excluded from the benchmark.
 
 ## Limitation — synthetic, not production
 
@@ -80,3 +82,51 @@ cd suricata && scripts/benchmark
 ET Open ruleset and all raw benchmark output are **gitignored** — only this method
 doc and the harness are versioned. The control is reproducible from the command
 above; results are environment-dependent and meant to be re-run, not pinned.
+
+---
+
+## OVERLAP audit (2026-05-19)
+
+`scripts/benchmark --audit-overlap` prints, per OVERLAP attack, our rule and the ET
+Open rule(s) that co-fired. Every OVERLAP rule was reviewed against its ET
+co-firing. **Guiding principle:** "do not depend on ET" is a foundational project
+decision — an ET Open rule also covering ours is *expected* and is **not** grounds
+to retire, because that would re-introduce the dependency the corpus exists to
+avoid. A rule is retired only if it is a *generic, non-CVE-backbone* technique for
+which ET has a mature exact equivalent **and** there is no independence rationale.
+
+Result: **1 retired, 17 kept** (each with a recorded reason).
+
+### Retired
+
+| SID | Co-fire | Reason |
+|---|---|---|
+| 9130003 | ET 2019880 (Double Encoded Characters in URI `../`) | Exact functional duplicate; generic traversal technique, not part of the clean-room CVE backbone; no ET-independence argument. `rulectl deprecate`d (excluded from detection/export/benchmark; `config/deprecated.log`). |
+
+### Kept — ours is strictly better or ET's match is illusory
+
+| SID | ET co-fire | Why kept |
+|---|---|---|
+| 9100003 | 2062928 | ET only fired a *HUNTING*-tier rule, not an alert-grade SQLi rule; ours is the specific error-based detector. |
+| 9130002 | 2013001, 2056494 | Ours uses `http.uri.raw` + all `php://` wrappers; ET's precise match is hunting-tier filter-chains only. |
+| 9160001 | 2024668/9 | ET's rules are Struts2-REST-scoped; ours is generic Java serialized-object (`rO0AB`) on any endpoint. |
+| 9160003 | 2053461 | **ET misclassifies** — matched the `exec` substring as "SQL Injection"; ours is the correct node-serialize detection. |
+| 9190002 | 2053461 | **ET misclassifies** — same `exec`→"SQL Injection"; ours is the correct JSP-webshell detection. |
+| 9300018 | 2048583 | Different kill-chain phase: ours = implant *access* (inbound); ET = implant *check* (outbound). Complementary. |
+| 9300014 | 2011768, 2060800 | ET 2060800 is only the soft-hyphen variant; ours covers the core PHP-CGI argument-injection family. |
+| 9410001 | 2018275/6 | ET's are single-malware-family signatures (Linux/Onimiki); ours is a generic DNS-tunnel heuristic. |
+| 9430001 | 2001219, 2003068 | ET's are *SCAN* (recon) rules; ours is an attempted-admin **brute-force** rate rule — different classtype/intent. Kept; same network signal but distinct alert semantics for the pipeline. |
+
+### Kept — clean-room CVE backbone, deliberately ET-independent
+
+ET Open also ships a precise CVE rule for each; ours is **equally** CVE-specific
+(none generic, none strictly worse). Kept on purpose so the corpus owns a
+SID-stable rule + PoC + MITRE metadata that does not depend on the ET Open feed
+remaining available/unchanged:
+
+`9300001` Log4Shell · `9300006` F5 iControl · `9300008` FortiOS SSL VPN ·
+`9300012` Ivanti Connect Secure · `9300017` PaperCut · `9300020` Bitbucket ·
+`9300023` PAN-OS GlobalProtect · `9300026` GoAnywhere MFT.
+
+This audit is reproducible: `scripts/benchmark --audit-overlap` regenerates the
+co-firing evidence; `config/deprecated.log` records the retirement.

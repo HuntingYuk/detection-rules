@@ -1,0 +1,1 @@
+2026-05-19	sid:9130003	rules/plaintext/traversal.rules	OVERLAP audit §17: exact functional duplicate of ET Open 2019880 (Double Encoded Characters in URI ../) — mature equivalent, generic technique not part of the clean-room CVE backbone, no ET-independence rationale. Retired; benchmark/CI skip it.
