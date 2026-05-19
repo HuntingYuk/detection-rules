@@ -18,3 +18,11 @@ alert http any any -> any any (msg:"WEB Webshell JSP Runtime.getRuntime().exec i
 # bounded window. Negative: a body with create_function( as docs text but no
 # superglobal -> reaches pcre, rejected -> silent (§19 T6).
 alert http any any -> any any (msg:"WEB Webshell PHP create_function code injection in request body [high]"; flow:established,to_server; http.request_body; content:"create_function("; nocase; fast_pattern; pcre:"/create_function\s*\([\s\S]{0,200}?\$_(?:POST|GET|REQUEST|COOKIE|SERVER)/i"; classtype:trojan-activity; metadata: asset_category web-classic, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0003, mitre_tactic_name Persistence, mitre_technique_id T1505.003, mitre_technique_name Web-Shell, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9190003_php-create-function/poc.sh, tag webshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9190003; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 4 (9190004): ASPX China-Chopper webshell.
+# Scope http.request_body, to_server. fast_pattern "eval(Request" -> a request
+# BODY carrying an ASPX eval of a Request collection item is attacker-unique
+# (apps do not POST server-side .NET code). pcre confirms eval( Request[.Item/
+# .Form/.QueryString] [ ( . Distinct from PHP (9190001/3) and JSP (9190002).
+# Negative: a body with eval(Request) as docs prose (no [ / collection accessor)
+# -> reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"WEB Webshell ASPX China Chopper eval(Request.Item) in request body [high]"; flow:established,to_server; http.request_body; content:"eval(Request"; nocase; fast_pattern; pcre:"/eval\s*\(\s*Request\s*(?:\.\s*(?:Item|Form|QueryString|Params))?\s*[\[\(]/i"; classtype:trojan-activity; metadata: asset_category web-classic, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0003, mitre_tactic_name Persistence, mitre_technique_id T1505.003, mitre_technique_name Web-Shell, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9190004_aspx-china-chopper/poc.sh, tag webshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9190004; rev:1;)

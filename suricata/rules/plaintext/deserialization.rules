@@ -24,3 +24,12 @@ alert http any any -> any any (msg:"WEB Insecure Deserialization - Node.js node-
 # "!!python/" as prose but no object/module tag after it -> reaches pcre,
 # rejected -> silent (§19 T6).
 alert http any any -> any any (msg:"WEB Insecure Deserialization - Python YAML object injection (!!python/object) in request body [high]"; flow:established,to_server; http.request_body; content:"!!python/"; nocase; fast_pattern; pcre:"/!!python\/(?:object\/(?:apply|new)|object|module)[\x3a\/]/i"; classtype:web-application-attack; metadata: asset_category web-modern, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160004_python-yaml-objinject/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160004; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 5 (9160005): raw .NET BinaryFormatter /
+# LosFormatter serialized stream. Scope http.request_body, to_server.
+# fast_pattern "AAEAAAD/////" = base64 of the BinaryFormatter header
+# 00 01 00 00 00 FF FF FF FF (3-byte aligned from the blob start, §5) ->
+# attacker-unique magic; distinct from the .NET XML/text gadget rule 9160002.
+# pcre requires more base64 after the magic (a real stream, not the literal
+# token). Negative: a body that contains AAEAAAD///// as prose with no base64
+# tail -> reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"WEB Insecure Deserialization - .NET BinaryFormatter serialized stream (base64 AAEAAAD) in request body [high]"; flow:established,to_server; http.request_body; content:"AAEAAAD/////"; fast_pattern; pcre:"/AAEAAAD\/\/\/\/\/[A-Za-z0-9+\/]{16,}/"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160005_dotnet-binaryformatter/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160005; rev:1;)

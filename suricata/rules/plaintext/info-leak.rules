@@ -19,3 +19,12 @@ alert http any any -> any any (msg:"WEB Info Leak - PEM private key in HTTP resp
 # mentions the variable name as prose (no = and long value) -> reaches pcre,
 # rejected -> silent (§19 T6). Residual: a sample .env in docs -> threshold dst.
 alert http any any -> any any (msg:"WEB Info Leak - AWS secret access key in HTTP response body [high]"; flow:established,to_client; http.response_body; content:"AWS_SECRET_ACCESS_KEY"; nocase; fast_pattern; pcre:"/AWS_SECRET_ACCESS_KEY[\x22\x27]?\s*[=:]\s*[\x22\x27]?[A-Za-z0-9\/+]{20,128}/"; classtype:web-application-activity; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1552, mitre_technique_name Unsecured-Credentials, kill_chain Actions-on-Objectives, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210003_aws-secret-env-leak/poc.sh, tag info-leak, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9210003; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 4 (9210004): a Python application traceback
+# / debug page leaked in an HTTP response (source paths, code, framework + var
+# disclosure). RESPONSE-side (to_client) http.response_body. fast_pattern
+# "Traceback (most recent call last)" (33B, format-unique). pcre requires the
+# traceback structure (File "/line N/Error:) so the bare phrase as docs prose
+# does not alert. Residual: a dev/staging host that returns tracebacks -> tune
+# that dst via threshold.config (same pattern as 9210002). Negative: a help
+# page MENTIONING the phrase with no traceback frame -> reaches pcre, rejected.
+alert http any any -> any any (msg:"WEB Info Leak - Python traceback / debug page in HTTP response body [high]"; flow:established,to_client; http.response_body; content:"Traceback (most recent call last)"; nocase; fast_pattern; pcre:"/Traceback \(most recent call last\)[\s\S]{0,400}?(?:File \x22|line \d+|[A-Za-z]+Error:)/"; classtype:web-application-activity; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210004_python-traceback-leak/poc.sh, tag info-leak, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9210004; rev:1;)
