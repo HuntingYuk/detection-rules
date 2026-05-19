@@ -14,11 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Cache pip (idstools + scapy)
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-idstools-scapy-v1
+      # No pip cache: idstools+scapy install in ~10s, and actions/cache@v4 itself
+      # runs on Node20 (re-introduces the deprecation annotation) — not worth it.
+      # No apt/PPA cache: PPA caching is unreliable; ~1min suricata install is fine.
 
       - name: Install Suricata (latest stable 8.x, OISF PPA)
         run: |
