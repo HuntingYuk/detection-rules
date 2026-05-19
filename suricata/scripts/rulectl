@@ -443,6 +443,28 @@ def cmd_diff(a):
     print("  rev-bumped (%d): %s" % (len(bumped),
           [ "%s:%d->%d"%(s,A[s],B[s]) for s in bumped ]))
 
+def cmd_ci(a):
+    """Full CI gate: lint + validate-meta + PoC/negative for EVERY active rule.
+    Every active rule MUST have a tests/poc/<sid>_*/ folder (DoD). Exits non-zero
+    on any failure. Each rule's test runs as a subprocess so an infra die() in one
+    rule is a failure, not an abort."""
+    cmd_lint(argparse.Namespace(verbose=False))
+    cmd_validate_meta(argparse.Namespace(paths=None))
+    rules=sorted(_enabled_rules(), key=lambda x:x[1].sid)
+    fails=[]; missing=[]
+    for _,r,_ in rules:
+        sid=r.sid
+        if not _poc_dir(sid): missing.append(sid); continue
+        rc=subprocess.run([sys.executable,os.path.abspath(__file__),"test",str(sid)],
+                          cwd=SUR,capture_output=True,text=True).returncode
+        (ok if rc==0 else bad)("ci test SID %d %s" % (sid,"PASS" if rc==0 else "FAIL"))
+        if rc!=0: fails.append(sid)
+    for sid in missing: bad("ci SID %d has NO tests/poc dir (DoD violation)" % sid)
+    print("CI: %d active rule(s), %d fail, %d missing-poc" %
+          (len(rules),len(fails),len(missing)))
+    if fails or missing: die("CI FAILED: fails=%s missing=%s" % (fails,missing))
+    ok("CI PASSED — all %d active rules gate-clean" % len(rules))
+
 def main():
     ap=argparse.ArgumentParser(prog="rulectl")
     sp=ap.add_subparsers(dest="cmd",required=True)
@@ -465,7 +487,8 @@ def main():
     p=sp.add_parser("export"); filt(p); p.add_argument("-o","--out",required=True); p.set_defaults(f=cmd_export)
     p=sp.add_parser("deprecate"); p.add_argument("sid"); p.add_argument("--reason",required=True); p.set_defaults(f=cmd_deprecate)
     p=sp.add_parser("diff"); p.add_argument("bundleA"); p.add_argument("bundleB"); p.set_defaults(f=cmd_diff)
-    a=ap.parse_args(); a.f(a)
+    p=sp.add_parser("ci"); p.set_defaults(f=cmd_ci)
+    a=ap.parse_args(); r=a.f(a); sys.exit(1 if r is False else 0)
 
 if __name__=="__main__":
     main()

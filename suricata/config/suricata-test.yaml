@@ -14,7 +14,7 @@ rule-files:
   - "tls-meta/*.rules"
 
 classification-file: config/classification.config
-reference-config-file: /opt/homebrew/share/suricata/reference.config
+reference-config-file: config/reference.config
 
 app-layer:
   protocols:
