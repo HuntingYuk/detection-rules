@@ -84,6 +84,18 @@ def _run(suri, pcap, td, ours_S=None, et_yaml=None):
             except Exception: pass
     return fired
 
+def _sid_msg(paths):
+    """sid(int) -> msg, parsed from rule files (skips idstools-disabled lines)."""
+    m={}
+    for pth in paths:
+        if not os.path.exists(pth): continue
+        for ln in open(pth, errors="replace"):
+            s=ln.strip()
+            if not s or s.startswith("#"): continue
+            sm=re.search(r'\bsid:(\d+)', s); mm=re.search(r'\bmsg:"([^"]*)"', s)
+            if sm: m[int(sm.group(1))]=mm.group(1) if mm else "(no msg)"
+    return m
+
 def _gen(td):
     pp=[]; nn=[]
     for d in sorted(glob.glob(os.path.join(TESTS,"*_*"))):
@@ -101,6 +113,9 @@ def _gen(td):
 def main():
     ap=argparse.ArgumentParser(prog="benchmark")
     ap.add_argument("--pcap-dir"); ap.add_argument("--benign-dir")
+    ap.add_argument("--audit-overlap", action="store_true",
+                    help="for each OVERLAP attack, print our rule + the ET Open "
+                         "rule(s) that co-fired (retire-vs-keep evidence)")
     a=ap.parse_args()
     suri=shutil.which("suricata") or die("suricata not on PATH")
     if not os.path.exists(os.path.join(ETDIR,"suricata.rules")):
@@ -147,6 +162,17 @@ def main():
         print("measurably lower-FP than ET's equivalent (needs real traffic to judge).")
         print("Synthetic corpus = coverage-gap signal, NOT production FP rate. Re-run")
         print("with --pcap-dir/--benign-dir on real traffic for authoritative numbers.")
+        if a.audit_overlap and overlap:
+            ourm=_sid_msg(sorted(glob.glob(os.path.join(RULES,"**","*.rules"),recursive=True)))
+            etm=_sid_msg([os.path.join(ETDIR,"suricata.rules")])
+            inv={t:u for u,t in am.items()}
+            print("\n---- OVERLAP audit: our rule vs ET Open co-firing ----")
+            for tag in sorted(overlap):
+                u=inv[tag]; osid=int(tag)
+                print("\nOURS  %s  %s" % (tag, ourm.get(osid,"(?)")))
+                for es in sorted(et.get(u,())):
+                    print("  ET  %-7d %s" % (es, etm.get(es,"(?)")))
+            print("------------------------------------------------------")
     finally:
         shutil.rmtree(td,ignore_errors=True)
 
