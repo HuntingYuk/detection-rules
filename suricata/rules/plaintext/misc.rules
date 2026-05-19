@@ -1,0 +1,8 @@
+# FP-reasoning: HIGH, plain (A02 Cryptographic Failures). fast_pattern is the
+# block-ALIGNED base64url of the 12-byte {"alg":"none ("eyJhbGciOiJub25l") -> a guaranteed
+# substring of any JWT header that begins {"alg":"none..." (alg-first, the form
+# jwt_tool/ysoserial default). alg:none = signature-strip auth bypass; legit
+# clients never send it. Negative: a normal signed JWT (alg HS256) -> different
+# header bytes -> no fast_pattern hit -> silent. Spaced / typ-first variants =
+# companion rules (roadmap).
+alert http any any -> any any (msg:"WEB A02 JWT alg:none signature-strip token presented [high]"; flow:established,to_server; http.header; content:"eyJhbGciOiJub25l"; fast_pattern; pcre:"/(?:authorization|cookie|token)[^\r\n]*eyJhbGciOiJub25l/i"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A02-Cryptographic-Failures, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1556, mitre_technique_name Modify-Authentication-Process, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9600001_jwt-alg-none/poc.sh, tag jwt-alg-none, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9600001; rev:1;)
