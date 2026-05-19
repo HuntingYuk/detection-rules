@@ -1,0 +1,6 @@
+# FP-reasoning: HIGH, plain. Scope http.request_body, to_server. fast_pattern
+# "<!ENTITY" (attacker-shaped; appears only in DTDs). pcre requires an EXTERNAL
+# entity (SYSTEM/PUBLIC + a fetchable scheme) -> XXE is attacker-unique. Bounded,
+# no backtracking. Negative: a benign INTERNAL entity (<!ENTITY x "v">) hits the
+# fast_pattern but has no SYSTEM/PUBLIC scheme -> reaches pcre, rejected -> silent.
+alert http any any -> any any (msg:"WEB XXE external entity (SYSTEM/PUBLIC) in request body [high]"; flow:established,to_server; http.request_body; content:"<!ENTITY"; nocase; fast_pattern; pcre:"/<!ENTITY\s+\S+\s+(?:SYSTEM|PUBLIC)\s+[\x22\x27][^\x22\x27]*(?:file|https?|ftp|gopher|jar|netdoc|php|expect):/i"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1213, mitre_technique_name Data-from-Information-Repositories, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9140001_doctype-entity-system/poc.sh, tag xxe, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9140001; rev:1;)
