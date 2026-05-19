@@ -14,9 +14,13 @@ docs/superpowers/
 *.brainstorm.md
 
 # --- private / generated, never redistributed ---
-reference/            # offline ET PRO study material (licensed, private)
-intel/                # extracted IP/indicator artifacts (private, feeds IP-rep pipeline)
-suricata/bundles/     # generated export bundles for production
+# NOTE: gitignore has NO inline comments — keep comments on their own lines.
+# reference/ = offline study material (licensed/3rd-party, private)
+reference/
+# intel/ = extracted IP/indicator artifacts (private, feeds IP-rep pipeline)
+intel/
+# suricata/bundles/ = generated export bundles for production
+suricata/bundles/
 !suricata/bundles/.gitkeep
 
 # --- test/runtime artifacts ---
