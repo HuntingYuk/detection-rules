@@ -132,3 +132,11 @@ alert http any any -> any any (msg:"KNOWN-CVE JetBrains TeamCity auth bypass via
 # /SetupWizard.aspx with no extra path). Negative: a normal ScreenConnect path
 # -> no fast_pattern hit -> silent.
 alert http any any -> any any (msg:"KNOWN-CVE ConnectWise ScreenConnect auth bypass SetupWizard path (CVE-2024-1709) [high]"; flow:established,to_server; http.uri.raw; content:"/SetupWizard.aspx/"; nocase; fast_pattern; pcre:"/\/SetupWizard\.aspx\/\S/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-1709, poc_ref tests/poc/9300022_screenconnect-cve-2024-1709/poc.sh, tag screenconnect, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300022; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-3400 Palo Alto PAN-OS GlobalProtect
+# command injection via a path-traversal/shell payload in the SESSID cookie.
+# Clean-room. Scope http.cookie. fast_pattern "SESSID=" + pcre requires the
+# SESSID value to contain ../ or a shell metachar -> attacker-unique (a real
+# session id is an opaque token, never ../ or backtick). pcre hex-escapes
+# ; and backtick (CLAUDE.md §5). Negative: a normal opaque SESSID -> reaches
+# pcre, rejected -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE Palo Alto PAN-OS GlobalProtect SESSID command injection (CVE-2024-3400) [high]"; flow:established,to_server; http.cookie; content:"SESSID="; nocase; fast_pattern; pcre:"/SESSID=[^\x3b\r\n]*(?:\.\.\/|\x60|\$\(|%2e%2e)/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-3400, poc_ref tests/poc/9300023_panos-gp-cve-2024-3400/poc.sh, tag panos-globalprotect, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300023; rev:1;)
