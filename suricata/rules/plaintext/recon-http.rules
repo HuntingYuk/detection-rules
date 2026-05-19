@@ -1,0 +1,5 @@
+# FP-reasoning: HIGH, plain. Scope http.user_agent, to_server. fast_pattern
+# "sqlmap" -> the sqlmap default User-Agent is attacker-unique; no legit client
+# advertises it. Negative: a normal browser UA -> reaches the http.user_agent
+# buffer, no match -> silent. Other scanner UAs = companion rules (roadmap).
+alert http any any -> any any (msg:"WEB Recon - sqlmap scanner User-Agent [high]"; flow:established,to_server; http.user_agent; content:"sqlmap"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp none, attack_target Server, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1595, mitre_technique_name Active-Scanning, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9200001_sqlmap-ua/poc.sh, tag scanner-ua, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9200001; rev:1;)
