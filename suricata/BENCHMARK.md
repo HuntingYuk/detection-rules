@@ -38,19 +38,20 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 114
-GAP  ours fires / ET silent  : 91   <- custom corpus value-add (§17)
-OVERLAP both fire            : 23   (ET Open already covers; audited below)
+attack pcaps measured        : 119
+GAP  ours fires / ET silent  : 93   <- custom corpus value-add (§17)
+OVERLAP both fire            : 26   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0   (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 114 (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 119 (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 91/114 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. Seven category-deepening batches (2026-05-19/20)
-added 35 rules; 28 pure-GAP + 7 audited OVERLAP across batches, raising GAP 62→91
-(+29). The 7 OVERLAPs split into ET-misclassify (5 — ET tags `exec/eval` as SQLi when
-it's Java/SpEL/PHP/Node), ET-INFO-tier (1 — Basic-auth posture vs our brute-rate),
-and CVE-precision diff (1 — generic Host-anomaly vs CVE-2023-4966 Citrix Bleed). All 20 OVERLAP rules were individually audited (see "OVERLAP audit" below):
+**Read:** 93/119 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Eight category-deepening batches (2026-05-19/20)
+added 40 rules; 30 pure-GAP + 10 audited OVERLAP across batches, raising GAP 62→93
+(+31). The 10 OVERLAPs split into ET-misclassify (6 — ET tags `exec/eval/php-tag` as
+SQLi or generic when it's CVE-specific Java/SpEL/PHP/Node), ET-INFO-tier-posture
+(2 — Basic-auth-unencrypted, generic Host-anomaly), and scan-vs-brute classtype diff
+(2 — RDP and SSH brute-force rules where ET has equivalent SCAN rules). All 20 OVERLAP rules were individually audited (see "OVERLAP audit" below):
 each is kept with a recorded reason (ours strictly better, ET misclassifies/only
 generic, or deliberate ET-independent CVE backbone); one generic duplicate (9130003)
 was retired. `MISS=0` confirms the merged-traffic context does not regress any rule
@@ -98,7 +99,7 @@ to retire, because that would re-introduce the dependency the corpus exists to
 avoid. A rule is retired only if it is a *generic, non-CVE-backbone* technique for
 which ET has a mature exact equivalent **and** there is no independence rationale.
 
-Result: **1 retired, 22 kept** (each with a recorded reason).
+Result: **1 retired, 25 kept** (each with a recorded reason).
 
 ### Retired
 
@@ -123,6 +124,9 @@ Result: **1 retired, 22 kept** (each with a recorded reason).
 | 9300037 | 2008176 | **ET misclassifies** — matches the literal `exec(` in the URL and tags it "SQL Injection in HTTP URI"; here the `exec(` is **Java Runtime.exec** (GeoServer commons-jxpath gadget), not SQL. Ours is the CVE-2024-36401-specific detection. |
 | 9300038 | 2053461 | **ET misclassifies** — same `exec`→"SQL Injection" mismatch on the body; here it's a Spring SpEL gadget `T(java.lang.Runtime).getRuntime().exec(...)`, not SQL. Ours is the CVE-2022-22947-specific detection. |
 | 9180002 | 2006380 | ET 2006380 is INFO-tier "Basic auth detected unencrypted" — a *posture* alert, fires per request regardless of intent. Ours is a **brute-force rate** rule (≥30 Basic-auth attempts/60s from one src) with `attempted-recon` classtype — different signal, different alert semantics for the pipeline. |
+| 9300039 | 2053461 | **ET misclassifies** — same recurring `exec`→"SQL Injection in body" pattern; here it's Java `Runtime.getRuntime().exec(...)` in the Confluence Add-Language form (OGNL), not SQL. Ours is the CVE-2024-21683-specific detection (path + gadget, two-buffer). |
+| 9300040 | 2011768 | ET 2011768 fires on **any `<?php`** in a POST body (generic PHP-tag posture) — would alert on benign code uploads too. Ours is the CVE-2017-9841-specific endpoint `/vendor/phpunit/.../eval-stdin.php` — actionable "PHPUnit exploitation" attribution vs a generic PHP-tag-in-body warning. |
+| 9430002 | 2001972/2013479 | ET's are *SCAN* (recon) rules — "Unusually fast Terminal Server Traffic". Ours is an **attempted-recon/credential-stuffing** brute rule with the same network signal but distinct alert semantics (sibling of 9430001 SSH same pattern). Different classtype/intent for the pipeline. |
 | 9430001 | 2001219, 2003068 | ET's are *SCAN* (recon) rules; ours is an attempted-admin **brute-force** rate rule — different classtype/intent. Kept; same network signal but distinct alert semantics for the pipeline. |
 
 ### Kept — clean-room CVE backbone, deliberately ET-independent

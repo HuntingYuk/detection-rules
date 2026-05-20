@@ -7,3 +7,10 @@
 # threshold.config suppress for known hosts (NOT deprecation). Negative exercises
 # the decisive condition: 5 SYN to tcp/22 (normal admin) -> below threshold -> silent.
 alert tcp any any -> any 22 (msg:"BRUTEFORCE SSH - high connection rate to tcp/22 from one source [medium]"; flow:to_server; flags:S,12; threshold:type threshold, track by_src, count 20, seconds 60; classtype:attempted-recon; metadata: asset_category infra, owasp none, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1110, mitre_technique_name Brute-Force, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode any, cve none, poc_ref tests/poc/9430001_ssh-connrate/poc.sh, tag ssh-bruteforce, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9430001; rev:1;)
+# FP-reasoning: MEDIUM, network_mode=any (pure L3/L4 — RDP is encrypted but
+# the CONNECTION RATE is visible without decryption). NON-payload class (spec
+# §22 C1): no fast_pattern; decisive condition = repeated to_server SYN to
+# tcp/3389 from one src. threshold count 30/60s by_src is the FP compensator
+# (legit ops mgmt has lower rate; brute-force tools generate burst). Sibling
+# of 9430001 (SSH 22). Negative: a few SYN to 3389 below threshold -> silent.
+alert tcp any any -> any 3389 (msg:"BRUTEFORCE RDP - high connection rate to tcp/3389 from one source [medium]"; flow:to_server; flags:S,12; threshold:type threshold, track by_src, count 30, seconds 60; classtype:attempted-recon; metadata: asset_category infra, owasp none, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1110, mitre_technique_name Brute-Force, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode any, cve none, poc_ref tests/poc/9430002_rdp-connrate/poc.sh, tag rdp-bruteforce, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9430002; rev:1;)

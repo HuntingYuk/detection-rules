@@ -3,3 +3,9 @@
 # advertises it. Negative: a normal browser UA -> reaches the http.user_agent
 # buffer, no match -> silent. Other scanner UAs = companion rules (roadmap).
 alert http any any -> any any (msg:"WEB Recon - sqlmap scanner User-Agent [high]"; flow:established,to_server; http.user_agent; content:"sqlmap"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp none, attack_target Server, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1595, mitre_technique_name Active-Scanning, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9200001_sqlmap-ua/poc.sh, tag scanner-ua, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9200001; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 2 (9200002): nuclei (ProjectDiscovery)
+# template scanner default User-Agent. Scope http.user_agent. fast_pattern
+# "Nuclei -" (8B; the literal UA prefix is attacker-shaped, no legit client
+# advertises it). Sibling of 9200001 (sqlmap). Negative: a normal browser UA
+# -> reaches the buffer, no match -> silent.
+alert http any any -> any any (msg:"WEB Recon - nuclei scanner User-Agent [high]"; flow:established,to_server; http.user_agent; content:"Nuclei -"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp none, attack_target Server, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1595, mitre_technique_name Active-Scanning, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9200002_nuclei-ua/poc.sh, tag scanner-ua, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9200002; rev:1;)

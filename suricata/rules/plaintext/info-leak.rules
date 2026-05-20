@@ -48,3 +48,13 @@ alert http any any -> any any (msg:"WEB Info Leak - Java Spring Boot Whitelabel 
 # Negative: a help page MENTIONING the phrase with no Rails frame -> reaches
 # pcre, rejected -> silent (§19 T6).
 alert http any any -> any any (msg:"WEB Info Leak - Rails dev exception page in HTTP response body [high]"; flow:established,to_client; http.response_body; content:"Action Controller: Exception caught"; nocase; fast_pattern; pcre:"/Action Controller: Exception caught[\s\S]{0,500}?(?:<h2>|extracted source|app\/(?:controllers|views|models)\/|Rails\.root|RAILS_ENV)/"; classtype:web-application-activity; metadata: asset_category web-modern, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210006_rails-exception-leak/poc.sh, tag info-leak, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9210006; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 7 (9210007): Apache Tomcat default error
+# report page leaked in an HTTP response (Tomcat version + servlet stack + app
+# path disclosure). RESPONSE-side (to_client) http.response_body. fast_pattern
+# "Apache Tomcat/" (14B) -> the Tomcat error-report header (`<h3>Apache Tomcat/
+# X.Y.Z</h3>`). pcre confirms the error-report structure so docs prose
+# mentioning "Apache Tomcat/" does not alert. Residual: a dev host that returns
+# the default page -> tune that dst via threshold.config (same as 9210002/4/5/6).
+# Negative: a help page MENTIONING "Apache Tomcat/" with no error frame ->
+# reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"WEB Info Leak - Apache Tomcat default error page in HTTP response body [high]"; flow:established,to_client; http.response_body; content:"Apache Tomcat/"; nocase; fast_pattern; pcre:"/Apache Tomcat\/\d+\.\d+\.\d+[\s\S]{0,800}?(?:HTTP Status \d+|Type (?:Exception|Status) Report|<b>Description<\/b>|root cause)/"; classtype:web-application-activity; metadata: asset_category web-classic, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210007_tomcat-error-leak/poc.sh, tag info-leak, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9210007; rev:1;)
