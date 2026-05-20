@@ -194,3 +194,27 @@ alert http any any -> any any (msg:"KNOWN-CVE MS Exchange ProxyLogon SSRF X-Anon
 # legit POST to the endpoint with benign 'old=' (no metachar) -> reaches body
 # pcre, rejected -> silent (§19 T6).
 alert http any any -> any any (msg:"KNOWN-CVE Webmin pre-auth command injection password_change.cgi (CVE-2019-15107) [high]"; flow:established,to_server; http.uri.raw; content:"/password_change.cgi"; nocase; fast_pattern; http.request_body; pcre:"/[\&\?]old=[^\&\r\n]{0,40}?[\x7c\x60\x24]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-15107, poc_ref tests/poc/9300031_webmin-cve-2019-15107/poc.sh, tag webmin, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300031; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2022-46169 Cacti unauth command injection via
+# the remote-agent poller (X-Forwarded-For bypasses IsRemoteAgent, then
+# action=polldata + local_data_ids[] passes attacker input to proc_open).
+# Clean-room from advisory. Scope http.uri (the path + params arrive there).
+# fast_pattern "/remote_agent.php" -> attacker-targeted endpoint. pcre requires
+# the exploit's parameter combination (action=polldata + local_data_ids[]).
+# Negative: a normal Cacti /remote_agent.php fetch (no polldata+local_data_ids)
+# -> reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE Cacti unauth RCE remote_agent polldata (CVE-2022-46169) [high]"; flow:established,to_server; http.uri; content:"/remote_agent.php"; nocase; fast_pattern; pcre:"/\/remote_agent\.php[^\r\n]{0,200}action=polldata[^\r\n]{0,200}local_data_ids/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-46169, poc_ref tests/poc/9300032_cacti-cve-2022-46169/poc.sh, tag cacti, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300032; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-23897 Jenkins CLI pre-auth arbitrary file
+# read via the args4j @<file> include trick on the HTTP CLI endpoint. Two
+# buffers: http.uri.raw "/cli?remoting=false" (fast_pattern; attacker-shaped
+# HTTP transport for the CLI) + http.request_body pcre requires the @/<absolute
+# path> argument. Negative: a benign Jenkins CLI session (no @/-arg) -> reaches
+# body pcre, rejected -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE Jenkins CLI pre-auth file read args4j @/ trick (CVE-2024-23897) [high]"; flow:established,to_server; http.uri.raw; content:"/cli?remoting=false"; nocase; fast_pattern; http.request_body; pcre:"/@\/(?:etc|var|root|home|opt|srv|tmp)\//i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-23897, poc_ref tests/poc/9300033_jenkins-cve-2024-23897/poc.sh, tag jenkins, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300033; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2017-9805 Apache Struts2 REST plugin XStream
+# deserialization RCE. Clean-room from advisory. Scope http.request_body
+# (XML body via the REST endpoint). fast_pattern
+# "jdk.nashorn.internal" (20B) -> the Nashorn engine class used by the public
+# gadget chain is attacker-unique inside an XML payload. pcre confirms the
+# gadget's NativeString/ProcessBuilder marker. Negative: a normal XML body
+# (no Nashorn class) -> no fast_pattern hit -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE Apache Struts2 REST plugin XStream deserialization RCE (CVE-2017-9805) [high]"; flow:established,to_server; http.request_body; content:"jdk.nashorn.internal"; nocase; fast_pattern; pcre:"/jdk\.nashorn\.internal\.objects\.(?:NativeString|NativeArray)|<dynamic-proxy>|<service>[\s\S]{0,200}?<map>/i"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-9805, poc_ref tests/poc/9300034_struts2-rest-xstream/poc.sh, tag struts2, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300034; rev:1;)

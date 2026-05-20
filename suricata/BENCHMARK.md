@@ -38,17 +38,17 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 94
-GAP  ours fires / ET silent  : 75   <- custom corpus value-add (§17)
-OVERLAP both fire            : 19   (ET Open already covers; audited below)
+attack pcaps measured        : 104
+GAP  ours fires / ET silent  : 84   <- custom corpus value-add (§17)
+OVERLAP both fire            : 20   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0   (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 94  (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 104 (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 75/94 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. Three category-deepening batches (2026-05-19)
-added 15 rules; 14 pure-GAP + 1 audited OVERLAP each batch on average, raising GAP
-62→75. All 19 OVERLAP rules were individually audited (see "OVERLAP audit" below):
+**Read:** 84/104 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Five category-deepening batches (2026-05-19/20)
+added 25 rules; 21 pure-GAP + 4 audited OVERLAP across batches, raising GAP 62→84
+(+22). All 20 OVERLAP rules were individually audited (see "OVERLAP audit" below):
 each is kept with a recorded reason (ours strictly better, ET misclassifies/only
 generic, or deliberate ET-independent CVE backbone); one generic duplicate (9130003)
 was retired. `MISS=0` confirms the merged-traffic context does not regress any rule
