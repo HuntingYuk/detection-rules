@@ -218,3 +218,21 @@ alert http any any -> any any (msg:"KNOWN-CVE Jenkins CLI pre-auth file read arg
 # gadget's NativeString/ProcessBuilder marker. Negative: a normal XML body
 # (no Nashorn class) -> no fast_pattern hit -> silent.
 alert http any any -> any any (msg:"KNOWN-CVE Apache Struts2 REST plugin XStream deserialization RCE (CVE-2017-9805) [high]"; flow:established,to_server; http.request_body; content:"jdk.nashorn.internal"; nocase; fast_pattern; pcre:"/jdk\.nashorn\.internal\.objects\.(?:NativeString|NativeArray)|<dynamic-proxy>|<service>[\s\S]{0,200}?<map>/i"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-9805, poc_ref tests/poc/9300034_struts2-rest-xstream/poc.sh, tag struts2, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300034; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-4040 CrushFTP server-side template
+# injection — the `<INCLUDE>` tag is evaluated server-side, so an attacker who
+# puts `<INCLUDE>...</INCLUDE>` in a URL/body field bypasses sandbox and reads
+# arbitrary files. Clean-room from advisory. Scope http.uri.raw. fast_pattern
+# "<INCLUDE>" -> the CrushFTP template directive in an HTTP request is
+# attacker-unique (no benign client embeds a CrushFTP server tag in a URL).
+# pcre confirms the tag carries a traversal/path payload. Negative: a URI
+# mentioning the literal "<INCLUDE>" with no traversal -> reaches pcre,
+# rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE CrushFTP server-side template injection <INCLUDE> (CVE-2024-4040) [high]"; flow:established,to_server; http.uri.raw; content:"<INCLUDE>"; nocase; fast_pattern; pcre:"/<INCLUDE>[^<\r\n]{0,200}?(?:\.\.|%2e%2e|etc\/|windows[\/\x5c]|passwd|win\.ini|\/proc\/)/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-4040, poc_ref tests/poc/9300035_crushftp-cve-2024-4040/poc.sh, tag crushftp, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300035; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2023-49103 ownCloud GraphAPI library leaks
+# `phpinfo()` (which contains env-vars including admin creds) at a public path.
+# Clean-room from advisory. Scope http.uri.raw. fast_pattern
+# "/apps/graphapi/v1/.well-known/microsoft-graph" -> the unauthenticated
+# endpoint that triggers the leak; attacker-targeted (no benign client hits
+# this path). Negative: a normal /apps/ ownCloud path -> no fast_pattern hit
+# -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE ownCloud GraphAPI phpinfo env-leak (CVE-2023-49103) [high]"; flow:established,to_server; http.uri.raw; content:"/apps/graphapi/v1/.well-known/microsoft-graph"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-49103, poc_ref tests/poc/9300036_owncloud-cve-2023-49103/poc.sh, tag owncloud, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300036; rev:1;)

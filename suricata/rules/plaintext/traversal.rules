@@ -26,6 +26,14 @@ alert http any any -> any any (msg:"WEB Path Traversal to Windows win.ini in htt
 # followed by a sensitive segment like etc/windows). Negative: a docs URI that
 # mentions the literal %c0%af with no traversal -> reaches pcre, rejected.
 alert http any any -> any any (msg:"WEB Path Traversal Unicode overlong-UTF-8 bypass (%c0%af/%c1%9c) in http.uri.raw [high]"; flow:established,to_server; http.uri.raw; content:"%c0%af"; nocase; fast_pattern; pcre:"/(?:(?:\.\.|%2e%2e)(?:%c0%af|%c1%9c)|%c0%af[^\r\n]{0,40}?(?:etc\/|windows[\/\x5c%]|passwd|win\.ini))/i"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0005, mitre_tactic_name Defense-Evasion, mitre_technique_id T1027, mitre_technique_name Obfuscated-Files-or-Information, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130005_unicode-overlong-utf8/poc.sh, tag path-traversal, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9130005; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 6 (9130006): nested-dot traversal `....//`
+# — after a single-pass `..` strip, `....//` collapses to `../`. WAFs that
+# blacklist `../` literally miss it. Scope http.uri.raw. fast_pattern "....//"
+# (6B; RFC-shaped, not in benign URIs). pcre requires sensitive context after
+# (etc/passwd, windows/win.ini, /proc/) so a random URL containing the literal
+# is rejected. Negative: docs URL mentioning "....//" with no sensitive target
+# -> reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"WEB Path Traversal nested-dot bypass ....// in http.uri.raw [high]"; flow:established,to_server; http.uri.raw; content:"....//"; nocase; fast_pattern; pcre:"/\.\.\.\.(?:[\/\x5c]|%2f|%5c){1,2}[^\r\n]{0,80}?(?:etc\/(?:passwd|shadow|hosts)|windows[\/\x5c%]|win\.ini|boot\.ini|\/proc\/self)/i"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0005, mitre_tactic_name Defense-Evasion, mitre_technique_id T1027, mitre_technique_name Obfuscated-Files-or-Information, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130006_nested-dotdot-bypass/poc.sh, tag path-traversal, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9130006; rev:1;)
 # FP-reasoning: HIGH, plain. Variant 3 (9130003): double-URL-encoded traversal
 # (%252e%252e -> ../ WAF/decoder bypass). Scope http.uri.raw. fast_pattern
 # "%252e" -> double-encoded dot is attacker-unique (no benign URL double-encodes
