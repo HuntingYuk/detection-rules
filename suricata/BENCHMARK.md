@@ -177,3 +177,50 @@ These four are **acknowledged**, not bugs.
 18 rules: dns-tunnel ×3, l34-recon ×5, tls-anomaly ×3, infra-bruteforce ×1,
 protocol-anomaly ×9, +9410001/2/3, +9420001..5. Each is rate/anomaly/dataset-anchored;
 the pcre/flags/keyword IS the selector. Correctly absent fast_pattern.
+
+---
+
+## Full traffic-level audit (2026-05-20) — `scripts/audit-traffic`
+
+Reproducible audit: merged-pcap PoC + negative through Suricata with the full
+corpus loaded, emits `AUDIT-TRAFFIC.md` with PoC target-fire, NEG target-silent,
+cross-fire (shadow) matrix, and negative-adequacy (does the negative carry the
+fast_pattern literal so it actually exercises MPM and gets pcre-rejected?). Run
+at scale: **119 PoCs + 119 negatives, both rulesets loaded once each, `-k none`.**
+
+### Headline
+- POC target-fired: **119 / 119** ✓
+- NEG target-silent: **119 / 119** ✓
+- Negatives carrying their fast_pattern (§19 T6 ideal): **48 / 98 payload rules**
+  (50 negatives miss MPM entirely instead of exercising it then being pcre-
+  rejected — acceptable per current DoD, but a follow-up campaign target).
+- Non-payload rules (no fast_pattern by design — §22 C1): 21
+- Max single-rule shadow count: **3** (9130001 etc/passwd — all 3 are
+  legitimate broad coverage: 9130006 nested-bypass, 9300028 Pulse, 9300035
+  CrushFTP each embed `/etc/passwd` in their exploit URL).
+
+### Fixed this pass — ATT&CK tactic↔technique correctness (18 rules, rev:2)
+Each ATT&CK technique belongs to exactly one canonical tactic. Pre-audit, four
+techniques were tagged with multiple tactics across the corpus. Aligned to the
+canonical mapping:
+
+| Technique | Canonical tactic | Rules retagged |
+|---|---|---|
+| T1059 Command-and-Scripting-Interpreter | TA0002 Execution | 9110001/2/3/4/5 (XSS — were TA0001) |
+| T1083 File-and-Directory-Discovery | TA0007 Discovery | 9130001, 9130004, 9300033 (were TA0009) |
+| T1190 Exploit-Public-Facing-Application | TA0001 Initial-Access | 9300020/28/35/36/37/38/39, 9150002 (were TA0002/6/7/9) |
+| T1552 Unsecured-Credentials | TA0006 Credential-Access | 9150001, 9150003 (were TA0007) |
+
+Re-audit: every technique now maps to exactly 1 tactic across all 119 rules.
+CI stays green; PoC fires unchanged.
+
+### Intentional, not a bug
+- `<!ENTITY` is the fast_pattern of both 9140001 (XXE external entity) and
+  9140003 (billion-laughs DoS) — same anchor by design, distinct pcre
+  selectors (SYSTEM/PUBLIC vs recursive amplifier). Both sibling XXE rules.
+
+### Follow-up backlog (intentionally not fixed this pass)
+- **Strengthen ~30 negatives** (rules with pcre whose negative misses MPM
+  entirely). Ideal per §19 T6: negative carries the content literal then pcre
+  rejects, proving pcre actually filters. Acceptable today; would require ~30
+  bespoke negative rewrites — a dedicated batch.

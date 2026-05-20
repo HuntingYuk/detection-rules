@@ -1,0 +1,273 @@
+#!/usr/bin/env python3
+"""audit-traffic — full traffic-level audit across every active rule.
+
+Three dimensions per rule:
+
+  1. POC CROSS-FIRE: which non-target SIDs also fire on the rule's PoC pcap?
+     Healthy shadows = legitimately overlapping coverage (e.g. an exploit URL
+     that contains "etc/passwd" trips 9130001 too). Suspicious shadows = a
+     rule that lights up on many *unrelated* PoCs (sign of being too broad).
+
+  2. NEGATIVE ADEQUACY (§19 T6 ideal): does the negative pcap CARRY the rule's
+     fast_pattern content literal in its raw bytes? If yes → MPM hits and the
+     rule must reject at pcre (strong negative). If no → the negative just
+     misses MPM entirely (weaker; doesn't prove pcre actually rejects).
+
+  3. NEG TARGET-FIRED: confirm the target SID stays silent on the negative
+     (CI/check already enforces this; we re-confirm in the merged context).
+
+Method: merge-pcap (unique-IP rewrite, same trick as scripts/benchmark) so we
+load the ruleset ONCE for attacks, ONCE for negatives — fast for 119 rules.
+
+Output: AUDIT-TRAFFIC.md (committed snapshot, regenerable).
+"""
+import os, re, sys, json, glob, shutil, subprocess, tempfile, collections
+
+SUR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT  = os.path.dirname(SUR)
+RULES = os.path.join(SUR, "rules")
+TESTS = os.path.join(SUR, "tests", "poc")
+CFG   = os.path.join(SUR, "config", "suricata-test.yaml")
+OUT_MD= os.path.join(SUR, "AUDIT-TRAFFIC.md")
+CLIENT_NET = "10.99."
+
+def die(m): print("ERROR: "+m, file=sys.stderr); sys.exit(1)
+
+def _content_to_bytes(s):
+    """Suricata content: literal text + |HH HH| hex runs -> raw bytes."""
+    out = b""; i = 0
+    while i < len(s):
+        if s[i] == "|":
+            j = s.index("|", i+1)
+            hexpart = s[i+1:j].replace(" ", "")
+            out += bytes.fromhex(hexpart)
+            i = j+1
+        else:
+            out += s[i].encode("latin-1")
+            i += 1
+    return out
+
+def _rules():
+    """sid -> dict(file, msg, content, nocase, conf, nm, target_sid)"""
+    out = {}
+    for f in sorted(glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True)):
+        rel = os.path.relpath(f, SUR)
+        text = open(f, errors="replace").read()
+        for ln in text.splitlines():
+            if not re.match(r'^\s*alert\b', ln):
+                continue
+            sm = re.search(r'\bsid:(\d+)', ln);   msg = re.search(r'\bmsg:"([^"]*)"', ln)
+            cf = re.search(r'\bconfidence (\w+)', ln); nm = re.search(r'\bnetwork_mode (\w+)', ln)
+            # the content used for fast_pattern (first content marked fast_pattern,
+            # else first content, else None for non-payload rules)
+            fp = None; nocase = False
+            for cm in re.finditer(r'content:"([^"]*)"(?:\s*;\s*nocase\s*;|\s*;)([^;]*)', ln):
+                cval = cm.group(1); tail = cm.group(2) or ""
+                if "fast_pattern" in tail or "fast_pattern" in ln[cm.end():cm.end()+40]:
+                    fp = cval; nocase = "nocase" in ln[cm.start():cm.end()+40]; break
+                if fp is None:
+                    fp = cval; nocase = "nocase" in ln[cm.start():cm.end()+40]
+            if not sm: continue
+            sid = sm.group(1)
+            out[sid] = dict(file=rel,
+                            msg=(msg.group(1) if msg else ""),
+                            content=fp, nocase=nocase,
+                            conf=(cf.group(1) if cf else ""),
+                            nm=(nm.group(1) if nm else ""))
+    return out
+
+def _gen_pcap(sh, outp):
+    if not os.path.exists(sh): return None
+    r = subprocess.run(["bash", sh, outp], capture_output=True)
+    return outp if r.returncode == 0 and os.path.exists(outp) else None
+
+def _uip(k): return "10.99.%d.%d" % (k//254, 1 + k % 254)
+
+def _merge(pairs, outpath, start=0):
+    """Each (tag, pcap) -> rewrite client IP unique 10.99.x.y; concat."""
+    from scapy.all import rdpcap, wrpcap, IP
+    allp = []; mapping = {}
+    for i, (tag, pf) in enumerate(pairs):
+        try: pk = rdpcap(pf)
+        except Exception: continue
+        if not pk or IP not in pk[0]: continue
+        cip = pk[0][IP].src; uip = _uip(start+i); mapping[uip] = tag
+        for p in pk:
+            if IP in p:
+                if p[IP].src == cip: p[IP].src = uip
+                if p[IP].dst == cip: p[IP].dst = uip
+                for ly in ("IP","TCP","UDP","ICMP"):
+                    try:
+                        if p.haslayer(ly) and hasattr(p[ly], "chksum"): del p[ly].chksum
+                    except Exception: pass
+        allp += list(pk)
+    if allp: wrpcap(outpath, allp)
+    return mapping
+
+def _combined(td):
+    files = sorted(glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True))
+    p = os.path.join(td, "_all.rules")
+    with open(p, "w") as o:
+        for f in files: o.write(open(f).read().rstrip()+"\n")
+    return p
+
+def _run_merged(suri, pcap, td, rules_S):
+    out = tempfile.mkdtemp(dir=td)
+    cmd = [suri, "-k", "none", "-l", out, "-r", pcap, "-c", CFG, "-S", rules_S]
+    subprocess.run(cmd, cwd=SUR, capture_output=True)
+    fired = collections.defaultdict(set)
+    ev = os.path.join(out, "eve.json")
+    if os.path.exists(ev):
+        for line in open(ev):
+            try:
+                j = json.loads(line)
+                if j.get("event_type") != "alert": continue
+                ci = next((x for x in (j.get("src_ip"), j.get("dest_ip"))
+                           if x and x.startswith(CLIENT_NET)), None)
+                if ci: fired[ci].add(int(j["alert"]["signature_id"]))
+            except Exception: pass
+    return fired
+
+def _neg_carries_fp(pcap_path, content_bytes, nocase):
+    """Does the negative pcap's raw bytes contain the content literal?"""
+    if not content_bytes: return None   # non-payload rule, N/A
+    raw = open(pcap_path, "rb").read()
+    if nocase: return content_bytes.lower() in raw.lower()
+    return content_bytes in raw
+
+def main():
+    import shutil as _sh
+    suri = _sh.which("suricata") or die("suricata not on PATH")
+    rules = _rules()
+    print("audit-traffic: %d active rules" % len(rules))
+
+    td = tempfile.mkdtemp(prefix="_audit_")
+    try:
+        # generate every PoC + negative pcap once
+        pocs = []; negs = []
+        for sid in sorted(rules):
+            d = sorted(glob.glob(os.path.join(TESTS, "%s_*" % sid)))
+            if not d: continue
+            p = _gen_pcap(os.path.join(d[0], "poc.sh"),      os.path.join(td, "p_%s.pcap" % sid))
+            n = _gen_pcap(os.path.join(d[0], "negative.sh"), os.path.join(td, "n_%s.pcap" % sid))
+            if p: pocs.append((sid, p))
+            if n: negs.append((sid, n))
+
+        ours = _combined(td)
+        am = _merge(pocs, os.path.join(td, "atk.pcap"), 0)
+        nm = _merge(negs, os.path.join(td, "ben.pcap"), 5000)
+        print("merged %d PoCs + %d negatives; running Suricata twice ..."
+              % (len(am), len(nm)))
+        afired = _run_merged(suri, os.path.join(td, "atk.pcap"), td, ours)
+        nfired = _run_merged(suri, os.path.join(td, "ben.pcap"), td, ours)
+
+        # invert mappings: uip -> tag(=sid)
+        atag = {u: t for u, t in am.items()}
+        ntag = {u: t for u, t in nm.items()}
+
+        # per-rule report
+        per = {}
+        for u, t in atag.items():
+            tgt = int(t); fired = afired.get(u, set())
+            per.setdefault(t, {})["poc_fired"] = sorted(fired)
+            per[t]["poc_shadows"] = sorted(fired - {tgt})
+            per[t]["poc_target_fired"] = (tgt in fired)
+        for u, t in ntag.items():
+            tgt = int(t); fired = nfired.get(u, set())
+            per.setdefault(t, {})["neg_target_fired"] = (tgt in fired)
+            per[t]["neg_other_sids"] = sorted(fired - {tgt})
+            # negative adequacy
+            np = os.path.join(td, "n_%s.pcap" % t)
+            r = rules.get(t, {})
+            cb = _content_to_bytes(r["content"]) if r.get("content") else None
+            per[t]["neg_carries_fp"] = _neg_carries_fp(np, cb, r.get("nocase", False)) if cb else None
+
+        # who shadows the most other PoCs? (per shadow-rule sid)
+        shadow_by_rule = collections.Counter()
+        for t, info in per.items():
+            for s in info.get("poc_shadows", []):
+                shadow_by_rule[s] += 1
+
+        # findings
+        miss_poc = [t for t, i in per.items() if not i.get("poc_target_fired", False)]
+        miss_neg = [t for t, i in per.items() if i.get("neg_target_fired", False)]
+        weak_neg = [t for t, i in per.items() if i.get("neg_carries_fp") is False]
+        np_rules = [t for t, i in per.items() if i.get("neg_carries_fp") is None]
+
+        # write report
+        lines = ["# AUDIT-TRAFFIC.md — every PoC/negative reviewed at traffic level", ""]
+        lines += ["> Auto-generated by `scripts/audit-traffic` (merged-pcap, "
+                  "unique-IP rewrite, `-k none`). Re-run to refresh.", ""]
+        lines += ["## Headline", "",
+                  "- Rules audited: **%d**" % len(rules),
+                  "- PoCs generated: %d" % len(am),
+                  "- Negatives generated: %d" % len(nm),
+                  "- POC target-fired: **%d** (must be all)" % (len(am) - len(miss_poc)),
+                  "- NEG target-silent: **%d** (must be all)" % (len(nm) - len(miss_neg)),
+                  "- Negatives that hit fast_pattern (§19 T6 ideal): "
+                  "**%d** / %d payload rules" %
+                  (sum(1 for t,i in per.items() if i.get("neg_carries_fp") is True),
+                   sum(1 for t,i in per.items() if i.get("neg_carries_fp") is not None)),
+                  "- Non-payload rules (no `content:`, no fast_pattern): %d" % len(np_rules),
+                  ""]
+        if miss_poc:
+            lines += ["## 🔴 BLOCKER — PoC did not fire target SID", ""]
+            for t in sorted(miss_poc, key=int): lines.append("- %s" % t)
+            lines.append("")
+        if miss_neg:
+            lines += ["## 🔴 BLOCKER — negative wrongly fired target SID", ""]
+            for t in sorted(miss_neg, key=int): lines.append("- %s" % t)
+            lines.append("")
+        if weak_neg:
+            lines += ["## 🟡 Weak negatives (don't exercise fast_pattern — §19 T6)",
+                      "", "These negatives MISS the MPM literal entirely instead "
+                      "of hitting it and being pcre-rejected. They prove the rule "
+                      "stays silent, but they don't prove pcre actually rejects "
+                      "the lookalike. Acceptable but ideal is to strengthen.", ""]
+            for t in sorted(weak_neg, key=int):
+                lines.append("- **%s** `%s` — content `%r`%s" % (
+                    t, rules[t]["msg"][:80],
+                    (rules[t]["content"] or "")[:40],
+                    " (nocase)" if rules[t].get("nocase") else ""))
+            lines.append("")
+
+        # Cross-fire analysis: rules that shadow many other PoCs
+        if shadow_by_rule:
+            lines += ["## Shadow ranking — rules that fire on OTHER PoCs", "",
+                      "Each row: rule SID, # of other PoCs it shadows. High counts "
+                      "usually = legitimate broad coverage (e.g. 9130001 etc/passwd "
+                      "trips on many CVE PoCs that include /etc/passwd in their "
+                      "exploit URL). Investigate any rule whose shadows are clearly "
+                      "*unrelated* attack classes.", "",
+                      "| Shadower SID | shadows # PoCs | msg |",
+                      "|--------------|----------------|-----|"]
+            for s, n in shadow_by_rule.most_common(15):
+                lines.append("| %d | %d | %s |" % (s, n,
+                    rules.get(str(s), {}).get("msg", "?")[:80].replace("|", "/")))
+            lines.append("")
+
+        # Per-rule shadow detail (only rules whose PoC has >=1 shadow)
+        with_sh = sorted((t for t, i in per.items() if i.get("poc_shadows")), key=int)
+        if with_sh:
+            lines += ["## PoCs with cross-fire (shadowers listed)", ""]
+            for t in with_sh:
+                sh = per[t]["poc_shadows"]
+                lines.append("- **%s** %s → shadows: %s" % (
+                    t, rules[t]["msg"][:70].replace("|", "/"),
+                    ", ".join(str(x) for x in sh)))
+            lines.append("")
+
+        lines += ["---", "",
+                  "Method recap: merged-pcap (unique-IP attribution + `-k none` so "
+                  "rewritten checksums don't drop flows), single Suricata load per "
+                  "side. The negative-adequacy byte-scan reads the .pcap raw and "
+                  "looks for the rule's `content:` literal (decoding `|HH|` hex "
+                  "runs, honouring `nocase`)."]
+
+        open(OUT_MD, "w").write("\n".join(lines) + "\n")
+        print("wrote %s (%d rules audited)" % (os.path.relpath(OUT_MD, ROOT), len(per)))
+    finally:
+        shutil.rmtree(td, ignore_errors=True)
+
+if __name__ == "__main__":
+    main()
