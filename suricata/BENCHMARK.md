@@ -133,3 +133,38 @@ remaining available/unchanged:
 
 This audit is reproducible: `scripts/benchmark --audit-overlap` regenerates the
 co-firing evidence; `config/deprecated.log` records the retirement.
+
+---
+
+## Quality audit (2026-05-20)
+
+Full pass at 99 active rules (`rulectl stats`, `lint -v`, PCRE scan, conf/threshold
+sanity). Lint clean (0 warnings). Findings + actions:
+
+### Fixed (D5 violations — unbounded `.*` in pcre, real backtracking risk)
+- **9300008** FortiOS: `\?.*lang=.*` → bounded `\?[^\r\n]{0,80}lang=[^\r\n]{0,120}?`. `rev:2`.
+- **9300015** GitLab: `[^&]*&.*` → bounded `[^&\r\n]{0,200}&[^\r\n]{0,400}?`. `rev:2`. PoC still fires post-fix.
+
+### Fixed (ATT&CK accuracy)
+- **9210004** Python-traceback leak: was `TA0007 Discovery` for T1592, but T1592 lives
+  under TA0043 Reconnaissance — corrected. `rev:2`.
+
+### Accepted trade-offs (4 short fast_patterns, §19 P1)
+`rulectl stats` flags 4 rules whose fast_pattern is <5 bytes. Each is the **shortest
+attacker-unique selector** for its CVE/leak class; extending the literal would shrink
+coverage (e.g. an AWS access-key id IS literally `AKIA`+16, there is no longer
+unambiguous prefix). pcre tightly bounds in every case:
+
+| SID | fast_pattern | Why short is fine |
+|---|---|---|
+| 9210001 | `AKIA` | AWS access key id format is exactly `AKIA` + 16 upper-alnum — no longer literal exists. Bounded pcre `\bAKIA[0-9A-Z]{16}\b`. |
+| 9300003 | `${(#` | Confluence OGNL opener (CVE-2022-26134). Unique to the exploit URL; bounded pcre confirms OGNL member-access right after. |
+| 9300004 | `() {` | Shellshock bash function-def header (CVE-2014-6271). Unique to bash function syntax; no benign HTTP header carries `() {`. |
+| 9300005 | `%{(#` | Struts2 S2-045 OGNL in Content-Type (CVE-2017-5638). Unique to Struts2 OGNL in a header; pcre anchors it to Content-Type. |
+
+These four are **acknowledged**, not bugs.
+
+### Non-payload rules (no `fast_pattern` by design — §22 C1)
+18 rules: dns-tunnel ×3, l34-recon ×5, tls-anomaly ×3, infra-bruteforce ×1,
+protocol-anomaly ×9, +9410001/2/3, +9420001..5. Each is rate/anomaly/dataset-anchored;
+the pcre/flags/keyword IS the selector. Correctly absent fast_pattern.
