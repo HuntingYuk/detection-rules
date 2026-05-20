@@ -38,17 +38,19 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 109
-GAP  ours fires / ET silent  : 89   <- custom corpus value-add (§17)
-OVERLAP both fire            : 20   (ET Open already covers; audited below)
+attack pcaps measured        : 114
+GAP  ours fires / ET silent  : 91   <- custom corpus value-add (§17)
+OVERLAP both fire            : 23   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0   (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 109 (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 114 (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 89/109 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. Six category-deepening batches (2026-05-19/20)
-added 30 rules; 26 pure-GAP + 4 audited OVERLAP across batches, raising GAP 62→89
-(+27). All 20 OVERLAP rules were individually audited (see "OVERLAP audit" below):
+**Read:** 91/114 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Seven category-deepening batches (2026-05-19/20)
+added 35 rules; 28 pure-GAP + 7 audited OVERLAP across batches, raising GAP 62→91
+(+29). The 7 OVERLAPs split into ET-misclassify (5 — ET tags `exec/eval` as SQLi when
+it's Java/SpEL/PHP/Node), ET-INFO-tier (1 — Basic-auth posture vs our brute-rate),
+and CVE-precision diff (1 — generic Host-anomaly vs CVE-2023-4966 Citrix Bleed). All 20 OVERLAP rules were individually audited (see "OVERLAP audit" below):
 each is kept with a recorded reason (ours strictly better, ET misclassifies/only
 generic, or deliberate ET-independent CVE backbone); one generic duplicate (9130003)
 was retired. `MISS=0` confirms the merged-traffic context does not regress any rule
@@ -96,7 +98,7 @@ to retire, because that would re-introduce the dependency the corpus exists to
 avoid. A rule is retired only if it is a *generic, non-CVE-backbone* technique for
 which ET has a mature exact equivalent **and** there is no independence rationale.
 
-Result: **1 retired, 19 kept** (each with a recorded reason).
+Result: **1 retired, 22 kept** (each with a recorded reason).
 
 ### Retired
 
@@ -118,6 +120,9 @@ Result: **1 retired, 19 kept** (each with a recorded reason).
 | 9410001 | 2018275/6 | ET's are single-malware-family signatures (Linux/Onimiki); ours is a generic DNS-tunnel heuristic. |
 | 9210003 | 2031502 | ET 2031502 is INFO-tier and fires on the *request* (`GET /.env` fetch attempt — could be a harmless 404 scan); ours fires on the **secret actually disclosed in the response body** — opposite direction, confirmed-leak vs scan-attempt, Critical vs INFO. Strictly higher fidelity. |
 | 9300029 | 2221028 | ET 2221028 is the generic SURICATA engine anomaly "HTTP Host header invalid" tripped by the oversized Host — no CVE context. Ours is the **CVE-2023-4966-specific** signature (OIDC discovery endpoint + oversized Host), giving actionable "Citrix Bleed exploitation" attribution vs a generic malformed-header anomaly. |
+| 9300037 | 2008176 | **ET misclassifies** — matches the literal `exec(` in the URL and tags it "SQL Injection in HTTP URI"; here the `exec(` is **Java Runtime.exec** (GeoServer commons-jxpath gadget), not SQL. Ours is the CVE-2024-36401-specific detection. |
+| 9300038 | 2053461 | **ET misclassifies** — same `exec`→"SQL Injection" mismatch on the body; here it's a Spring SpEL gadget `T(java.lang.Runtime).getRuntime().exec(...)`, not SQL. Ours is the CVE-2022-22947-specific detection. |
+| 9180002 | 2006380 | ET 2006380 is INFO-tier "Basic auth detected unencrypted" — a *posture* alert, fires per request regardless of intent. Ours is a **brute-force rate** rule (≥30 Basic-auth attempts/60s from one src) with `attempted-recon` classtype — different signal, different alert semantics for the pipeline. |
 | 9430001 | 2001219, 2003068 | ET's are *SCAN* (recon) rules; ours is an attempted-admin **brute-force** rate rule — different classtype/intent. Kept; same network signal but distinct alert semantics for the pipeline. |
 
 ### Kept — clean-room CVE backbone, deliberately ET-independent
