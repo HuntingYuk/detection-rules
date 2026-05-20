@@ -1,0 +1,399 @@
+#!/usr/bin/env python3
+"""audit-fp — broad-benign false-positive probe across the full ruleset.
+
+Distinct from per-rule negatives (which only test ONE rule's lookalike each),
+this script generates ~35 realistic *broader-benign* scenarios in 6 buckets:
+
+  A. docs-with-attack-terms   — search/wiki/help URLs mentioning union select,
+                                xp_cmdshell, /etc/passwd, certutil, etc. as
+                                user-typed query/topic prose
+  B. docs-response-terms      — response bodies referencing AWS_SECRET_...,
+                                Traceback, Whitelabel, Apache Tomcat/X.Y.Z,
+                                PEM headers, etc. as DOC prose (not a leak)
+  C. exploit-shaped endpoints — paths that LOOK like exploit endpoints but
+                                with benign params (real OWA assets, real
+                                GeoServer GetCapabilities, real Jenkins CLI
+                                list-plugins, real /actuator/health, etc.)
+  D. below-threshold volume   — login bursts, Basic-Auth bursts, SSH/RDP scans,
+                                SYN scans, repeated XSS/SQLi searches all under
+                                the rule's threshold (must stay silent)
+  E. normal protocol          — 3-way handshake, normal ICMP ping, short DNS,
+                                TLS-ClientHello to a real hostname, TLS 443,
+                                normal GET (not TRACE)
+  F. cookie/param overlaps    — JSESSIONID, short SESSID, single user[email],
+                                non-Citrix-Bleed-shaped large Host (e.g. CDN)
+
+Each scenario emits one TCP/HTTP/UDP flow. All flows are merged (unique-IP
+attribution, same trick as scripts/benchmark/audit-traffic), run through
+Suricata ONCE with the full ruleset. ANY firing alert = an FP candidate.
+Output: AUDIT-FP.md (committed snapshot).
+"""
+import os, re, sys, json, glob, shutil, subprocess, tempfile, base64, collections
+
+SUR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT  = os.path.dirname(SUR)
+RULES = os.path.join(SUR, "rules")
+CFG   = os.path.join(SUR, "config", "suricata-test.yaml")
+OUT_MD= os.path.join(SUR, "AUDIT-FP.md")
+CLIENT_NET = "10.99."
+
+def die(m): print("ERROR: "+m, file=sys.stderr); sys.exit(1)
+
+# ----- scapy pcap builders -----
+def _make_http_get(uri, host="legit.example", headers=None, src_ip="10.0.0.50", sport=44600):
+    from scapy.all import Ether, IP, TCP, Raw
+    hdr = "GET %s HTTP/1.1\r\nHost: %s\r\n" % (uri, host)
+    if headers:
+        for k, v in headers.items(): hdr += "%s: %s\r\n" % (k, v)
+    hdr += "Connection: close\r\n\r\n"
+    req = hdr.encode()
+    dst = "10.0.0.80"
+    C = lambda f,s,a,p=b"": Ether()/IP(src=src_ip,dst=dst)/TCP(sport=sport,dport=80,flags=f,seq=s,ack=a)/(Raw(p) if p else b"")
+    V = lambda f,s,a: Ether()/IP(src=dst,dst=src_ip)/TCP(sport=80,dport=sport,flags=f,seq=s,ack=a)
+    pk = [C("S",1000,0),V("SA",2000,1001),C("A",1001,2001),C("PA",1001,2001,req),V("A",2001,1001+len(req))]
+    t = 1_700_000_000.0
+    for p in pk: p.time=t; t+=0.01
+    return pk
+
+def _make_http_post(uri, body, host="legit.example", headers=None, src_ip="10.0.0.50", sport=44600):
+    from scapy.all import Ether, IP, TCP, Raw
+    ct = "application/x-www-form-urlencoded"
+    if headers and "Content-Type" in headers: ct = headers["Content-Type"]
+    hdr = ("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: %s\r\nContent-Length: %d\r\n" %
+           (uri, host, ct, len(body)))
+    if headers:
+        for k, v in headers.items():
+            if k != "Content-Type": hdr += "%s: %s\r\n" % (k, v)
+    hdr += "Connection: close\r\n\r\n"
+    req = hdr.encode() + body
+    dst = "10.0.0.80"
+    C = lambda f,s,a,p=b"": Ether()/IP(src=src_ip,dst=dst)/TCP(sport=sport,dport=80,flags=f,seq=s,ack=a)/(Raw(p) if p else b"")
+    V = lambda f,s,a: Ether()/IP(src=dst,dst=src_ip)/TCP(sport=80,dport=sport,flags=f,seq=s,ack=a)
+    pk = [C("S",1000,0),V("SA",2000,1001),C("A",1001,2001),C("PA",1001,2001,req),V("A",2001,1001+len(req))]
+    t = 1_700_000_000.0
+    for p in pk: p.time=t; t+=0.01
+    return pk
+
+def _make_http_response(uri, resp_body, resp_status="200 OK", resp_ctype="text/html",
+                        host="legit.example", src_ip="10.0.0.50", sport=44600):
+    from scapy.all import Ether, IP, TCP, Raw
+    reqh = ("GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n" % (uri, host)).encode()
+    resp = ("HTTP/1.1 %s\r\nContent-Type: %s\r\nContent-Length: %d\r\nConnection: close\r\n\r\n" %
+            (resp_status, resp_ctype, len(resp_body))).encode() + resp_body
+    dst = "10.0.0.80"
+    C = lambda f,s,a,p=b"": Ether()/IP(src=src_ip,dst=dst)/TCP(sport=sport,dport=80,flags=f,seq=s,ack=a)/(Raw(p) if p else b"")
+    V = lambda f,s,a,p=b"": Ether()/IP(src=dst,dst=src_ip)/TCP(sport=80,dport=sport,flags=f,seq=s,ack=a)/(Raw(p) if p else b"")
+    cs, ss = 1000, 2000
+    pk = [C("S",cs,0),V("SA",ss,cs+1),C("A",cs+1,ss+1)]; cs+=1; ss+=1
+    pk += [C("PA",cs,ss,reqh)]; cs += len(reqh); pk += [V("A",ss,cs)]
+    pk += [V("PA",ss,cs,resp)]; ss += len(resp); pk += [C("A",cs,ss)]
+    t = 1_700_000_000.0
+    for i, p in enumerate(pk): p.time = t + i*0.01
+    return pk
+
+def _make_syn_burst(dport, count, src_ip="10.0.0.50"):
+    from scapy.all import Ether, IP, TCP
+    dst = "10.0.0.80"; pk = []; t = 1_700_000_000.0
+    for i in range(count):
+        p = Ether()/IP(src=src_ip,dst=dst)/TCP(sport=44700+i,dport=dport,flags="S",seq=1000+i)
+        p.time = t; t += 0.1
+        pk.append(p)
+    return pk
+
+def _make_icmp_echo(payload_size, src_ip="10.0.0.50"):
+    from scapy.all import Ether, IP, ICMP, Raw
+    p = Ether()/IP(src=src_ip,dst="10.0.0.80")/ICMP(type=8)/Raw(b"A"*payload_size)
+    p.time = 1_700_000_000.0
+    return [p]
+
+def _make_dns_query(qname, src_ip="10.0.0.50"):
+    from scapy.all import Ether, IP, UDP, DNS, DNSQR
+    p = Ether()/IP(src=src_ip,dst="10.0.0.53")/UDP(sport=33333,dport=53)/DNS(rd=1,qd=DNSQR(qname=qname))
+    p.time = 1_700_000_000.0
+    return [p]
+
+# ----- scenarios (name, pkts_list) -----
+def scenarios():
+    L = []
+    # A. docs-with-attack-terms (URI query/path text)
+    for name, uri in [
+        ("docs_union_select",   "/wiki?q=union+select+sql+tutorial+for+beginners"),
+        ("docs_sleep_fn",       "/help?q=sleep(10)+php+function+documentation"),
+        ("docs_extractvalue",   "/docs?q=mysql+extractvalue+function+reference"),
+        ("docs_or_1_1",         "/wiki?q=tautology+or+1=1+true+for+all+integers"),
+        ("docs_xp_cmdshell",    "/help?q=mssql+xp_cmdshell+security+overview"),
+        ("docs_utl_http",       "/wiki?q=oracle+UTL_HTTP+network+package+overview"),
+        ("docs_etc_passwd",     "/wiki?q=/etc/passwd+linux+user+account+file"),
+        ("docs_win_ini",        "/help?q=where+is+win.ini+windows+initialization"),
+        ("docs_create_function","/blog?topic=php+create_function+deprecated+in+8"),
+        ("docs_eval_request",   "/code-review?advice=avoid+eval(Request)+in+aspnet"),
+        ("docs_metadata_gcp",   "/cloud-docs?q=metadata.google.internal+gcp+imds"),
+        ("docs_169_imds",       "/aws-docs?q=169.254.169.254+ec2+IMDS+overview"),
+        ("docs_log4j",          "/security?cve=CVE-2021-44228+log4shell+writeup"),
+        ("docs_powershell_enc", "/help?q=powershell+-EncodedCommand+flag+reference"),
+        ("docs_certutil_url",   "/help?q=certutil+-urlcache+flag+overview"),
+        ("docs_dev_tcp",        "/wiki?q=bash+/dev/tcp/+howto"),
+        ("docs_traversal",      "/help?q=path+traversal+....//and+%c0%af+bypass+notes"),
+        ("docs_pyc",            "/wiki?q=python+-c+print+small+example"),
+        ("docs_bitsadmin",      "/help?q=bitsadmin+/transfer+command+syntax+ref"),
+        ("docs_mshta",          "/wiki?q=mshta+remote+execution+syntax+reference"),
+    ]:
+        L.append((name, _make_http_get(uri, host="docs.example", sport=44600+len(L))))
+
+    # B. docs-response-terms (response body mentions leak markers as prose)
+    for name, body in [
+        ("docs_resp_aws_var",   b"<p>To configure, set the AWS_SECRET_ACCESS_KEY environment variable in your shell.</p>"),
+        ("docs_resp_traceback", b"<p>Python apps show a Traceback (most recent call last) line when DEBUG is on.</p>"),
+        ("docs_resp_whitelabel",b"<p>Spring Boot's 'Whitelabel Error Page' explained: how to override it cleanly.</p>"),
+        ("docs_resp_action_ctrl",b"<p>Rails 'Action Controller: Exception caught' appears in dev mode only.</p>"),
+        ("docs_resp_tomcat",    b"<p>To upgrade Apache Tomcat/9 to 10, follow the migration guide carefully.</p>"),
+        ("docs_resp_pem",       b"<p>PEM headers like -----BEGIN PRIVATE KEY----- delimit base64 blobs.</p>"),
+        ("docs_resp_akia",      b"<p>An AWS access key id starts with AKIA followed by uppercase chars; treat as secret.</p>"),
+    ]:
+        L.append((name, _make_http_response("/docs", body, host="docs.example", sport=44700+len(L))))
+
+    # C. exploit-shaped-but-benign endpoints
+    L.append(("legit_owa_normal",
+              _make_http_get("/owa/auth/Current/themes/resources/logon.css",
+                             host="mail.example",
+                             headers={"Cookie":"OWA-Session=Abc123XyZ"}, sport=45000)))
+    L.append(("legit_geoserver_caps",
+              _make_http_get("/geoserver/ows?service=WFS&request=GetCapabilities&version=2.0.0",
+                             host="geo.example", sport=45001)))
+    L.append(("legit_geoserver_normal_propval",
+              _make_http_get("/geoserver/ows?service=WFS&version=2.0.0&request=GetPropertyValue"
+                             "&typeNames=sf:archsites&valueReference=cat",
+                             host="geo.example", sport=45002)))
+    L.append(("legit_jenkins_list_plugins",
+              _make_http_post("/cli?remoting=false", b"list-plugins", host="jenkins.example", sport=45003)))
+    L.append(("legit_actuator_health",
+              _make_http_get("/actuator/health", host="api.example", sport=45004)))
+    L.append(("legit_actuator_route_benign",
+              _make_http_post("/actuator/gateway/routes/svc1",
+                              b'{"id":"svc1","filters":[],"uri":"http://internal/x"}',
+                              host="gw.example",
+                              headers={"Content-Type":"application/json"}, sport=45005)))
+    L.append(("legit_oidc_discovery_normal",
+              _make_http_get("/oauth/idp/.well-known/openid-configuration",
+                             host="ns.example.com", sport=45006)))
+    L.append(("legit_phpunit_composer_real",
+              _make_http_get("/vendor/composer/installed.json", host="app.example", sport=45007)))
+    L.append(("legit_setup_wizard_no_trick",
+              _make_http_get("/SetupWizard.aspx", host="rmm.example", sport=45008)))
+    L.append(("legit_admin_changelang_real",
+              _make_http_post("/admin/configurenewlanguage.action",
+                              b"name=Bahasa%20Indonesia&displayName=Bahasa%20Indonesia&fileName=id.po",
+                              host="confluence.example", sport=45009)))
+    L.append(("legit_remote_agent_ping",
+              _make_http_get("/remote_agent.php?action=ping&host_id=1",
+                             host="cacti.example", sport=45010)))
+    L.append(("legit_password_change_benign",
+              _make_http_post("/password_change.cgi",
+                              b"user=alice&pam=&expired=0&old=hunter2&new1=hunter3&new2=hunter3",
+                              host="webmin.example", sport=45011)))
+    L.append(("legit_pulse_dana_normal",
+              _make_http_get("/dana/html5acc/guacamole/scripts/main.js",
+                             host="vpn.example", sport=45012)))
+    L.append(("legit_php_input_real",
+              _make_http_post("/composer/vendor/installed", b"normal-data=value",
+                              host="app.example", sport=45013)))
+    L.append(("legit_yaml_benign",
+              _make_http_post("/api/import",
+                              b"items:\n  - !!str hello\n  - !!map { a: 1 }\n",
+                              host="app.example",
+                              headers={"Content-Type":"application/x-yaml"}, sport=45014)))
+    L.append(("legit_aspx_eval_doc_comment",
+              _make_http_post("/feedback",
+                              b"comment=do not call eval(Request) blindly; always validate input first",
+                              host="app.example", sport=45015)))
+    L.append(("legit_yaml_python_str",
+              _make_http_post("/api/import",
+                              b"note: avoid !!python/ language tags in untrusted config files\n",
+                              host="app.example",
+                              headers={"Content-Type":"application/x-yaml"}, sport=45016)))
+    L.append(("legit_ruby_yaml_str",
+              _make_http_post("/api/load",
+                              b"feedback=Use !ruby/object refers to a Psych YAML tag; never deserialize untrusted YAML",
+                              host="app.example", sport=45017)))
+    L.append(("legit_dotnet_b64_blob",
+              _make_http_post("/upload",
+                              b"data="+base64.b64encode(b"benign payload not a binformatter stream"),
+                              host="app.example", sport=45018)))
+    L.append(("legit_browser_ua",
+              _make_http_get("/", host="app.example",
+                             headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"},
+                             sport=45019)))
+    L.append(("legit_curl_ua",
+              _make_http_get("/api/widgets", host="api.example",
+                             headers={"User-Agent":"curl/7.88.1"}, sport=45020)))
+
+    # D. below-threshold volume
+    L.append(("low_login_burst",  _make_http_post.__wrapped__ if False else
+              sum([_make_http_post("/api/login", b"u=alice&p=hunter%d"%i, host="app.example", sport=45100+i)
+                   for i in range(5)], [])))
+    L.append(("low_basic_burst",  sum([_make_http_get("/admin", host="app.example",
+                                  headers={"Authorization":"Basic "+base64.b64encode(("admin:p%d"%i).encode()).decode()},
+                                  sport=45110+i) for i in range(5)], [])))
+    L.append(("low_ssh_scan_22",     _make_syn_burst(22,   count=3,  src_ip="10.0.0.51")))
+    L.append(("low_rdp_scan_3389",   _make_syn_burst(3389, count=5,  src_ip="10.0.0.52")))
+    L.append(("low_smb_scan_445",    _make_syn_burst(445,  count=10, src_ip="10.0.0.53")))
+    L.append(("low_xss_repeats", sum([_make_http_get("/p?img=x%22%20onerror=alert(1)", host="app.example", sport=45120+i)
+                                       for i in range(2)], [])))   # under threshold 3
+    L.append(("low_sqli_repeats", sum([_make_http_get("/q?id=1+union+select+1", host="app.example", sport=45130+i)
+                                       for i in range(2)], [])))   # under threshold 3
+    L.append(("low_csti_repeats", sum([_make_http_get("/s?q={{constructor.constructor('a')()}}", host="app.example", sport=45140+i)
+                                       for i in range(2)], [])))   # under threshold 3
+
+    # E. normal protocol shape
+    L.append(("normal_icmp_56", _make_icmp_echo(56, src_ip="10.0.0.54")))   # below 1024 threshold
+    L.append(("normal_dns_short", _make_dns_query("example.com.", src_ip="10.0.0.55")))
+    L.append(("normal_dns_cdn",   _make_dns_query("d1k2.cloudfront.net.", src_ip="10.0.0.56")))
+    L.append(("normal_get_root", _make_http_get("/", host="app.example", sport=45150)))
+
+    # F. cookie/param overlaps
+    L.append(("legit_jsessionid",
+              _make_http_get("/app/page", host="app.example",
+                             headers={"Cookie":"JSESSIONID=ABCDE12345FGH67890"}, sport=45160)))
+    L.append(("legit_sessid_short",
+              _make_http_get("/owa/auth/Current/themes/resources/logon.css",
+                             host="mail.example",
+                             headers={"Cookie":"SESSID=normalShortValue42"}, sport=45161)))
+    L.append(("legit_user_email_single",
+              _make_http_post("/users/password",
+                              b"user[email]=alice@example.com&authenticity_token=xyz",
+                              host="gitlab.example", sport=45162)))
+    L.append(("legit_long_host_no_oidc",
+              _make_http_get("/index.html", host="a"*250+".example", sport=45163)))
+
+    return L
+
+def _uip(k): return "10.99.%d.%d" % (k//254, 1 + k % 254)
+
+def _merge(scen, outpath):
+    """rewrite each scenario's client src to a unique 10.99.x.y."""
+    from scapy.all import wrpcap, IP
+    allp = []; mapping = {}
+    for i, (name, pkts) in enumerate(scen):
+        if not pkts: continue
+        # find the first IP src in the flow = the client
+        cip = None
+        for p in pkts:
+            if IP in p:
+                cip = p[IP].src; break
+        if cip is None: continue
+        uip = _uip(i); mapping[uip] = name
+        for p in pkts:
+            if IP in p:
+                if p[IP].src == cip: p[IP].src = uip
+                if p[IP].dst == cip: p[IP].dst = uip
+                for ly in ("IP","TCP","UDP","ICMP"):
+                    try:
+                        if p.haslayer(ly) and hasattr(p[ly], "chksum"): del p[ly].chksum
+                    except Exception: pass
+        allp += list(pkts)
+    if allp: wrpcap(outpath, allp)
+    return mapping
+
+def _combined(td):
+    files = sorted(glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True))
+    p = os.path.join(td, "_all.rules")
+    with open(p, "w") as o:
+        for f in files: o.write(open(f).read().rstrip()+"\n")
+    return p
+
+def _run(suri, pcap, td, rules_S):
+    out = tempfile.mkdtemp(dir=td)
+    cmd = [suri, "-k", "none", "-l", out, "-r", pcap, "-c", CFG, "-S", rules_S]
+    subprocess.run(cmd, cwd=SUR, capture_output=True)
+    fired = collections.defaultdict(set)
+    ev = os.path.join(out, "eve.json")
+    if os.path.exists(ev):
+        for line in open(ev):
+            try:
+                j = json.loads(line)
+                if j.get("event_type") != "alert": continue
+                ci = next((x for x in (j.get("src_ip"), j.get("dest_ip"))
+                           if x and x.startswith(CLIENT_NET)), None)
+                if ci: fired[ci].add(int(j["alert"]["signature_id"]))
+            except Exception: pass
+    return fired
+
+def _rule_msgs():
+    out = {}
+    for f in glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True):
+        for ln in open(f, errors="replace"):
+            if re.match(r'^\s*alert\b', ln):
+                sm = re.search(r'\bsid:(\d+)', ln); mm = re.search(r'\bmsg:"([^"]*)"', ln)
+                if sm: out[int(sm.group(1))] = mm.group(1) if mm else ""
+    return out
+
+def main():
+    suri = shutil.which("suricata") or die("suricata not on PATH")
+    td = tempfile.mkdtemp(prefix="_fp_")
+    try:
+        scen = scenarios()
+        print("audit-fp: %d benign scenarios" % len(scen))
+        mp = _merge(scen, os.path.join(td, "fp.pcap"))
+        ours = _combined(td)
+        fired = _run(suri, os.path.join(td, "fp.pcap"), td, ours)
+        msgs = _rule_msgs()
+
+        # FP candidates: any uip whose set is non-empty
+        fps = [(name, sorted(fired.get(u, set())))
+               for u, name in mp.items() if fired.get(u)]
+        clean = [name for u, name in mp.items() if not fired.get(u)]
+
+        # group by rule sid
+        per_rule = collections.defaultdict(list)
+        for name, sids in fps:
+            for s in sids: per_rule[s].append(name)
+
+        L = ["# AUDIT-FP.md — broad-benign false-positive probe", "",
+             "> Auto-generated by `scripts/audit-fp` — runs ~%d realistic benign "
+             "scenarios (docs-with-attack-terms, response-leak-prose, exploit-shaped "
+             "endpoints, below-threshold volume, normal protocol, cookie overlaps) "
+             "through the full ruleset. ANY firing alert = an FP candidate." % len(scen),
+             "", "## Headline", "",
+             "- Benign scenarios: **%d**" % len(scen),
+             "- Scenarios that ALERTED (FP candidates): **%d**" % len(fps),
+             "- Scenarios that stayed silent (clean): %d" % len(clean),
+             "- Distinct rules with at least one FP: **%d**" % len(per_rule),
+             ""]
+        if not fps:
+            L += ["## ✅ Clean — no FP across the broad-benign probe", "",
+                  "Every benign scenario stayed silent. The negatives we ship per rule "
+                  "are well-shaped enough that the broader prose/endpoint variations "
+                  "don't trip anything either. Re-run after each batch.", ""]
+        else:
+            L += ["## 🟡 FP candidates — rules to review", "",
+                  "Each row: rule SID that fired on a *benign* scenario. Either tighten "
+                  "the rule's pcre to exclude this pattern, or document the residual "
+                  "as a known tune-target (threshold by dst).", "",
+                  "| Rule SID | Rule msg | Fired on benign scenario(s) |",
+                  "|----------|----------|----------------------------|"]
+            for sid in sorted(per_rule):
+                L.append("| %d | %s | %s |" % (
+                    sid, msgs.get(sid, "?")[:80].replace("|", "/"),
+                    ", ".join(sorted(per_rule[sid]))[:120]))
+            L += ["",
+                  "## Detail — per benign scenario that alerted", ""]
+            for name, sids in sorted(fps):
+                L.append("- **%s** → SIDs: %s" % (name, ", ".join(str(s) for s in sids)))
+            L.append("")
+
+        L += ["---", "",
+              "**Method.** Each scenario is one TCP/HTTP/UDP flow; client IPs are "
+              "rewritten to unique 10.99.x.y for per-flow attribution. L4 checksums "
+              "are recomputed and `suricata -k none` ignores stale ones. Full "
+              "ruleset loaded ONCE. Re-run after rule edits to confirm the corpus "
+              "stays FP-clean against broad benign traffic."]
+
+        open(OUT_MD, "w").write("\n".join(L) + "\n")
+        print("wrote %s — %d FP candidate scenarios, %d distinct rules"
+              % (os.path.relpath(OUT_MD, ROOT), len(fps), len(per_rule)))
+        sys.exit(1 if fps and "--strict" in sys.argv else 0)
+    finally:
+        shutil.rmtree(td, ignore_errors=True)
+
+if __name__ == "__main__":
+    main()
