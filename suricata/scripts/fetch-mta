@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""fetch-mta — pull recent malware-traffic-analysis.net pcap exercises into
+reference/mta/attacks/ (gitignored). Pcaps are password-encrypted zip
+(password "infected"); helper unzips locally — pcaps NEVER committed.
+
+Usage:
+  scripts/fetch-mta              # last N=3 exercises from 2025/2026 indexes
+  scripts/fetch-mta --count 5    # N=5
+  scripts/fetch-mta --year 2024  # specific year index
+  scripts/fetch-mta --url <pcap.zip URL>   # one specific exercise pcap
+
+Treatment per CLAUDE.md §13: clean-room reference, behaviour-only derivation,
+indicators feed YOUR-SEPARATE IP-reputation pipeline (NOT this repo).
+"""
+import os, re, sys, ssl, time, urllib.request, urllib.error, zipfile, io, argparse
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MTA_BASE = "https://www.malware-traffic-analysis.net"
+ATK_DIR = os.path.join(ROOT, "reference", "mta", "attacks")
+# Per MTA "about" page: password scheme = "infected_YYYYMMDD" matching the post date.
+def _password_for_url(url):
+    m = re.search(r'/(\d{4})/(\d{2})/(\d{2})/', url)
+    return f"infected_{m.group(1)}{m.group(2)}{m.group(3)}".encode() if m else b"infected"
+UA = "huntingyuk-detection-rules/audit-fp (fetch-mta; clean-room behaviour ref)"
+
+def _get(url, timeout=20):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    return urllib.request.urlopen(req, timeout=timeout, context=ssl.create_default_context()).read()
+
+def _list_dates(year):
+    """Return MM/DD list of dated exercises in YYYY (newest first)."""
+    try:
+        html = _get(f"{MTA_BASE}/{year}/index.html").decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        print(f"  no index for {year}: {e}", file=sys.stderr); return []
+    dates = re.findall(r'href="(\d{2}/\d{2})/index\.html"', html)
+    seen, out = set(), []
+    for d in dates:
+        if d in seen: continue
+        seen.add(d); out.append(d)
+    return out
+
+def _pcap_zip_urls(year, mmdd):
+    """Find .pcap.zip URLs in the day's exercise index."""
+    try:
+        html = _get(f"{MTA_BASE}/{year}/{mmdd}/index.html").decode("utf-8", "replace")
+    except urllib.error.HTTPError: return []
+    return [f"{MTA_BASE}/{year}/{mmdd}/{m}"
+            for m in re.findall(r'href="([^"]+\.pcap\.zip)"', html)]
+
+def _download_and_unzip(url, out_dir):
+    name = url.rsplit("/", 1)[-1]
+    print(f"  downloading {name} ...", end="", flush=True)
+    try:
+        data = _get(url, timeout=60)
+    except Exception as e:
+        print(f" FAIL ({e})"); return 0
+    print(f" {len(data)//1024} KB", end="")
+    n_pcaps = 0
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            zf.setpassword(_password_for_url(url))
+            for member in zf.namelist():
+                if not member.lower().endswith(".pcap"): continue
+                target = os.path.join(out_dir, os.path.basename(member))
+                if os.path.exists(target):
+                    print(" [skip exists]", end=""); continue
+                with zf.open(member) as src, open(target, "wb") as dst:
+                    dst.write(src.read())
+                n_pcaps += 1
+        print(f"  -> {n_pcaps} pcap(s)")
+    except RuntimeError as e:
+        print(f"  unzip FAIL ({e}; password may have changed for this archive)")
+    return n_pcaps
+
+def main():
+    ap = argparse.ArgumentParser(prog="fetch-mta")
+    ap.add_argument("--count", type=int, default=3)
+    ap.add_argument("--year",  default=None, help="default: latest year on site")
+    ap.add_argument("--url",   default=None, help="one specific pcap.zip URL")
+    a = ap.parse_args()
+
+    os.makedirs(ATK_DIR, exist_ok=True)
+    total_pcaps = 0
+
+    if a.url:
+        total_pcaps += _download_and_unzip(a.url, ATK_DIR)
+        print(f"\ntotal pcaps now: {len(os.listdir(ATK_DIR))} in {ATK_DIR}")
+        return
+
+    # latest year on site (try a.year first, else 2026, 2025, 2024 fallback)
+    years = [a.year] if a.year else ["2026", "2025", "2024"]
+    picked = []
+    for y in years:
+        dates = _list_dates(y)
+        if dates:
+            picked.append((y, dates)); break
+    if not picked:
+        print("ERROR: no year index reachable", file=sys.stderr); sys.exit(1)
+    y, dates = picked[0]
+    print(f"using {y} index ({len(dates)} dated exercises)")
+
+    n = 0
+    for mmdd in dates:
+        if n >= a.count: break
+        urls = _pcap_zip_urls(y, mmdd)
+        if not urls:
+            print(f"  {y}/{mmdd}: no pcap.zip"); continue
+        # take the largest-looking pcap (or first) per exercise
+        for u in urls[:1]:   # first match
+            print(f"  {y}/{mmdd}: {u.rsplit('/',1)[-1]}")
+            total_pcaps += _download_and_unzip(u, ATK_DIR)
+            n += 1
+            if n >= a.count: break
+        time.sleep(1)   # be polite
+
+    print(f"\ntotal pcaps in {os.path.relpath(ATK_DIR, ROOT)}: "
+          f"{len(os.listdir(ATK_DIR))} files")
+
+if __name__ == "__main__":
+    main()
