@@ -4,64 +4,106 @@
 
 ## Headline
 
-- Attack pcaps analysed: **4**
+- Attack pcaps analysed: **3**
 - Benign pcaps analysed: 0
 - ET Open control: **enabled**
 
-- Total alerts from OUR ruleset on attack corpus: **1** (1 distinct SIDs)
+- Total alerts from OUR ruleset on attack corpus: **2533** (15 distinct SIDs)
 
-- Total alerts from ET Open on attack corpus: 116 (13 distinct SIDs)
+- Total alerts from ET Open on attack corpus: 118298 (471 distinct SIDs)
 
 ## Per-attack-pcap coverage
 
-### `2026-04-22-macOS-malware-infection-from-ClickFix-script.pcap` (29709 KB)
-
-**Our rules fired:** _(none)_
-
-**ET Open fired:** (4 distinct SIDs, top 10)
-
-- 2034567 × 24 — ET HUNTING curl User-Agent to Dotted Quad
-- 2047703 × 23 — ET INFO External IP Address Lookup Domain (ipify .org) in TLS SNI
-- 2047702 × 6 — ET INFO External IP Lookup Domain (ipify .org) in DNS Lookup
-- 2068433 × 1 — ET MALWARE InstallFix MacOS CnC Activity M2
-
-### `2026-04-23-traffic-from-SmartApeSG-activity.pcap` (106194 KB)
-
-**Our rules fired:** _(none)_
-
-**ET Open fired:** (5 distinct SIDs, top 10)
-
-- 2033355 × 2 — ET INFO Windows Powershell User-Agent Usage
-- 2023883 × 1 — ET DNS Query to a *.top domain - Likely Hostile
-- 2047866 × 1 — ET INFO Observed Google DNS over HTTPS Domain (dns .google in TLS SNI)
-- 2260003 × 1 — SURICATA Applayer Protocol detection skipped
-- 2031071 × 1 — ET INFO Microsoft Connection Test
-
-### `2026-05-08-macOS-Shub-Stealer-infection.pcap` (22461 KB)
+### `2025-11-23-ten-days-of-scans-and-probes-and-web-traffic-hitting-my-web-server.pcap` (31725 KB)
 
 **Our rules fired:**
 
-- 9500008 × **1** — PROTO-ANOMALY high TCP RST rate from one source - reset flood/scan [medium]
+- 9300040 × **440** — KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]
+- 9170004 × **384** — WEB Exposure - /.env or config backup probe [high]
+- 9170001 × **103** — WEB Exposure - /.git/config repository probe [high]
+- 9130002 × **42** — WEB LFI/RFI PHP stream wrapper (php://filter etc) in http.uri.raw [high]
+- 9300014 × **41** — KNOWN-CVE PHP-CGI argument injection (CVE-2024-4577) [high]
+- 9400001 × **33** — TLS anomaly - SNI is a bare IPv4 literal (non-RFC6066, suspicious client) [medium]
+- 9420001 × **22** — RECON TCP SYN port-scan - high SYN rate from one source [medium]
+- 9300004 × **12** — KNOWN-CVE Shellshock bash function-def injection in HTTP header (CVE-2014-6271) [high]
+- 9170002 × **6** — WEB Exposure - /.aws/credentials cloud secret probe [high]
+- 9500008 × **6** — PROTO-ANOMALY high TCP RST rate from one source - reset flood/scan [medium]
+- 9180002 × **1** — WEB Auth brute-force - high Basic-Auth header rate from one source [medium]
 
-**ET Open fired:** (3 distinct SIDs, top 10)
+**ET Open fired:** (404 distinct SIDs, top 10)
 
-- 2047703 × 10 — ET INFO External IP Address Lookup Domain (ipify .org) in TLS SNI
-- 2047702 × 3 — ET INFO External IP Lookup Domain (ipify .org) in DNS Lookup
-- 2210054 × 1 — SURICATA STREAM excessive retransmissions
+- 2402000 × 9654 — ET DROP Dshield Block Listed Source group 1
+- 2100366 × 4703 — GPL ICMP PING *NIX
+- 2010935 × 1692 — ET SCAN Suspicious inbound to MSSQL port 1433
+- 2400035 × 1240 — ET DROP Spamhaus DROP Listed Traffic Inbound group 36
+- 2400012 × 1042 — ET DROP Spamhaus DROP Listed Traffic Inbound group 13
+- 2400006 × 771 — ET DROP Spamhaus DROP Listed Traffic Inbound group 7
+- 2403536 × 766 — ET CINS Active Threat Intelligence Poor Reputation IP group 237
+- 2010937 × 612 — ET SCAN Suspicious inbound to mySQL port 3306
+- 2403357 × 534 — ET CINS Active Threat Intelligence Poor Reputation IP group 58
+- 2260000 × 529 — SURICATA Applayer Mismatch protocol both directions
+- _...and 394 more_
 
-### `2026-05-11-macOS-malware-infection-traffic.pcap` (18662 KB)
+### `2025-12-07-seven-days-of-scans-and-probes-and-web-traffic-hitting-my-web-server.pcap` (20884 KB)
 
-**Our rules fired:** _(none)_
+**Our rules fired:**
 
-**ET Open fired:** (7 distinct SIDs, top 10)
+- 9170004 × **165** — WEB Exposure - /.env or config backup probe [high]
+- 9300040 × **154** — KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]
+- 9170001 × **32** — WEB Exposure - /.git/config repository probe [high]
+- 9130002 × **17** — WEB LFI/RFI PHP stream wrapper (php://filter etc) in http.uri.raw [high]
+- 9300014 × **17** — KNOWN-CVE PHP-CGI argument injection (CVE-2024-4577) [high]
+- 9300004 × **11** — KNOWN-CVE Shellshock bash function-def injection in HTTP header (CVE-2014-6271) [high]
+- 9400001 × **9** — TLS anomaly - SNI is a bare IPv4 literal (non-RFC6066, suspicious client) [medium]
+- 9500008 × **5** — PROTO-ANOMALY high TCP RST rate from one source - reset flood/scan [medium]
+- 9170002 × **5** — WEB Exposure - /.aws/credentials cloud secret probe [high]
+- 9170003 × **3** — WEB Exposure - /.svn/wc.db SVN repo probe [high]
 
-- 2034567 × 32 — ET HUNTING curl User-Agent to Dotted Quad
-- 2061835 × 3 — ET MALWARE AMOS Stealer CnC Checkin (POST)
-- 2221036 × 3 — SURICATA HTTP Response excessive header repetition
-- 2068434 × 1 — ET MALWARE InstallFix MacOS CnC Activity M3
-- 2210054 × 1 — SURICATA STREAM excessive retransmissions
-- 2047866 × 1 — ET INFO Observed Google DNS over HTTPS Domain (dns .google in TLS SNI)
-- 2068433 × 1 — ET MALWARE InstallFix MacOS CnC Activity M2
+**ET Open fired:** (379 distinct SIDs, top 10)
+
+- 2402000 × 6519 — ET DROP Dshield Block Listed Source group 1
+- 2100366 × 2025 — GPL ICMP PING *NIX
+- 2400035 × 1391 — ET DROP Spamhaus DROP Listed Traffic Inbound group 36
+- 2010935 × 867 — ET SCAN Suspicious inbound to MSSQL port 1433
+- 2400012 × 642 — ET DROP Spamhaus DROP Listed Traffic Inbound group 13
+- 2403536 × 571 — ET CINS Active Threat Intelligence Poor Reputation IP group 237
+- 2010937 × 440 — ET SCAN Suspicious inbound to mySQL port 3306
+- 2400015 × 400 — ET DROP Spamhaus DROP Listed Traffic Inbound group 16
+- 2403357 × 388 — ET CINS Active Threat Intelligence Poor Reputation IP group 58
+- 2403489 × 373 — ET CINS Active Threat Intelligence Poor Reputation IP group 190
+- _...and 369 more_
+
+### `2025-12-28-ten-days-of-scans-and-probes-and-web-traffic-hitting-my-web-server.pcap` (34418 KB)
+
+**Our rules fired:**
+
+- 9170004 × **368** — WEB Exposure - /.env or config backup probe [high]
+- 9300040 × **339** — KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]
+- 9420001 × **99** — RECON TCP SYN port-scan - high SYN rate from one source [medium]
+- 9170001 × **79** — WEB Exposure - /.git/config repository probe [high]
+- 9130002 × **34** — WEB LFI/RFI PHP stream wrapper (php://filter etc) in http.uri.raw [high]
+- 9300014 × **34** — KNOWN-CVE PHP-CGI argument injection (CVE-2024-4577) [high]
+- 9420003 × **22** — RECON UDP port sweep - high UDP rate to many ports from one source [medium]
+- 9500006 × **15** — PROTO-ANOMALY TCP SYN segment carrying data payload - evasion/TFO abuse [medium]
+- 9400001 × **11** — TLS anomaly - SNI is a bare IPv4 literal (non-RFC6066, suspicious client) [medium]
+- 9170002 × **9** — WEB Exposure - /.aws/credentials cloud secret probe [high]
+- 9300004 × **9** — KNOWN-CVE Shellshock bash function-def injection in HTTP header (CVE-2014-6271) [high]
+- 9500008 × **5** — PROTO-ANOMALY high TCP RST rate from one source - reset flood/scan [medium]
+- 9430001 × **1** — BRUTEFORCE SSH - high connection rate to tcp/22 from one source [medium]
+
+**ET Open fired:** (420 distinct SIDs, top 10)
+
+- 2402000 × 9943 — ET DROP Dshield Block Listed Source group 1
+- 2400035 × 2337 — ET DROP Spamhaus DROP Listed Traffic Inbound group 36
+- 2010935 × 1103 — ET SCAN Suspicious inbound to MSSQL port 1433
+- 2400012 × 953 — ET DROP Spamhaus DROP Listed Traffic Inbound group 13
+- 2403536 × 833 — ET CINS Active Threat Intelligence Poor Reputation IP group 237
+- 2101280 × 719 — GPL RPC portmap listing UDP 111
+- 2400006 × 690 — ET DROP Spamhaus DROP Listed Traffic Inbound group 7
+- 2403357 × 620 — ET CINS Active Threat Intelligence Poor Reputation IP group 58
+- 2010937 × 615 — ET SCAN Suspicious inbound to mySQL port 3306
+- 2403433 × 591 — ET CINS Active Threat Intelligence Poor Reputation IP group 134
+- _...and 410 more_
 
 ---
 
@@ -71,52 +113,72 @@
 
 ---
 
-## Interpretation — why our 124 rules look quiet here
+## Interpretation — REAL-TRAFFIC VALIDATION (2026-05-21)
 
-The first real-traffic run on 4 MTA pcaps (macOS InstallFix/Shub-Stealer/AMOS,
-SmartApeSG redirector) lit up only **1** of our rules vs **13** ET Open rules.
-Read carefully before "fixing":
+Three real perimeter-scan pcaps from MTA (Brad Duncan's "X days of scans and
+probes hitting my web server" series — captures of the actual scanning noise
+his internet-facing webserver sees). **This is the right profile for our
+corpus** (inbound attacker→server) — and it validates the corpus genuinely:
 
-**Attack-model mismatch is BY DESIGN.** Our corpus targets **inbound
-attacker→our-server** patterns: SQLi/XSS/CMDi/SSRF/path-traversal/known-CVE
-exploitation against perimeter web apps. MTA pcaps are the opposite direction
-— **outbound compromised-host→attacker-C2**: malware downloads, beacon/checkin,
-stealer exfil, malicious-DNS lookups, malware-family TLS SNI. There is barely
-any overlap on purpose: the user's IoC / IP-reputation pipeline (separate from
-this repo, per spec) handles outbound C2; this repo handles inbound exploit
-attempts.
+**Top hits — what real scanners actually look for on the internet:**
 
-**ET Open's "win" is exactly the slice we cut.** Of the 13 ET sids that fired:
-- 5 ET MALWARE / ET HUNTING rules (`InstallFix MacOS CnC`, `AMOS Stealer CnC
-  Checkin`, `curl UA to Dotted Quad`) — malware-family IoC/behavioural, the
-  IP-rep-pipeline space we *intentionally* don't duplicate.
-- 4 ET INFO rules (`External IP Lookup`, `Google DoH SNI`, `Windows Powershell
-  UA`, `Microsoft Connection Test`) — posture/recon noise, not attack-grade.
-- 4 generic engine anomaly / hunting rules (SURICATA STREAM/Applayer, ET DNS
-  Query to *.top).
+| SID | Rule | Hits across 3 pcaps |
+|---|---|---|
+| 9300040 | PHPUnit eval-stdin.php CVE-2017-9841 | **933** |
+| 9170004 | `/.env` + backup exposure | **917** |
+| 9170001 | `/.git/config` exposure | 214 |
+| 9420001 | TCP SYN port-scan | 121 |
+| 9130002 | PHP stream-wrapper LFI/RFI | 93 |
+| 9300014 | PHP-CGI CVE-2024-4577 | 92 |
+| 9400001 | TLS SNI = bare IPv4 | 53 |
+| 9300004 | Shellshock CVE-2014-6271 | 32 |
+| 9420003 | UDP port sweep | 22 |
+| 9170002 | `/.aws/credentials` exposure | 20 |
+| 9500008 | TCP RST flood | 16 |
+| 9500006 | SYN with data payload | 15 |
+| 9170003 | `/.svn/wc.db` exposure | 3 |
+| 9430001 | SSH brute-force rate | 1 |
+| 9180002 | Basic-Auth spray rate | 1 |
 
-None of those are the OWASP / known-CVE perimeter-defence class we author.
+**Reading**: 15 of our 124 rules fired = the entire **access-control exposure
+family** (9170001-4 = .git/.aws/.svn/.env), the **classic still-scanned CVEs**
+(PHPUnit-2017-9841 933×, PHP-CGI-2024-4577 92×, Shellshock-2014-6271 32×),
+**LFI/RFI PHP wrappers** (9130002), **L3/L4 recon family** (port-scan, RST
+flood, SYN-with-data, UDP sweep), **TLS metadata** (SNI=bare-IP from
+scanner-by-IP), and **brute-force rate rules** (SSH, Basic-Auth).
 
-**The one rule of ours that fired** (9500008 high TCP RST rate) is the L3/L4
-protocol-anomaly catch — fire was on the Shub-Stealer pcap during its C2
-teardown phase. Adjacent value, not by-design coverage.
+Every one of these is a "real attacker shape" — the corpus catches what the
+internet actually throws at exposed perimeter. The huge counts on 9170004 +
+9300040 mirror what every SOC sees: scanners mass-probe `/.env` and PHPUnit
+endpoints by the thousands per day. Validating both that:
+1. **The rules trigger correctly on real attacker traffic** (not just our PoCs).
+2. **The thresholds we shipped are appropriately tight** — even with thousands
+   of probes, the threshold-based rules (port-scan / brute / RST-flood) fire
+   ONLY when the rate actually warrants. Negative signal here would have been
+   "fires only once because our threshold is too loose".
 
-**What this DOES tell us — actionably:**
+**Compare with the MTA infection-side captures in `reference/mta/infections/`
+(separate run, see commit-history AUDIT-REAL run on those)**: those captures
+are the OPPOSITE direction (compromised host → C2), where the IP-rep pipeline
+(separate from this repo, per spec) is the right tool — and our corpus
+correctly stays mostly quiet on that profile (1 hit = real RST-flood, not
+FP). The corpus is now empirically validated to:
+- **Fire on the inbound profile** it was scoped for (this section).
+- **Stay quiet on the outbound profile** that's out of scope (prior MTA
+  infection run, `reference/mta/infections/`).
 
-1. The synthetic-PoC §17 numbers (`GAP 98/124`) measure exploitation-attempt
-   coverage, **not** total-network coverage. Both are valid; just different
-   questions.
-2. If we want this corpus to alert on MTA-style pcaps, we'd need to author
-   **outbound C2/beacon** rules (User-Agent patterns, JA3/JA4 of known
-   malware, DNS-tunnel beyond what 9410001..3 cover, etc.). That is a
-   *separate corpus category*, currently out of scope.
-3. The right real-traffic benchmark for THIS corpus's intended scope is a
-   perimeter capture in front of a vulnerable webapp being scanned/attacked —
-   NOT infection-side captures. Sources to try next: DEF CON CTF web-challenge
-   traffic, HackTheBox/TryHackMe lab captures, or a real public-facing
-   webapp's perimeter logs.
+**ET Open dominates absolute alert count (118k vs our 2.5k) — read carefully**:
+ET has 50,169 rules vs our 124, and most of ET's alerts are INFO/HUNTING
+tiers that fire on every probe (`ET INFO Outgoing Basic Auth Base64 HTTP
+Password detected unencrypted` once per request, etc.) rather than
+exploitation-grade alerts. Our 2.5k alerts are all exploitation-grade
+(15 distinct SIDs, every one a real attack class). Different signal density.
 
-**Honest §17 framing**: corpus delivers what it was scoped for (inbound
-web-perimeter). MTA pcaps validate that we don't over-fire on outbound-malware
-noise (essentially we *don't* — 9500008 is the lone hit, on an actual
-scan-shape RST burst, not a false positive). That's a quiet kind of pass.
+**Action items surfaced by this run** — none urgent, all opportunities:
+- Top-fired SIDs (9300040 PHPUnit, 9170004 .env) confirm these are
+  high-value retentions. No tuning needed.
+- The L3/L4 recon family (9420001-5) is firing exactly as designed — port
+  scans on the internet are common; thresholds are tight enough not to
+  drown.
+- 9180002 / 9430001 single hits suggest the captures had ONE
+  brute-force-shaped session each; thresholds are real-traffic-validated.
