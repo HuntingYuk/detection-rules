@@ -4,12 +4,12 @@
 
 ## Headline
 
-- Rules audited: **119**
-- PoCs generated: 119
-- Negatives generated: 119
-- POC target-fired: **119** (must be all)
-- NEG target-silent: **119** (must be all)
-- Negatives that hit fast_pattern (§19 T6 ideal): **48** / 98 payload rules
+- Rules audited: **124**
+- PoCs generated: 124
+- Negatives generated: 124
+- POC target-fired: **124** (must be all)
+- NEG target-silent: **124** (must be all)
+- Negatives that hit fast_pattern (§19 T6 ideal): **74** / 103 payload rules
 - Non-payload rules (no `content:`, no fast_pattern): 21
 
 ## 🟡 Weak negatives (don't exercise fast_pattern — §19 T6)
@@ -17,55 +17,34 @@
 These negatives MISS the MPM literal entirely instead of hitting it and being pcre-rejected. They prove the rule stays silent, but they don't prove pcre actually rejects the lookalike. Acceptable but ideal is to strengthen.
 
 - **9100001** `WEB SQLi UNION-based in http.uri (canonical) [medium]` — content `'union select'` (nocase)
-- **9100002** `WEB SQLi time-based blind (SLEEP/BENCHMARK/WAITFOR) in http.uri [medium]` — content `'sleep('` (nocase)
-- **9100003** `WEB SQLi error-based (extractvalue/updatexml/exp) in http.uri [medium]` — content `'extractvalue('` (nocase)
 - **9100004** `WEB SQLi boolean-blind tautology in http.uri [medium]` — content `'or 1=1'` (nocase)
-- **9110001** `WEB XSS attribute-breakout into <script> in http.uri [medium]` — content `'><script'` (nocase)
-- **9110002** `WEB XSS event-handler injection (on*=) in http.uri [medium]` — content `'onerror='` (nocase)
 - **9110005** `WEB XSS <iframe srcdoc=> attribute payload in http.uri [medium]` — content `'iframe srcdoc='` (nocase)
 - **9120001** `WEB CMDi shell-separator + cat /etc/ in http.uri [medium]` — content `'cat /etc/'` (nocase)
-- **9120003** `WEB SSTI computed probe {{7*7}} (Jinja/Twig) in http.uri [medium]` — content `'{{7*7}}'` (nocase)
 - **9120009** `WEB CMDi python -c inline-script execution in http.uri [high]` — content `'python -c'` (nocase)
+- **9120010** `WEB CMDi netcat -e reverse shell (nc/ncat -e /bin/sh) in http.uri [high]` — content `'nc -e'` (nocase)
 - **9150002** `WEB SSRF dangerous URL scheme (gopher/dict/file/ldap/ftp) in http.uri [high]` — content `'gopher://'` (nocase)
-- **9160001** `WEB Insecure Deserialization - Java serialized object (base64 rO0AB) in request ` — content `'rO0AB'`
 - **9160002** `WEB Insecure Deserialization - .NET ysoserial gadget in request body [high]` — content `'ObjectDataProvider'` (nocase)
-- **9160003** `WEB Insecure Deserialization - Node.js node-serialize RCE marker in body [high]` — content `'_$$ND_FUNC$$_'`
 - **9170001** `WEB Exposure - /.git/config repository probe [high]` — content `'/.git/config'` (nocase)
 - **9170002** `WEB Exposure - /.aws/credentials cloud secret probe [high]` — content `'/.aws/credentials'` (nocase)
 - **9170003** `WEB Exposure - /.svn/wc.db SVN repo probe [high]` — content `'/.svn/wc.db'` (nocase)
 - **9190001** `WEB Webshell PHP @eval($_POST ...) interaction (China Chopper-style) [high]` — content `'@eval($_POST'` (nocase)
-- **9190002** `WEB Webshell JSP Runtime.getRuntime().exec in request body [high]` — content `'getRuntime().exec'` (nocase)
 - **9200001** `WEB Recon - sqlmap scanner User-Agent [high]` — content `'sqlmap'` (nocase)
 - **9200002** `WEB Recon - nuclei scanner User-Agent [high]` — content `'Nuclei -'` (nocase)
 - **9210002** `WEB Info Leak - PEM private key in HTTP response body [high]` — content `'PRIVATE KEY-----'` (nocase)
-- **9300002** `KNOWN-CVE Spring4Shell classLoader property binding (CVE-2022-22965) [high]` — content `'class.module.classLoader'` (nocase)
-- **9300003** `KNOWN-CVE Confluence OGNL injection (CVE-2022-26134) [high]` — content `'${(#'` (nocase)
-- **9300004** `KNOWN-CVE Shellshock bash function-def injection in HTTP header (CVE-2014-6271) ` — content `'() {'`
-- **9300005** `KNOWN-CVE Apache Struts2 S2-045 OGNL in Content-Type (CVE-2017-5638) [high]` — content `'%{(#'` (nocase)
 - **9300006** `KNOWN-CVE F5 BIG-IP iControl REST auth bypass /mgmt/tm/util/bash (CVE-2022-1388)` — content `'/mgmt/tm/util/bash'` (nocase)
-- **9300007** `KNOWN-CVE Citrix ADC path traversal /vpn/../vpns/ (CVE-2019-19781) [high]` — content `'/vpns/portal/'` (nocase)
-- **9300008** `KNOWN-CVE FortiOS SSL VPN path traversal sslvpn_websession (CVE-2018-13379) [hig` — content `'sslvpn_websession'` (nocase)
-- **9300010** `KNOWN-CVE Progress MOVEit Transfer SQLi (CVE-2023-34362) [high]` — content `'/moveitisapi/moveitisapi.dll'` (nocase)
 - **9300011** `KNOWN-CVE Atlassian Confluence broken access control setup endpoint (CVE-2023-22` — content `'/setup/setupadministrator.action'` (nocase)
-- **9300013** `KNOWN-CVE Apache OFBiz auth bypass requirePasswordChange (CVE-2023-51467) [high]` — content `'requirePasswordChange=Y'` (nocase)
 - **9300015** `KNOWN-CVE GitLab password-reset email-array takeover (CVE-2023-7028) [high]` — content `'user[email][]'` (nocase)
 - **9300017** `KNOWN-CVE PaperCut MF/NG auth bypass SetupCompleted (CVE-2023-27350) [high]` — content `'page/SetupCompleted'` (nocase)
-- **9300018** `KNOWN-CVE Cisco IOS XE Web UI implant access logon_hash (CVE-2023-20198) [high]` — content `'/webui/logoutconfirm.html'` (nocase)
-- **9300019** `KNOWN-CVE Adobe ColdFusion deserialization _cfclient (CVE-2023-26360) [high]` — content `'_cfclient=true'` (nocase)
-- **9300020** `KNOWN-CVE Atlassian Bitbucket archive command injection (CVE-2022-36804) [high]` — content `'--upload-pack'` (nocase)
 - **9300021** `KNOWN-CVE JetBrains TeamCity auth bypass via semicolon-jsp trick (CVE-2024-27198` — content `'|3b|.jsp'` (nocase)
 - **9300022** `KNOWN-CVE ConnectWise ScreenConnect auth bypass SetupWizard path (CVE-2024-1709)` — content `'/SetupWizard.aspx/'` (nocase)
 - **9300024** `KNOWN-CVE Zimbra mboximport path traversal (CVE-2022-27925) [high]` — content `'/service/extension/backup/mboximport'` (nocase)
 - **9300025** `KNOWN-CVE VMware vCenter vROps uploadova RCE (CVE-2021-21972) [high]` — content `'/ui/vropspluginui/rest/services/uploadov'` (nocase)
 - **9300026** `KNOWN-CVE Fortra GoAnywhere MFT license deserialization RCE (CVE-2023-0669) [hig` — content `'/goanywhere/lic/accept'` (nocase)
 - **9300027** `KNOWN-CVE Atlassian Confluence improper authz setup-restore (CVE-2023-22518) [hi` — content `'/json/setup-restore'` (nocase)
-- **9300028** `KNOWN-CVE Pulse Connect Secure pre-auth file read (CVE-2019-11510) [high]` — content `'/dana/html5acc/guacamole/'` (nocase)
-- **9300034** `KNOWN-CVE Apache Struts2 REST plugin XStream deserialization RCE (CVE-2017-9805)` — content `'jdk.nashorn.internal'` (nocase)
 - **9300036** `KNOWN-CVE ownCloud GraphAPI phpinfo env-leak (CVE-2023-49103) [high]` — content `'/apps/graphapi/v1/.well-known/microsoft-'` (nocase)
-- **9300037** `KNOWN-CVE GeoServer OGC API pre-auth RCE valueReference=exec (CVE-2024-36401) [h` — content `'valueReference=exec('` (nocase)
 - **9300040** `KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]` — content `'/vendor/phpunit/phpunit/src/Util/PHP/eva'` (nocase)
+- **9300041** `KNOWN-CVE Apache HTTPD path traversal /icons/ alias (CVE-2021-41773) [high]` — content `'/icons/.'` (nocase)
 - **9500009** `PROTO-ANOMALY HTTP TRACE method (Cross-Site-Tracing / recon) [medium]` — content `'TRACE'` (nocase)
-- **9600001** `WEB A02 JWT alg:none signature-strip token presented [high]` — content `'eyJhbGciOiJub25l'`
 
 ## Shadow ranking — rules that fire on OTHER PoCs
 
@@ -73,8 +52,9 @@ Each row: rule SID, # of other PoCs it shadows. High counts usually = legitimate
 
 | Shadower SID | shadows # PoCs | msg |
 |--------------|----------------|-----|
-| 9130001 | 3 | WEB Path Traversal to /etc/passwd in http.uri.raw [high] |
+| 9130001 | 4 | WEB Path Traversal to /etc/passwd in http.uri.raw [high] |
 | 9200001 | 1 | WEB Recon - sqlmap scanner User-Agent [high] |
+| 9170004 | 1 | WEB Exposure - /.env or config backup probe [high] |
 | 9210001 | 1 | WEB Info Leak - AWS access key id in HTTP response body [high] |
 | 9130002 | 1 | WEB LFI/RFI PHP stream wrapper (php://filter etc) in http.uri.raw [high] |
 | 9160001 | 1 | WEB Insecure Deserialization - Java serialized object (base64 rO0AB) in request  |
@@ -85,12 +65,13 @@ Each row: rule SID, # of other PoCs it shadows. High counts usually = legitimate
 
 - **9100001** WEB SQLi UNION-based in http.uri (canonical) [medium] → shadows: 9200001
 - **9130006** WEB Path Traversal nested-dot bypass ....// in http.uri.raw [high] → shadows: 9130001
-- **9210003** WEB Info Leak - AWS secret access key in HTTP response body [high] → shadows: 9210001
+- **9210003** WEB Info Leak - AWS secret access key in HTTP response body [high] → shadows: 9170004, 9210001
 - **9300014** KNOWN-CVE PHP-CGI argument injection (CVE-2024-4577) [high] → shadows: 9130002
 - **9300026** KNOWN-CVE Fortra GoAnywhere MFT license deserialization RCE (CVE-2023- → shadows: 9160001
 - **9300028** KNOWN-CVE Pulse Connect Secure pre-auth file read (CVE-2019-11510) [hi → shadows: 9130001
 - **9300035** KNOWN-CVE CrushFTP server-side template injection <INCLUDE> (CVE-2024- → shadows: 9130001
 - **9300039** KNOWN-CVE Confluence Add-Language post-auth OGNL RCE (CVE-2024-21683)  → shadows: 9190002
+- **9300041** KNOWN-CVE Apache HTTPD path traversal /icons/ alias (CVE-2021-41773) [ → shadows: 9130001
 - **9400001** TLS anomaly - SNI is a bare IPv4 literal (non-RFC6066, suspicious clie → shadows: 9400002
 
 ---

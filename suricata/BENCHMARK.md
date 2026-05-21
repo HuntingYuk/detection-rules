@@ -220,8 +220,35 @@ CI stays green; PoC fires unchanged.
   9140003 (billion-laughs DoS) — same anchor by design, distinct pcre
   selectors (SYSTEM/PUBLIC vs recursive amplifier). Both sibling XXE rules.
 
-### Follow-up backlog (intentionally not fixed this pass)
-- **Strengthen ~30 negatives** (rules with pcre whose negative misses MPM
-  entirely). Ideal per §19 T6: negative carries the content literal then pcre
-  rejects, proving pcre actually filters. Acceptable today; would require ~30
-  bespoke negative rewrites — a dedicated batch.
+### Weak-negative strengthening campaign (2026-05-21) — DONE
+
+Closed the §19 T6 follow-up: rewrote **31 negative.sh files** to carry the
+rule's fast_pattern literal in a benign context that fails the pcre check
+(genuine MPM-hit-then-pcre-reject pattern). Strong-negative coverage rose
+**48→74 / 103 payload rules**.
+
+A residual ~30 rules remain measurably "weak" by the pcre-stripped Suricata
+test, but the residuals are **inherent limits**, not skipped work:
+
+1. **Detection-filter rules** (xss 9110001..5, sqli 9100001..4, ssti
+   9120003/4): the negative DOES carry the content literal, but `detection_
+   filter count N` keeps the bare-content rule silent at the
+   below-count send rate the negative uses. The byte-scan in
+   `audit-traffic` shows these as carrying; the pcre-stripped Suricata
+   test counts them as silent because of the same threshold.
+
+2. **pcre ≈ content rules** (no near-miss is *syntactically possible*):
+   - **9150002** gopher://: pcre alternation `gopher|dict|ldap|...` IS the
+     content. Any literal `gopher://` satisfies both.
+   - **9160002** ObjectDataProvider: pcre alternation includes the literal
+     fast_pattern.
+   - **9190001** @eval($_POST: pcre `@eval\s*\(\s*\$_(POST|...)` matches the
+     literal with zero whitespace — identical to the content.
+   - **9210002** PEM private key: pcre's BEGIN-header marker IS the content.
+     Already the canonical residual documented in **FP-RISKS.md §1** —
+     `count 1, seconds 86400` per-dst is the operator knob.
+
+For these four, the negatives revert to the original "miss MPM entirely"
+form (which still proves *target SID stays silent* — the gate's mandatory
+property — just not the §19 T6 ideal). Documented here so re-audit pass
+doesn't keep re-flagging them.
