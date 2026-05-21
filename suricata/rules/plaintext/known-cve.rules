@@ -297,3 +297,44 @@ alert http any any -> any any (msg:"KNOWN-CVE Drupal Drupalgeddon2 #post_render 
 # exec operation against an ActiveMQ Broker MBean. Negative: a benign Jolokia
 # read/list (no exec+Broker MBean) -> reaches body pcre, rejected -> silent.
 alert http any any -> any any (msg:"KNOWN-CVE Apache ActiveMQ Jolokia HTTP MBean exec RCE [high]"; flow:established,to_server; http.uri.raw; content:"/api/jolokia"; nocase; fast_pattern; http.request_body; pcre:"/\x22type\x22\s*:\s*\x22exec\x22[\s\S]{0,300}?org\.apache\.activemq\x3atype\x3dBroker/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-41678, poc_ref tests/poc/9300043_activemq-jolokia/poc.sh, tag activemq, created_at 2026_05_20, updated_at 2026_05_21, author huntingyuk; sid:9300043; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-34102 Adobe Commerce / Magento
+# "CosmicSting" pre-auth XML SOAP deserialization → arbitrary file read /
+# remote OS-command execution via PHP gadget chains. Clean-room from
+# advisory. Two-buffer: http.uri.raw "/rest/V1/guest-carts" (fast_pattern;
+# the Magento guest-cart REST endpoint the exploit POSTs to) +
+# http.request_body pcre requires the SOAP-XML-in-JSON payload shape (the
+# CosmicSting trick wraps a SimpleXMLElement-style XML into the JSON body,
+# tagged by SOAP-namespace / xsi:type / DOCTYPE markers). Negative: a benign
+# Magento JSON guest-cart estimate without the XML/SOAP payload → reaches
+# body pcre, rejected → silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE Adobe Commerce / Magento CosmicSting XML SOAP deserialization (CVE-2024-34102) [high]"; flow:established,to_server; http.uri.raw; content:"/rest/V1/guest-carts"; nocase; fast_pattern; http.request_body; pcre:"/(?:<!DOCTYPE\s+[^>]*\[|xmlns:xsi=|http:\/\/www\.w3\.org\/2001\/XMLSchema-instance|SimpleXMLElement|xsi:type)/i"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-34102, poc_ref tests/poc/9300044_magento-cosmicsting/poc.sh, tag magento, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300044; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-25600 WordPress Bricks Builder pre-auth
+# RCE via the render_element REST endpoint (the `bricks/v1/render_element`
+# action evaluates a `queryEditor` PHP expression from the body). Clean-room
+# from advisory. Two-buffer: http.uri.raw "/wp-json/bricks/v1/render_element"
+# (fast_pattern) + http.request_body pcre requires the queryEditor sink in a
+# JSON gadget (eval / file_get_contents / phpinfo / passthru / system).
+# Negative: a benign WP REST render call (no queryEditor sink) → body pcre
+# rejects → silent.
+alert http any any -> any any (msg:"KNOWN-CVE WordPress Bricks Builder render_element RCE (CVE-2024-25600) [high]"; flow:established,to_server; http.uri.raw; content:"/wp-json/bricks/v1/render_element"; nocase; fast_pattern; http.request_body; pcre:"/queryEditor[\s\S]{0,200}?(?:eval|file_get_contents|phpinfo|passthru|system|shell_exec|assert)\s*\(/i"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-25600, poc_ref tests/poc/9300045_wp-bricks-rce/poc.sh, tag wordpress, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300045; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-50623 Cleo Harmony/VLTrader/LexiCom
+# unauth file-upload → RCE via path traversal in autorun directory (mass-
+# exploited by ransomware ops late 2024). Clean-room from advisory. Two-
+# buffer: http.uri.raw "/Synchronization" (fast_pattern; the Cleo sync
+# endpoint targeted by the exploit) + http.request_body pcre requires the
+# autorun-path-traversal marker (../autorun/ or ../autorun%2f, where the
+# uploaded file is auto-executed by Cleo's host). Negative: a normal Cleo
+# /Synchronization request without traversal → body pcre rejects → silent.
+alert http any any -> any any (msg:"KNOWN-CVE Cleo Harmony/VLTrader unauth file-upload RCE (CVE-2024-50623) [high]"; flow:established,to_server; http.uri.raw; content:"/Synchronization"; nocase; fast_pattern; http.request_body; pcre:"/(?:\.\.|%2e%2e)(?:\/|%2f)autorun(?:\/|%2f)|host=[^&\r\n]{0,200}autorun(?:\/|%2f)/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-50623, poc_ref tests/poc/9300046_cleo-cve-2024-50623/poc.sh, tag cleo, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300046; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2021-44228 Log4Shell — obfuscated JNDI
+# bypass variants (the bare-string rule 9300001 catches "${jndi:<scheme>:";
+# real exploit traffic in 2021-2025 uses string-substitution tricks like
+# "${::-j}${::-n}${::-d}${::-i}:" and "${env:UNDEFINED:-jndi}:" to evade
+# naive matchers). Scope http.header (UA/Referer/Cookie/X-Forwarded-For/
+# Authorization — same as 9300001). fast_pattern "${::-" (5B; the ::-
+# default-value substitution is an attacker-unique opener — no benign
+# log4j config uses it). pcre confirms either a "j" letter substitution
+# right after, OR the ${env: + jndi pattern. Negative: an HTTP header
+# mentioning "${::-" as text without a JNDI letter substitution after
+# → reaches pcre, rejected → silent.
+alert http any any -> any any (msg:"KNOWN-CVE Log4Shell obfuscated JNDI bypass (${::-} or ${env:...:-jndi}) in HTTP header (CVE-2021-44228) [high]"; flow:established,to_server; http.header; content:"${::-"; nocase; fast_pattern; pcre:"/\$\{(?:::-[jJ]|env\x3a[^}]{0,40}?:-(?:jndi|jnd\$\{))/i"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-44228, poc_ref tests/poc/9300047_log4shell-obfuscated/poc.sh, tag log4shell, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300047; rev:1;)

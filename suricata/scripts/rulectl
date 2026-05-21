@@ -455,6 +455,11 @@ def cmd_ci(a):
     (ok if g.returncode==0 else bad)("ci gen-docs --check %s" %
         ("PASS" if g.returncode==0 else "FAIL\n"+g.stderr.strip()))
     if g.returncode!=0: die("CI FAILED: docs drift / undocumented rule (run scripts/gen-docs)")
+    gm=os.path.join(os.path.dirname(os.path.abspath(__file__)),"gen-manifest")
+    g2=subprocess.run([sys.executable,gm,"--check"],cwd=SUR,capture_output=True,text=True)
+    (ok if g2.returncode==0 else bad)("ci gen-manifest --check %s" %
+        ("PASS" if g2.returncode==0 else "FAIL\n"+g2.stderr.strip()))
+    if g2.returncode!=0: die("CI FAILED: rules.json stale (run scripts/gen-manifest)")
     rules=sorted(_enabled_rules(), key=lambda x:x[1].sid)
     fails=[]; missing=[]
     for _,r,_ in rules:

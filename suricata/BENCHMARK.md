@@ -38,17 +38,17 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 124
-GAP  ours fires / ET silent  : 98   <- custom corpus value-add (§17)
-OVERLAP both fire            : 26   (ET Open already covers; audited below)
-MISS ours did NOT fire       : 0   (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 124 (caveat: negatives tuned to OUR rules)
+attack pcaps measured        : 128
+GAP  ours fires / ET silent  : 101  <- custom corpus value-add (§17)
+OVERLAP both fire            : 27   (ET Open already covers; audited below)
+MISS ours did NOT fire       : 0    (gate guarantees 0  ✓)
+ET Open FP on our benign     : 2 / 128 (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 98/124 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. Nine category-deepening batches (2026-05-19
-through 21) added 45 rules; 35 pure-GAP + 10 audited OVERLAP across batches, raising
-GAP 62→98 (+36). The 10 OVERLAPs split into ET-misclassify (6 — ET tags
+**Read:** 101/128 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Ten category-deepening batches (2026-05-19
+through 21) added 49 rules; 38 pure-GAP + 11 audited OVERLAP across batches, raising
+GAP 62→101 (+39). The 10 OVERLAPs split into ET-misclassify (6 — ET tags
 `exec/eval/php-tag` as SQLi or generic when it's CVE-specific Java/SpEL/PHP/Node),
 ET-INFO-tier-posture (2 — Basic-auth-unencrypted, generic Host-anomaly), and
 scan-vs-brute classtype diff (2 — RDP and SSH brute-force rules where ET has
