@@ -270,3 +270,30 @@ alert http any any -> any any (msg:"KNOWN-CVE Confluence Add-Language post-auth 
 # fixed exploit path) — a benign client never requests this path. pcre absent
 # (the path itself is the deterministic, attacker-unique selector).
 alert http any any -> any any (msg:"KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]"; flow:established,to_server; http.uri.raw; content:"/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-9841, poc_ref tests/poc/9300040_phpunit-cve-2017-9841/poc.sh, tag phpunit, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300040; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2021-41773 Apache HTTPD 2.4.49 path traversal
+# in mod_alias / Files (and the CVE-2021-42013 variant on 2.4.50 with an extra
+# encode). Clean-room from advisory. Scope http.uri.raw. fast_pattern
+# "/icons/." (8B) -> the default-aliased /icons/ directory is the entry the
+# exploit pivots through; combined with the encoded traversal token "%2e"
+# adjacent, it's attacker-unique. pcre confirms the traversal sequence.
+# Negative: a normal /icons/<file>.png fetch (no traversal) -> reaches pcre,
+# rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE Apache HTTPD path traversal /icons/ alias (CVE-2021-41773) [high]"; flow:established,to_server; http.uri.raw; content:"/icons/."; nocase; fast_pattern; pcre:"/\/icons\/\.(?:%2e|\.)(?:%2f|\/)[^\r\n]{0,200}?(?:etc\/passwd|bin\/sh|cgi-bin\/|win\.ini)/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-41773, poc_ref tests/poc/9300041_httpd-cve-2021-41773/poc.sh, tag httpd, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300041; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2018-7600 Drupal "Drupalgeddon2" — the
+# Drupal 7/8 Form API renders attacker-controlled #post_render/array_filter
+# from POST data, leading to RCE. Clean-room from advisory. Two-buffer:
+# http.uri.raw "element_parents=account/mail/%23value" (fast_pattern; the
+# canonical exploit URL marker that targets the mail element via deep array
+# rendering) + http.request_body pcre requires the #post_render / #markup
+# render-callback abuse. Negative: a legit /user/register POST without
+# #post_render -> reaches body pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE Drupal Drupalgeddon2 #post_render Form-API RCE (CVE-2018-7600) [high]"; flow:established,to_server; http.uri.raw; content:"element_parents=account/mail/%23value"; nocase; fast_pattern; http.request_body; pcre:"/(?:#post_render|%23post_render|#markup|%23markup)[\[\]\w.]{0,30}=[^&\r\n]{0,80}?(?:exec|system|passthru|shell_exec|file_get_contents|assert)/i"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-7600, poc_ref tests/poc/9300042_drupalgeddon2/poc.sh, tag drupal, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300042; rev:1;)
+# FP-reasoning: HIGH, plain. Apache ActiveMQ Jolokia HTTP MBean RCE (the
+# Jolokia agent exposes JMX over HTTP at /api/jolokia; an "exec" request
+# against a Broker MBean lets attackers invoke arbitrary Java methods —
+# weaponised in ransomware campaigns even when CVE-2023-46604's OpenWire
+# port is firewalled). Two-buffer: http.uri.raw "/api/jolokia"
+# (fast_pattern; the agent endpoint) + http.request_body pcre requires an
+# exec operation against an ActiveMQ Broker MBean. Negative: a benign Jolokia
+# read/list (no exec+Broker MBean) -> reaches body pcre, rejected -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE Apache ActiveMQ Jolokia HTTP MBean exec RCE [high]"; flow:established,to_server; http.uri.raw; content:"/api/jolokia"; nocase; fast_pattern; http.request_body; pcre:"/\x22type\x22\s*:\s*\x22exec\x22[\s\S]{0,300}?org\.apache\.activemq\x3atype\x3dBroker/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-41678, poc_ref tests/poc/9300043_activemq-jolokia/poc.sh, tag activemq, created_at 2026_05_20, updated_at 2026_05_21, author huntingyuk; sid:9300043; rev:1;)

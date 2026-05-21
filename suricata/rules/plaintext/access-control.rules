@@ -16,3 +16,10 @@ alert http any any -> any any (msg:"WEB Exposure - /.aws/credentials cloud secre
 # unique; no benign client requests this path. Negative: a normal /svn/ API
 # path -> no fast_pattern hit -> silent.
 alert http any any -> any any (msg:"WEB Exposure - /.svn/wc.db SVN repo probe [high]"; flow:established,to_server; http.uri.raw; content:"/.svn/wc.db"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170003_svn-wc-db-exposure/poc.sh, tag exposure, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9170003; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 4 (9170004): exposed .env / dotfile
+# config backup probe (sibling 9170001 .git, 9170002 .aws, 9170003 .svn).
+# Scope http.uri.raw. fast_pattern "/.env" (5B) + pcre confirms the request
+# is for a .env file or its common backups (.env.bak/.local/.backup/.production).
+# No benign client requests dotfile env configs over HTTP. Negative: a normal
+# /env/<something> API path -> no /.env fast_pattern hit -> silent.
+alert http any any -> any any (msg:"WEB Exposure - /.env or config backup probe [high]"; flow:established,to_server; http.uri.raw; content:"/.env"; nocase; fast_pattern; pcre:"/\/\.env(?:\.(?:bak|backup|local|production|prod|dev|old|orig|save|swp))?(?:[\?\s\x00]|$)/i"; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170004_env-backup-exposure/poc.sh, tag exposure, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9170004; rev:1;)
