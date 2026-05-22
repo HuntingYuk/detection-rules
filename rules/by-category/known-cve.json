@@ -1,0 +1,2813 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "known-cve",
+  "rules": [
+    {
+      "sid": 9300001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Log4Shell JNDI lookup in HTTP header (CVE-2021-44228) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-44228",
+        "poc_ref": "tests/poc/9300001_log4shell-jndi/poc.sh",
+        "tag": "log4shell",
+        "created_at": "2026_05_18",
+        "updated_at": "2026_05_18",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "${jndi:",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\$\\{jndi:(?:ldaps?|rmi|dns|iiop|nis|corba|nds|https?)\\:/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9300001_log4shell-jndi/",
+      "readme": "suricata/tests/poc/9300001_log4shell-jndi/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Log4Shell JNDI lookup in HTTP header (CVE-2021-44228) [high]\"; flow:established,to_server; http.header; content:\"${jndi:\"; nocase; fast_pattern; pcre:\"/\\$\\{jndi:(?:ldaps?|rmi|dns|iiop|nis|corba|nds|https?)\\:/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-44228, poc_ref tests/poc/9300001_log4shell-jndi/poc.sh, tag log4shell, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9300001; rev:1;)",
+      "description": {
+        "attack": "Log4Shell — eksploitasi Log4j (CVE-2021-44228): payload `${jndi:ldap://...}` di header HTTP memicu JNDI lookup.",
+        "impact": "Remote Code Execution pre-auth — salah satu CVE terparah dalam sejarah.",
+        "detects": "`${jndi:` diikuti skema JNDI nyata di header HTTP."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Spring4Shell classLoader property binding (CVE-2022-22965) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-22965",
+        "poc_ref": "tests/poc/9300002_spring4shell/poc.sh",
+        "tag": "spring4shell",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "class.module.classLoader",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/class\\.module\\.classLoader\\.(?:resources|context|parent|URLs)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300002_spring4shell/",
+      "readme": "suricata/tests/poc/9300002_spring4shell/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Spring4Shell classLoader property binding (CVE-2022-22965) [high]\"; flow:established,to_server; http.request_body; content:\"class.module.classLoader\"; nocase; fast_pattern; pcre:\"/class\\.module\\.classLoader\\.(?:resources|context|parent|URLs)/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-22965, poc_ref tests/poc/9300002_spring4shell/poc.sh, tag spring4shell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300002; rev:1;)",
+      "description": {
+        "attack": "Spring4Shell (CVE-2022-22965): binding properti `class.module.classLoader` lewat data-binding Spring.",
+        "impact": "Remote Code Execution pada aplikasi Spring (tulis webshell).",
+        "detects": "Token `class.module.classLoader` di body request form."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Confluence OGNL injection (CVE-2022-26134) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-26134",
+        "poc_ref": "tests/poc/9300003_confluence-ognl/poc.sh",
+        "tag": "confluence-ognl",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "${(#",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\$\\{\\(#[a-z0-9_]+\\s*=/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9300003_confluence-ognl/",
+      "readme": "suricata/tests/poc/9300003_confluence-ognl/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Confluence OGNL injection (CVE-2022-26134) [high]\"; flow:established,to_server; http.uri; content:\"${(#\"; nocase; fast_pattern; pcre:\"/\\$\\{\\(#[a-z0-9_]+\\s*=/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-26134, poc_ref tests/poc/9300003_confluence-ognl/poc.sh, tag confluence-ognl, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300003; rev:1;)",
+      "description": {
+        "attack": "Confluence OGNL injection (CVE-2022-26134): ekspresi OGNL `${(#...)}` di URL.",
+        "impact": "Remote Code Execution pre-auth di Atlassian Confluence.",
+        "detects": "Pembuka OGNL `${(#` + akses member di URL."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300004,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Shellshock bash function-def injection in HTTP header (CVE-2014-6271) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2014-6271",
+        "poc_ref": "tests/poc/9300004_shellshock/poc.sh",
+        "tag": "shellshock",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "() {",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/\\(\\)\\s*\\{[^}]*\\}\\s*\\x3b/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9300004_shellshock/",
+      "readme": "suricata/tests/poc/9300004_shellshock/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Shellshock bash function-def injection in HTTP header (CVE-2014-6271) [high]\"; flow:established,to_server; http.header; content:\"() {\"; fast_pattern; pcre:\"/\\(\\)\\s*\\{[^}]*\\}\\s*\\x3b/\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2014-6271, poc_ref tests/poc/9300004_shellshock/poc.sh, tag shellshock, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300004; rev:1;)",
+      "description": {
+        "attack": "Shellshock (CVE-2014-6271): definisi fungsi bash `() { :; };` disuntik di header HTTP (User-Agent/Referer/Cookie).",
+        "impact": "Remote Code Execution lewat CGI bash.",
+        "detects": "`() {` + payload definisi-fungsi-lalu-perintah di header HTTP."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache Struts2 S2-045 OGNL in Content-Type (CVE-2017-5638) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2017-5638",
+        "poc_ref": "tests/poc/9300005_struts2-s2045/poc.sh",
+        "tag": "struts2",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "%{(#",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Content-Type[^\\r\\n]*%\\{\\(#/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9300005_struts2-s2045/",
+      "readme": "suricata/tests/poc/9300005_struts2-s2045/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache Struts2 S2-045 OGNL in Content-Type (CVE-2017-5638) [high]\"; flow:established,to_server; http.header; content:\"%{(#\"; nocase; fast_pattern; pcre:\"/Content-Type[^\\r\\n]*%\\{\\(#/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-5638, poc_ref tests/poc/9300005_struts2-s2045/poc.sh, tag struts2, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300005; rev:1;)",
+      "description": {
+        "attack": "Apache Struts2 S2-045 (CVE-2017-5638): OGNL disuntik lewat header Content-Type.",
+        "impact": "Remote Code Execution pre-auth di Struts2.",
+        "detects": "Pembuka OGNL `%{(#` di header Content-Type."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE F5 BIG-IP iControl REST auth bypass /mgmt/tm/util/bash (CVE-2022-1388) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-1388",
+        "poc_ref": "tests/poc/9300006_f5-bigip-icontrol/poc.sh",
+        "tag": "f5-bigip",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/mgmt/tm/util/bash",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9300006_f5-bigip-icontrol/",
+      "readme": "suricata/tests/poc/9300006_f5-bigip-icontrol/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE F5 BIG-IP iControl REST auth bypass /mgmt/tm/util/bash (CVE-2022-1388) [high]\"; flow:established,to_server; http.uri; content:\"/mgmt/tm/util/bash\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-1388, poc_ref tests/poc/9300006_f5-bigip-icontrol/poc.sh, tag f5-bigip, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300006; rev:1;)",
+      "description": {
+        "attack": "F5 BIG-IP iControl REST auth bypass (CVE-2022-1388): akses endpoint shell /mgmt/tm/util/bash tanpa auth.",
+        "impact": "Remote Code Execution unauth di perangkat F5.",
+        "detects": "Path `/mgmt/tm/util/bash` di URL — tidak ada klien jinak yang mengaksesnya."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300007,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Citrix ADC path traversal /vpn/../vpns/ (CVE-2019-19781) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2019-19781",
+        "poc_ref": "tests/poc/9300007_citrix-adc-traversal/poc.sh",
+        "tag": "citrix-adc",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/vpns/portal/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/vpn(?:\\/|%2f)(?:\\.\\.|%2e%2e)(?:\\/|%2f)vpns\\//i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300007_citrix-adc-traversal/",
+      "readme": "suricata/tests/poc/9300007_citrix-adc-traversal/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Citrix ADC path traversal /vpn/../vpns/ (CVE-2019-19781) [high]\"; flow:established,to_server; http.uri.raw; content:\"/vpns/portal/\"; nocase; fast_pattern; pcre:\"/\\/vpn(?:\\/|%2f)(?:\\.\\.|%2e%2e)(?:\\/|%2f)vpns\\//i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-19781, poc_ref tests/poc/9300007_citrix-adc-traversal/poc.sh, tag citrix-adc, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300007; rev:1;)",
+      "description": {
+        "attack": "Citrix ADC/Gateway path traversal (CVE-2019-19781): `/vpn/../vpns/portal/`.",
+        "impact": "Remote Code Execution pre-auth di Citrix ADC.",
+        "detects": "Traversal `/vpn/../vpns/` mencapai template portal di URL raw."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300008,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE FortiOS SSL VPN path traversal sslvpn_websession (CVE-2018-13379) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2018-13379",
+        "poc_ref": "tests/poc/9300008_fortios-sslvpn-traversal/poc.sh",
+        "tag": "fortios",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "sslvpn_websession",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/remote\\/fgt_lang\\?[^\\r\\n]{0,80}lang=[^\\r\\n]{0,120}?(?:\\.\\.|%2e%2e|\\/dev\\/cmdb)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300008_fortios-sslvpn-traversal/",
+      "readme": "suricata/tests/poc/9300008_fortios-sslvpn-traversal/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE FortiOS SSL VPN path traversal sslvpn_websession (CVE-2018-13379) [high]\"; flow:established,to_server; http.uri.raw; content:\"sslvpn_websession\"; nocase; fast_pattern; pcre:\"/\\/remote\\/fgt_lang\\?[^\\r\\n]{0,80}lang=[^\\r\\n]{0,120}?(?:\\.\\.|%2e%2e|\\/dev\\/cmdb)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-13379, poc_ref tests/poc/9300008_fortios-sslvpn-traversal/poc.sh, tag fortios, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9300008; rev:2;)",
+      "description": {
+        "attack": "FortiOS SSL VPN path traversal pre-auth (CVE-2018-13379): baca file sesi sslvpn_websession.",
+        "impact": "Bocornya kredensial VPN tanpa auth → akses jaringan internal.",
+        "detects": "`sslvpn_websession` + traversal /remote/fgt_lang di URL raw."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300009,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE MS Exchange ProxyShell autodiscover path confusion (CVE-2021-34473) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-34473",
+        "poc_ref": "tests/poc/9300009_exchange-proxyshell/poc.sh",
+        "tag": "proxyshell",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/autodiscover/autodiscover.json",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/autodiscover\\.json[^\\r\\n]*(?:\\?@|%3f@|Email=autodiscover|PowerShell)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300009_exchange-proxyshell/",
+      "readme": "suricata/tests/poc/9300009_exchange-proxyshell/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE MS Exchange ProxyShell autodiscover path confusion (CVE-2021-34473) [high]\"; flow:established,to_server; http.uri.raw; content:\"/autodiscover/autodiscover.json\"; nocase; fast_pattern; pcre:\"/autodiscover\\.json[^\\r\\n]*(?:\\?@|%3f@|Email=autodiscover|PowerShell)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-34473, poc_ref tests/poc/9300009_exchange-proxyshell/poc.sh, tag proxyshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300009; rev:1;)",
+      "description": {
+        "attack": "MS Exchange ProxyShell (CVE-2021-34473): path confusion lewat /autodiscover/autodiscover.json.",
+        "impact": "Remote Code Execution pre-auth di Exchange.",
+        "detects": "`/autodiscover/autodiscover.json` + trik path-confusion `?@`/`Email=autodiscover`."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300010,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Progress MOVEit Transfer SQLi (CVE-2023-34362) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-34362",
+        "poc_ref": "tests/poc/9300010_moveit-sqli/poc.sh",
+        "tag": "moveit",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/moveitisapi/moveitisapi.dll",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/moveitisapi\\.dll\\?action=m2|guestaccess\\.aspx|\\/api\\/v1\\/folders\\/\\d+\\/files/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300010_moveit-sqli/",
+      "readme": "suricata/tests/poc/9300010_moveit-sqli/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Progress MOVEit Transfer SQLi (CVE-2023-34362) [high]\"; flow:established,to_server; http.uri.raw; content:\"/moveitisapi/moveitisapi.dll\"; nocase; fast_pattern; pcre:\"/moveitisapi\\.dll\\?action=m2|guestaccess\\.aspx|\\/api\\/v1\\/folders\\/\\d+\\/files/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-34362, poc_ref tests/poc/9300010_moveit-sqli/poc.sh, tag moveit, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300010; rev:1;)",
+      "description": {
+        "attack": "Progress MOVEit Transfer SQLi (CVE-2023-34362) lewat endpoint ISAPI.",
+        "impact": "Pencurian data + RCE — dipakai kampanye ransomware Cl0p massal.",
+        "detects": "`/moveitisapi/moveitisapi.dll` + aksi X-siLock/guestaccess di URL raw."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300011,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Atlassian Confluence broken access control setup endpoint (CVE-2023-22515) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-22515",
+        "poc_ref": "tests/poc/9300011_confluence-priv-esc/poc.sh",
+        "tag": "confluence",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/setup/setupadministrator.action",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300011_confluence-priv-esc/",
+      "readme": "suricata/tests/poc/9300011_confluence-priv-esc/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Atlassian Confluence broken access control setup endpoint (CVE-2023-22515) [high]\"; flow:established,to_server; http.uri.raw; content:\"/setup/setupadministrator.action\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-22515, poc_ref tests/poc/9300011_confluence-priv-esc/poc.sh, tag confluence, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300011; rev:1;)",
+      "description": {
+        "attack": "Atlassian Confluence broken access control (CVE-2023-22515): akses endpoint setup untuk membuat admin tanpa auth.",
+        "impact": "Pembuatan akun admin → ambil alih Confluence.",
+        "detects": "Path `/setup/setupadministrator.action` yang seharusnya tak terjangkau pasca-install."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300012,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Ivanti Connect Secure command injection (CVE-2024-21887) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-21887",
+        "poc_ref": "tests/poc/9300012_ivanti-cmdinj/poc.sh",
+        "tag": "ivanti",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/api/v1/totp/user-backup-code/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/user-backup-code\\/(?:\\.\\.|%2e%2e)(?:\\/|%2f)(?:\\.\\.|%2e%2e)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300012_ivanti-cmdinj/",
+      "readme": "suricata/tests/poc/9300012_ivanti-cmdinj/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Ivanti Connect Secure command injection (CVE-2024-21887) [high]\"; flow:established,to_server; http.uri.raw; content:\"/api/v1/totp/user-backup-code/\"; nocase; fast_pattern; pcre:\"/user-backup-code\\/(?:\\.\\.|%2e%2e)(?:\\/|%2f)(?:\\.\\.|%2e%2e)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-21887, poc_ref tests/poc/9300012_ivanti-cmdinj/poc.sh, tag ivanti, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300012; rev:1;)",
+      "description": {
+        "attack": "Ivanti Connect Secure command injection (CVE-2024-21887, dirantai dengan auth bypass CVE-2023-46805).",
+        "impact": "Remote Code Execution unauth di VPN Ivanti.",
+        "detects": "`/api/v1/totp/user-backup-code/` + traversal ../../ ke system di URL raw."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300013,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache OFBiz auth bypass requirePasswordChange (CVE-2023-51467) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-51467",
+        "poc_ref": "tests/poc/9300013_ofbiz-auth-bypass/poc.sh",
+        "tag": "ofbiz",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "requirePasswordChange=Y",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:webtools|accounting|ap|ar)\\/control\\/[^\\r\\n]*requirePasswordChange=Y/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300013_ofbiz-auth-bypass/",
+      "readme": "suricata/tests/poc/9300013_ofbiz-auth-bypass/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache OFBiz auth bypass requirePasswordChange (CVE-2023-51467) [high]\"; flow:established,to_server; http.uri.raw; content:\"requirePasswordChange=Y\"; nocase; fast_pattern; pcre:\"/\\/(?:webtools|accounting|ap|ar)\\/control\\/[^\\r\\n]*requirePasswordChange=Y/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-51467, poc_ref tests/poc/9300013_ofbiz-auth-bypass/poc.sh, tag ofbiz, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300013; rev:1;)",
+      "description": {
+        "attack": "Apache OFBiz auth bypass (CVE-2023-51467): USERNAME/PASSWORD kosong + requirePasswordChange=Y.",
+        "impact": "Bypass autentikasi → RCE.",
+        "detects": "Parameter `requirePasswordChange=Y` pada endpoint /control/ OFBiz."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300014,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE PHP-CGI argument injection (CVE-2024-4577) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-4577",
+        "poc_ref": "tests/poc/9300014_php-cgi-arginj/poc.sh",
+        "tag": "php-cgi",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "allow_url_include",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:%ad|%2d|\\x2d)d\\+?allow_url_include/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300014_php-cgi-arginj/",
+      "readme": "suricata/tests/poc/9300014_php-cgi-arginj/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE PHP-CGI argument injection (CVE-2024-4577) [high]\"; flow:established,to_server; http.uri.raw; content:\"allow_url_include\"; nocase; fast_pattern; pcre:\"/(?:%ad|%2d|\\x2d)d\\+?allow_url_include/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-4577, poc_ref tests/poc/9300014_php-cgi-arginj/poc.sh, tag php-cgi, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300014; rev:1;)",
+      "description": {
+        "attack": "PHP-CGI argument injection (CVE-2024-4577): trik soft-hyphen %AD menyuntik flag php-cgi.",
+        "impact": "Remote Code Execution pre-auth di server PHP-CGI Windows.",
+        "detects": "`allow_url_include` + flag -d ter-inject (raw '-d' atau encoding %AD/%2D) di query string."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300015,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE GitLab password-reset email-array takeover (CVE-2023-7028) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-7028",
+        "poc_ref": "tests/poc/9300015_gitlab-pwreset/poc.sh",
+        "tag": "gitlab",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "user[email][]",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/user\\[email\\]\\[\\][^&\\r\\n]{0,200}&[^\\r\\n]{0,400}?user\\[email\\]\\[\\]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300015_gitlab-pwreset/",
+      "readme": "suricata/tests/poc/9300015_gitlab-pwreset/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE GitLab password-reset email-array takeover (CVE-2023-7028) [high]\"; flow:established,to_server; http.request_body; content:\"user[email][]\"; nocase; fast_pattern; pcre:\"/user\\[email\\]\\[\\][^&\\r\\n]{0,200}&[^\\r\\n]{0,400}?user\\[email\\]\\[\\]/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-7028, poc_ref tests/poc/9300015_gitlab-pwreset/poc.sh, tag gitlab, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9300015; rev:2;)",
+      "description": {
+        "attack": "GitLab account takeover (CVE-2023-7028): injeksi array email pada reset password (user[email][] dua kali).",
+        "impact": "Reset password korban dikirim ke email penyerang → ambil alih akun.",
+        "detects": "Parameter `user[email][]` muncul DUA kali di body request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300016,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Spring Cloud Function SpEL injection routing-expression (CVE-2022-22963) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-22963",
+        "poc_ref": "tests/poc/9300016_spring-cloud-fn-spel/poc.sh",
+        "tag": "spring-cloud-function",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "spring.cloud.function.routing-expression",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/routing-expression[^\\r\\n]*(?:T\\(|new\\s+java|getRuntime|exec\\()/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9300016_spring-cloud-fn-spel/",
+      "readme": "suricata/tests/poc/9300016_spring-cloud-fn-spel/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Spring Cloud Function SpEL injection routing-expression (CVE-2022-22963) [high]\"; flow:established,to_server; http.header; content:\"spring.cloud.function.routing-expression\"; nocase; fast_pattern; pcre:\"/routing-expression[^\\r\\n]*(?:T\\(|new\\s+java|getRuntime|exec\\()/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-22963, poc_ref tests/poc/9300016_spring-cloud-fn-spel/poc.sh, tag spring-cloud-function, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300016; rev:1;)",
+      "description": {
+        "attack": "Spring Cloud Function SpEL injection (CVE-2022-22963) lewat header spring.cloud.function.routing-expression.",
+        "impact": "Remote Code Execution pre-auth.",
+        "detects": "Header routing-expression + payload SpEL T(...)/new ..."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300017,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE PaperCut MF/NG auth bypass SetupCompleted (CVE-2023-27350) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-27350",
+        "poc_ref": "tests/poc/9300017_papercut-auth-bypass/poc.sh",
+        "tag": "papercut",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "page/SetupCompleted",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300017_papercut-auth-bypass/",
+      "readme": "suricata/tests/poc/9300017_papercut-auth-bypass/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE PaperCut MF/NG auth bypass SetupCompleted (CVE-2023-27350) [high]\"; flow:established,to_server; http.uri.raw; content:\"page/SetupCompleted\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category infra, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-27350, poc_ref tests/poc/9300017_papercut-auth-bypass/poc.sh, tag papercut, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300017; rev:1;)",
+      "description": {
+        "attack": "PaperCut MF/NG auth bypass (CVE-2023-27350) lewat halaman SetupCompleted.",
+        "impact": "Bypass auth → RCE di server cetak PaperCut.",
+        "detects": "Path `page/SetupCompleted` diakses tanpa auth."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300018,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Cisco IOS XE Web UI implant access logon_hash (CVE-2023-20198) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-20198",
+        "poc_ref": "tests/poc/9300018_cisco-iosxe-webui/poc.sh",
+        "tag": "cisco-iosxe",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/webui/logoutconfirm.html",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/logoutconfirm\\.html\\?[^\\r\\n]*logon_hash=/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300018_cisco-iosxe-webui/",
+      "readme": "suricata/tests/poc/9300018_cisco-iosxe-webui/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Cisco IOS XE Web UI implant access logon_hash (CVE-2023-20198) [high]\"; flow:established,to_server; http.uri.raw; content:\"/webui/logoutconfirm.html\"; nocase; fast_pattern; pcre:\"/logoutconfirm\\.html\\?[^\\r\\n]*logon_hash=/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-20198, poc_ref tests/poc/9300018_cisco-iosxe-webui/poc.sh, tag cisco-iosxe, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300018; rev:1;)",
+      "description": {
+        "attack": "Cisco IOS XE Web UI privilege escalation (CVE-2023-20198): akses implant via logon_hash.",
+        "impact": "Pembuatan user privileged + implant → ambil alih perangkat jaringan.",
+        "detects": "`/webui/logoutconfirm.html` + parameter logon_hash di URL raw."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300019,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Adobe ColdFusion deserialization _cfclient (CVE-2023-26360) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-26360",
+        "poc_ref": "tests/poc/9300019_coldfusion-cve-2023-26360/poc.sh",
+        "tag": "coldfusion",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "_cfclient=true",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\.(?:cfm|cfc)[^\\r\\n]*_cfclient=true|_cfclient=true[^\\r\\n]*\\.(?:cfm|cfc)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9300019_coldfusion-cve-2023-26360/",
+      "readme": "suricata/tests/poc/9300019_coldfusion-cve-2023-26360/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Adobe ColdFusion deserialization _cfclient (CVE-2023-26360) [high]\"; flow:established,to_server; http.uri; content:\"_cfclient=true\"; nocase; fast_pattern; pcre:\"/\\.(?:cfm|cfc)[^\\r\\n]*_cfclient=true|_cfclient=true[^\\r\\n]*\\.(?:cfm|cfc)/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-26360, poc_ref tests/poc/9300019_coldfusion-cve-2023-26360/poc.sh, tag coldfusion, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300019; rev:1;)",
+      "description": {
+        "attack": "Adobe ColdFusion deserialization/arbitrary-read (CVE-2023-26360) lewat parameter _cfclient.",
+        "impact": "Pembacaan file arbitrer / RCE pre-auth.",
+        "detects": "`_cfclient=true` pada path skrip ColdFusion."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300020,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Atlassian Bitbucket archive command injection (CVE-2022-36804) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-36804",
+        "poc_ref": "tests/poc/9300020_bitbucket-cve-2022-36804/poc.sh",
+        "tag": "bitbucket",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "--upload-pack",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/archive\\?[^\\r\\n]*--upload-pack=/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300020_bitbucket-cve-2022-36804/",
+      "readme": "suricata/tests/poc/9300020_bitbucket-cve-2022-36804/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Atlassian Bitbucket archive command injection (CVE-2022-36804) [high]\"; flow:established,to_server; http.uri.raw; content:\"--upload-pack\"; nocase; fast_pattern; pcre:\"/\\/archive\\?[^\\r\\n]*--upload-pack=/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-36804, poc_ref tests/poc/9300020_bitbucket-cve-2022-36804/poc.sh, tag bitbucket, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9300020; rev:2;)",
+      "description": {
+        "attack": "Atlassian Bitbucket command injection (CVE-2022-36804) lewat endpoint archive.",
+        "impact": "Remote Code Execution.",
+        "detects": "Flag git `--upload-pack` ter-inject ke parameter query archive."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300021,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE JetBrains TeamCity auth bypass via semicolon-jsp trick (CVE-2024-27198) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-27198",
+        "poc_ref": "tests/poc/9300021_teamcity-cve-2024-27198/poc.sh",
+        "tag": "teamcity",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "|3b|.jsp",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/app\\/rest\\/[^\\r\\n]*\\x3b\\.jsp|jsp=[^\\r\\n]*\\/app\\/rest\\//i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300021_teamcity-cve-2024-27198/",
+      "readme": "suricata/tests/poc/9300021_teamcity-cve-2024-27198/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE JetBrains TeamCity auth bypass via semicolon-jsp trick (CVE-2024-27198) [high]\"; flow:established,to_server; http.uri.raw; content:\"|3b|.jsp\"; nocase; fast_pattern; pcre:\"/\\/app\\/rest\\/[^\\r\\n]*\\x3b\\.jsp|jsp=[^\\r\\n]*\\/app\\/rest\\//i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-27198, poc_ref tests/poc/9300021_teamcity-cve-2024-27198/poc.sh, tag teamcity, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300021; rev:1;)",
+      "description": {
+        "attack": "JetBrains TeamCity auth bypass (CVE-2024-27198): trik static-resource ';.jsp' untuk mencapai /app/rest/.",
+        "impact": "Bypass auth → buat admin token → RCE.",
+        "detects": "`;.jsp` + path /app/rest/ di URL raw (pcre pakai \\x3b karena ; adalah pemisah opsi Suricata)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300022,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE ConnectWise ScreenConnect auth bypass SetupWizard path (CVE-2024-1709) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-1709",
+        "poc_ref": "tests/poc/9300022_screenconnect-cve-2024-1709/poc.sh",
+        "tag": "screenconnect",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/SetupWizard.aspx/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/SetupWizard\\.aspx\\/\\S/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300022_screenconnect-cve-2024-1709/",
+      "readme": "suricata/tests/poc/9300022_screenconnect-cve-2024-1709/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE ConnectWise ScreenConnect auth bypass SetupWizard path (CVE-2024-1709) [high]\"; flow:established,to_server; http.uri.raw; content:\"/SetupWizard.aspx/\"; nocase; fast_pattern; pcre:\"/\\/SetupWizard\\.aspx\\/\\S/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-1709, poc_ref tests/poc/9300022_screenconnect-cve-2024-1709/poc.sh, tag screenconnect, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300022; rev:1;)",
+      "description": {
+        "attack": "ConnectWise ScreenConnect auth bypass (CVE-2024-1709): segmen path ekstra setelah SetupWizard.aspx.",
+        "impact": "Bypass auth → admin → RCE pada tool RMM (dipakai serangan rantai pasok).",
+        "detects": "Pola `/SetupWizard.aspx/` (trailing slash + segmen) di URL raw."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300023,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Palo Alto PAN-OS GlobalProtect SESSID command injection (CVE-2024-3400) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-3400",
+        "poc_ref": "tests/poc/9300023_panos-gp-cve-2024-3400/poc.sh",
+        "tag": "panos-globalprotect",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "SESSID=",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/SESSID=[^\\x3b\\r\\n]*(?:\\.\\.\\/|\\x60|\\$\\(|%2e%2e)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.cookie"
+      ],
+      "poc_dir": "suricata/tests/poc/9300023_panos-gp-cve-2024-3400/",
+      "readme": "suricata/tests/poc/9300023_panos-gp-cve-2024-3400/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Palo Alto PAN-OS GlobalProtect SESSID command injection (CVE-2024-3400) [high]\"; flow:established,to_server; http.cookie; content:\"SESSID=\"; nocase; fast_pattern; pcre:\"/SESSID=[^\\x3b\\r\\n]*(?:\\.\\.\\/|\\x60|\\$\\(|%2e%2e)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-3400, poc_ref tests/poc/9300023_panos-gp-cve-2024-3400/poc.sh, tag panos-globalprotect, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300023; rev:1;)",
+      "description": {
+        "attack": "Palo Alto PAN-OS GlobalProtect command injection (CVE-2024-3400) lewat cookie SESSID berisi traversal/metachar shell.",
+        "impact": "Remote Code Execution unauth di firewall PAN-OS.",
+        "detects": "`SESSID=` dengan nilai mengandung ../ atau metachar shell di header cookie."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300024,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Zimbra mboximport path traversal (CVE-2022-27925) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-27925",
+        "poc_ref": "tests/poc/9300024_zimbra-cve-2022-27925/poc.sh",
+        "tag": "zimbra",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/service/extension/backup/mboximport",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300024_zimbra-cve-2022-27925/",
+      "readme": "suricata/tests/poc/9300024_zimbra-cve-2022-27925/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Zimbra mboximport path traversal (CVE-2022-27925) [high]\"; flow:established,to_server; http.uri.raw; content:\"/service/extension/backup/mboximport\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-27925, poc_ref tests/poc/9300024_zimbra-cve-2022-27925/poc.sh, tag zimbra, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300024; rev:1;)",
+      "description": {
+        "attack": "Zimbra mboximport zip-slip path traversal (CVE-2022-27925, dirantai dengan CVE-2022-37042).",
+        "impact": "Remote Code Execution.",
+        "detects": "Endpoint `/service/extension/backup/mboximport` di URL raw."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300025,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE VMware vCenter vROps uploadova RCE (CVE-2021-21972) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-21972",
+        "poc_ref": "tests/poc/9300025_vcenter-cve-2021-21972/poc.sh",
+        "tag": "vcenter",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/ui/vropspluginui/rest/services/uploadova",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300025_vcenter-cve-2021-21972/",
+      "readme": "suricata/tests/poc/9300025_vcenter-cve-2021-21972/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE VMware vCenter vROps uploadova RCE (CVE-2021-21972) [high]\"; flow:established,to_server; http.uri.raw; content:\"/ui/vropspluginui/rest/services/uploadova\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-21972, poc_ref tests/poc/9300025_vcenter-cve-2021-21972/poc.sh, tag vcenter, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300025; rev:1;)",
+      "description": {
+        "attack": "VMware vCenter vROps plugin unauth OVA upload (CVE-2021-21972).",
+        "impact": "Remote Code Execution unauth di vCenter — kendali penuh virtualisasi.",
+        "detects": "Endpoint `/ui/vropspluginui/rest/services/uploadova` di URL raw."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300026,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Fortra GoAnywhere MFT license deserialization RCE (CVE-2023-0669) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-0669",
+        "poc_ref": "tests/poc/9300026_goanywhere-cve-2023-0669/poc.sh",
+        "tag": "goanywhere",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/goanywhere/lic/accept",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300026_goanywhere-cve-2023-0669/",
+      "readme": "suricata/tests/poc/9300026_goanywhere-cve-2023-0669/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Fortra GoAnywhere MFT license deserialization RCE (CVE-2023-0669) [high]\"; flow:established,to_server; http.uri.raw; content:\"/goanywhere/lic/accept\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category infra, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-0669, poc_ref tests/poc/9300026_goanywhere-cve-2023-0669/poc.sh, tag goanywhere, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300026; rev:1;)",
+      "description": {
+        "attack": "Fortra GoAnywhere MFT pre-auth command injection lewat deserialization servlet lisensi (CVE-2023-0669).",
+        "impact": "Remote Code Execution pre-auth — dieksploitasi kampanye Cl0p.",
+        "detects": "Endpoint `/goanywhere/lic/accept` di URL raw."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300027,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Atlassian Confluence improper authz setup-restore (CVE-2023-22518) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-22518",
+        "poc_ref": "tests/poc/9300027_confluence-cve-2023-22518/poc.sh",
+        "tag": "confluence",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/json/setup-restore",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300027_confluence-cve-2023-22518/",
+      "readme": "suricata/tests/poc/9300027_confluence-cve-2023-22518/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Atlassian Confluence improper authz setup-restore (CVE-2023-22518) [high]\"; flow:established,to_server; http.uri.raw; content:\"/json/setup-restore\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-22518, poc_ref tests/poc/9300027_confluence-cve-2023-22518/poc.sh, tag confluence, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300027; rev:1;)",
+      "description": {
+        "attack": "Atlassian Confluence improper authorization (CVE-2023-22518): setup-restore tanpa auth.",
+        "impact": "Reset/restore data → ambil alih Confluence (dieksploitasi ransomware).",
+        "detects": "Endpoint `/json/setup-restore` diakses tanpa auth."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300028,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Pulse Connect Secure pre-auth file read (CVE-2019-11510) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2019-11510",
+        "poc_ref": "tests/poc/9300028_pulsesecure-cve-2019-11510/poc.sh",
+        "tag": "pulsesecure",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/dana/html5acc/guacamole/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/dana\\/html5acc\\/guacamole\\/(?:\\.\\.(?:\\/|%2f)){2,}/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300028_pulsesecure-cve-2019-11510/",
+      "readme": "suricata/tests/poc/9300028_pulsesecure-cve-2019-11510/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Pulse Connect Secure pre-auth file read (CVE-2019-11510) [high]\"; flow:established,to_server; http.uri.raw; content:\"/dana/html5acc/guacamole/\"; nocase; fast_pattern; pcre:\"/dana\\/html5acc\\/guacamole\\/(?:\\.\\.(?:\\/|%2f)){2,}/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-11510, poc_ref tests/poc/9300028_pulsesecure-cve-2019-11510/poc.sh, tag pulsesecure, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9300028; rev:2;)",
+      "description": {
+        "attack": "Pulse Connect Secure pre-auth arbitrary file read via path traversal (CVE-2019-11510).",
+        "impact": "Bocornya kredensial/sesi VPN tanpa auth → akses jaringan internal.",
+        "detects": "`/dana/html5acc/guacamole/` + traversal ../ di URL raw."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300029,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Citrix Bleed NetScaler session-token leak oversized Host (CVE-2023-4966) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1212",
+        "mitre_technique_name": "Exploitation-for-Credential-Access",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-4966",
+        "poc_ref": "tests/poc/9300029_citrixbleed-cve-2023-4966/poc.sh",
+        "tag": "citrixbleed",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/oauth/idp/.well-known/openid-configuration",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Host\\x3a\\x20*[^\\r\\n]{200,4096}/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9300029_citrixbleed-cve-2023-4966/",
+      "readme": "suricata/tests/poc/9300029_citrixbleed-cve-2023-4966/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Citrix Bleed NetScaler session-token leak oversized Host (CVE-2023-4966) [high]\"; flow:established,to_server; http.uri.raw; content:\"/oauth/idp/.well-known/openid-configuration\"; nocase; fast_pattern; http.header; pcre:\"/Host\\x3a\\x20*[^\\r\\n]{200,4096}/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1212, mitre_technique_name Exploitation-for-Credential-Access, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-4966, poc_ref tests/poc/9300029_citrixbleed-cve-2023-4966/poc.sh, tag citrixbleed, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9300029; rev:1;)",
+      "description": {
+        "attack": "Citrix Bleed (CVE-2023-4966): request ke endpoint OIDC discovery NetScaler dengan header Host raksasa untuk over-read memori dan membocorkan session token.",
+        "impact": "Pencurian token sesi tanpa auth → pembajakan sesi admin/VPN tanpa kredensial (dieksploitasi ransomware massal).",
+        "detects": "`/oauth/idp/.well-known/openid-configuration` + header `Host:` bernilai >=200 karakter (dua buffer; OIDC discovery sah punya Host pendek)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300030,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE MS Exchange ProxyLogon SSRF X-AnonResource-Backend cookie (CVE-2021-26855) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-26855",
+        "poc_ref": "tests/poc/9300030_exchange-proxylogon/poc.sh",
+        "tag": "proxylogon",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "X-AnonResource-Backend",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/X-AnonResource-Backend\\s*=\\s*[^\\r\\n\\x3b]{0,120}\\/(?:ecp|owa)\\//i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.cookie"
+      ],
+      "poc_dir": "suricata/tests/poc/9300030_exchange-proxylogon/",
+      "readme": "suricata/tests/poc/9300030_exchange-proxylogon/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE MS Exchange ProxyLogon SSRF X-AnonResource-Backend cookie (CVE-2021-26855) [high]\"; flow:established,to_server; http.cookie; content:\"X-AnonResource-Backend\"; nocase; fast_pattern; pcre:\"/X-AnonResource-Backend\\s*=\\s*[^\\r\\n\\x3b]{0,120}\\/(?:ecp|owa)\\//i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-26855, poc_ref tests/poc/9300030_exchange-proxylogon/poc.sh, tag proxylogon, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300030; rev:1;)",
+      "description": {
+        "attack": "MS Exchange ProxyLogon (CVE-2021-26855): SSRF auth-bypass lewat cookie `X-AnonResource-Backend` yang menunjuk ke jalur internal `/ecp/` atau `/owa/` — prekursor ke ProxyShell (9300009).",
+        "impact": "Akses tanpa auth ke endpoint admin Exchange → menulis webshell → RCE penuh server email (kampanye HAFNIUM massal).",
+        "detects": "Cookie `X-AnonResource-Backend=` bernilai mengandung path `/ecp/` atau `/owa/`."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300031,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Webmin pre-auth command injection password_change.cgi (CVE-2019-15107) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2019-15107",
+        "poc_ref": "tests/poc/9300031_webmin-cve-2019-15107/poc.sh",
+        "tag": "webmin",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/password_change.cgi",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/[\\&\\?]old=[^\\&\\r\\n]{0,40}?[\\x7c\\x60\\x24]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300031_webmin-cve-2019-15107/",
+      "readme": "suricata/tests/poc/9300031_webmin-cve-2019-15107/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Webmin pre-auth command injection password_change.cgi (CVE-2019-15107) [high]\"; flow:established,to_server; http.uri.raw; content:\"/password_change.cgi\"; nocase; fast_pattern; http.request_body; pcre:\"/[\\&\\?]old=[^\\&\\r\\n]{0,40}?[\\x7c\\x60\\x24]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-15107, poc_ref tests/poc/9300031_webmin-cve-2019-15107/poc.sh, tag webmin, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300031; rev:1;)",
+      "description": {
+        "attack": "Webmin pre-auth command injection (CVE-2019-15107): parameter `old=` di POST `/password_change.cgi` dilewatkan ke `perl_exec()` tanpa sanitasi metachar shell.",
+        "impact": "Remote Code Execution sebagai root tanpa auth di Webmin (admin panel Unix populer).",
+        "detects": "POST ke `/password_change.cgi` + nilai param `old=` mengandung metachar shell (| ` $) di body."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300032,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Cacti unauth RCE remote_agent polldata (CVE-2022-46169) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-46169",
+        "poc_ref": "tests/poc/9300032_cacti-cve-2022-46169/poc.sh",
+        "tag": "cacti",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/remote_agent.php",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/remote_agent\\.php[^\\r\\n]{0,200}action=polldata[^\\r\\n]{0,200}local_data_ids/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9300032_cacti-cve-2022-46169/",
+      "readme": "suricata/tests/poc/9300032_cacti-cve-2022-46169/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Cacti unauth RCE remote_agent polldata (CVE-2022-46169) [high]\"; flow:established,to_server; http.uri; content:\"/remote_agent.php\"; nocase; fast_pattern; pcre:\"/\\/remote_agent\\.php[^\\r\\n]{0,200}action=polldata[^\\r\\n]{0,200}local_data_ids/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-46169, poc_ref tests/poc/9300032_cacti-cve-2022-46169/poc.sh, tag cacti, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300032; rev:1;)",
+      "description": {
+        "attack": "Cacti unauth RCE (CVE-2022-46169): bypass `IsRemoteAgent()` lewat header X-Forwarded-For, lalu `/remote_agent.php?action=polldata&local_data_ids[]=...` melewatkan input penyerang ke `proc_open` tanpa sanitasi.",
+        "impact": "Remote Code Execution tanpa auth di server Cacti (NMS populer).",
+        "detects": "Path `/remote_agent.php` + kombinasi `action=polldata` & `local_data_ids[]` di URL."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300033,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Jenkins CLI pre-auth file read args4j @/ trick (CVE-2024-23897) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-23897",
+        "poc_ref": "tests/poc/9300033_jenkins-cve-2024-23897/poc.sh",
+        "tag": "jenkins",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/cli?remoting=false",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/@\\/(?:etc|var|root|home|opt|srv|tmp)\\//i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300033_jenkins-cve-2024-23897/",
+      "readme": "suricata/tests/poc/9300033_jenkins-cve-2024-23897/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Jenkins CLI pre-auth file read args4j @/ trick (CVE-2024-23897) [high]\"; flow:established,to_server; http.uri.raw; content:\"/cli?remoting=false\"; nocase; fast_pattern; http.request_body; pcre:\"/@\\/(?:etc|var|root|home|opt|srv|tmp)\\//i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-23897, poc_ref tests/poc/9300033_jenkins-cve-2024-23897/poc.sh, tag jenkins, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300033; rev:2;)",
+      "description": {
+        "attack": "Jenkins CLI pre-auth arbitrary file read (CVE-2024-23897): args4j memperluas argumen yang dimulai `@/path` jadi isi file — pemanggilan CLI lewat HTTP `/cli?remoting=false` membocorkan file sensitif tanpa auth.",
+        "impact": "Pembacaan file rahasia (mis. `/etc/passwd`, secret) tanpa auth → eskalasi ke RCE penuh lewat secret yang bocor.",
+        "detects": "URL `/cli?remoting=false` + body berisi argumen `@/etc|var|root|home|opt|srv|tmp/...` (dua buffer)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300034,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache Struts2 REST plugin XStream deserialization RCE (CVE-2017-9805) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2017-9805",
+        "poc_ref": "tests/poc/9300034_struts2-rest-xstream/poc.sh",
+        "tag": "struts2",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "jdk.nashorn.internal",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/jdk\\.nashorn\\.internal\\.objects\\.(?:NativeString|NativeArray)|<dynamic-proxy>|<service>[\\s\\S]{0,200}?<map>/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300034_struts2-rest-xstream/",
+      "readme": "suricata/tests/poc/9300034_struts2-rest-xstream/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache Struts2 REST plugin XStream deserialization RCE (CVE-2017-9805) [high]\"; flow:established,to_server; http.request_body; content:\"jdk.nashorn.internal\"; nocase; fast_pattern; pcre:\"/jdk\\.nashorn\\.internal\\.objects\\.(?:NativeString|NativeArray)|<dynamic-proxy>|<service>[\\s\\S]{0,200}?<map>/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-9805, poc_ref tests/poc/9300034_struts2-rest-xstream/poc.sh, tag struts2, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300034; rev:1;)",
+      "description": {
+        "attack": "Apache Struts2 REST plugin XStream deserialization RCE (CVE-2017-9805): body XML berisi gadget Nashorn (`jdk.nashorn.internal.objects.NativeString`) yang dieksekusi saat XStream men-deserialize.",
+        "impact": "Remote Code Execution pre-auth di aplikasi Struts2 REST.",
+        "detects": "Marker class `jdk.nashorn.internal` (+ Nashorn-gadget atau `<dynamic-proxy>`) di body request XML."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300035,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE CrushFTP server-side template injection <INCLUDE> (CVE-2024-4040) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-4040",
+        "poc_ref": "tests/poc/9300035_crushftp-cve-2024-4040/poc.sh",
+        "tag": "crushftp",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "<INCLUDE>",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<INCLUDE>[^<\\r\\n]{0,200}?(?:\\.\\.|%2e%2e|etc\\/|windows[\\/\\x5c]|passwd|win\\.ini|\\/proc\\/)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300035_crushftp-cve-2024-4040/",
+      "readme": "suricata/tests/poc/9300035_crushftp-cve-2024-4040/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE CrushFTP server-side template injection <INCLUDE> (CVE-2024-4040) [high]\"; flow:established,to_server; http.uri.raw; content:\"<INCLUDE>\"; nocase; fast_pattern; pcre:\"/<INCLUDE>[^<\\r\\n]{0,200}?(?:\\.\\.|%2e%2e|etc\\/|windows[\\/\\x5c]|passwd|win\\.ini|\\/proc\\/)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-4040, poc_ref tests/poc/9300035_crushftp-cve-2024-4040/poc.sh, tag crushftp, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300035; rev:2;)",
+      "description": {
+        "attack": "CrushFTP server-side template injection (CVE-2024-4040): tag `<INCLUDE>...</INCLUDE>` di parameter URL dievaluasi sisi-server dan membaca file arbitrer (bypass sandbox).",
+        "impact": "Pembacaan file sensitif tanpa auth (kredensial, config) → eskalasi ke RCE/admin via secret yang bocor.",
+        "detects": "Tag `<INCLUDE>` di URL membawa traversal/path sensitif (`..`, `etc/`, `windows`, `passwd`, `/proc/`)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300036,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE ownCloud GraphAPI phpinfo env-leak (CVE-2023-49103) [high]",
+      "classtype": "attempted-recon",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-49103",
+        "poc_ref": "tests/poc/9300036_owncloud-cve-2023-49103/poc.sh",
+        "tag": "owncloud",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/apps/graphapi/v1/.well-known/microsoft-graph",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300036_owncloud-cve-2023-49103/",
+      "readme": "suricata/tests/poc/9300036_owncloud-cve-2023-49103/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE ownCloud GraphAPI phpinfo env-leak (CVE-2023-49103) [high]\"; flow:established,to_server; http.uri.raw; content:\"/apps/graphapi/v1/.well-known/microsoft-graph\"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-49103, poc_ref tests/poc/9300036_owncloud-cve-2023-49103/poc.sh, tag owncloud, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300036; rev:2;)",
+      "description": {
+        "attack": "ownCloud GraphAPI phpinfo() leak (CVE-2023-49103): endpoint `/apps/graphapi/v1/.well-known/microsoft-graph` mengembalikan output `phpinfo()` yang berisi variabel lingkungan (termasuk admin password & secret).",
+        "impact": "Bocornya kredensial admin + secret env tanpa auth → ambil alih instance ownCloud penuh.",
+        "detects": "Request ke path `/apps/graphapi/v1/.well-known/microsoft-graph` — endpoint exploit-specific, tidak ada klien sah yang mengaksesnya."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300037,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE GeoServer OGC API pre-auth RCE valueReference=exec (CVE-2024-36401) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-36401",
+        "poc_ref": "tests/poc/9300037_geoserver-cve-2024-36401/poc.sh",
+        "tag": "geoserver",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "valueReference=exec(",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/valueReference=exec\\((?:[^&\\r\\n]{0,200}?)(?:java\\.lang\\.Runtime|ProcessBuilder|getRuntime)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300037_geoserver-cve-2024-36401/",
+      "readme": "suricata/tests/poc/9300037_geoserver-cve-2024-36401/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE GeoServer OGC API pre-auth RCE valueReference=exec (CVE-2024-36401) [high]\"; flow:established,to_server; http.uri.raw; content:\"valueReference=exec(\"; nocase; fast_pattern; pcre:\"/valueReference=exec\\((?:[^&\\r\\n]{0,200}?)(?:java\\.lang\\.Runtime|ProcessBuilder|getRuntime)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-36401, poc_ref tests/poc/9300037_geoserver-cve-2024-36401/poc.sh, tag geoserver, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300037; rev:2;)",
+      "description": {
+        "attack": "GeoServer pre-auth RCE (CVE-2024-36401): properti `valueReference` di OGC API WFS GetPropertyValue dievaluasi via commons-jxpath sehingga penyerang menyuntik `exec(java.lang.Runtime.getRuntime(),'cmd')` untuk eksekusi perintah arbitrer.",
+        "impact": "Remote Code Execution tanpa auth di server GeoServer (banyak digunakan pemerintah/GIS).",
+        "detects": "Parameter `valueReference=exec(` + class Java Runtime/ProcessBuilder di URL request."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300038,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Spring Cloud Gateway SpEL RCE via actuator route (CVE-2022-22947) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-22947",
+        "poc_ref": "tests/poc/9300038_spring-cloud-gw-spel/poc.sh",
+        "tag": "spring-cloud-gateway",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/actuator/gateway/routes/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/T\\(\\s*(?:java\\.lang\\.Runtime|java\\.lang\\.ProcessBuilder)|new\\s+java\\.lang\\.ProcessBuilder|getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300038_spring-cloud-gw-spel/",
+      "readme": "suricata/tests/poc/9300038_spring-cloud-gw-spel/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Spring Cloud Gateway SpEL RCE via actuator route (CVE-2022-22947) [high]\"; flow:established,to_server; http.uri.raw; content:\"/actuator/gateway/routes/\"; nocase; fast_pattern; http.request_body; pcre:\"/T\\(\\s*(?:java\\.lang\\.Runtime|java\\.lang\\.ProcessBuilder)|new\\s+java\\.lang\\.ProcessBuilder|getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec/i\"; classtype:attempted-admin; metadata: asset_category web-modern, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-22947, poc_ref tests/poc/9300038_spring-cloud-gw-spel/poc.sh, tag spring-cloud-gateway, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300038; rev:2;)",
+      "description": {
+        "attack": "Spring Cloud Gateway SpEL RCE (CVE-2022-22947): endpoint Actuator `/actuator/gateway/routes/{name}` menerima definisi route berisi ekspresi SpEL `#{T(java.lang.Runtime)...}` yang dieksekusi saat refresh.",
+        "impact": "Remote Code Execution di service gateway (dampak luas karena gateway berada di edge).",
+        "detects": "POST ke `/actuator/gateway/routes/...` + body berisi SpEL gadget (`T(java.lang.Runtime|ProcessBuilder)` / `getRuntime().exec`)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300039,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Confluence Add-Language post-auth OGNL RCE (CVE-2024-21683) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-21683",
+        "poc_ref": "tests/poc/9300039_confluence-cve-2024-21683/poc.sh",
+        "tag": "confluence",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/admin/configurenewlanguage.action",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:Runtime\\.getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec|ProcessBuilder\\s*\\(|@java\\.lang\\.Runtime|#\\{T\\(java\\.lang\\.Runtime\\))/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300039_confluence-cve-2024-21683/",
+      "readme": "suricata/tests/poc/9300039_confluence-cve-2024-21683/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Confluence Add-Language post-auth OGNL RCE (CVE-2024-21683) [high]\"; flow:established,to_server; http.uri.raw; content:\"/admin/configurenewlanguage.action\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:Runtime\\.getRuntime\\s*\\(\\s*\\)\\s*\\.\\s*exec|ProcessBuilder\\s*\\(|@java\\.lang\\.Runtime|#\\{T\\(java\\.lang\\.Runtime\\))/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-21683, poc_ref tests/poc/9300039_confluence-cve-2024-21683/poc.sh, tag confluence, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300039; rev:2;)",
+      "description": {
+        "attack": "Atlassian Confluence post-auth RCE (CVE-2024-21683): form 'Add a new language' di /admin/configurenewlanguage.action menerima nama bahasa yang berisi OGNL/Runtime gadget, dievaluasi saat upload.",
+        "impact": "Remote Code Execution oleh user dengan privilege admin — penuh ambil alih Confluence.",
+        "detects": "POST ke `/admin/configurenewlanguage.action` + body berisi gadget Runtime/ProcessBuilder/SpEL T(Runtime) (dua buffer)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300040,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2017-9841",
+        "poc_ref": "tests/poc/9300040_phpunit-cve-2017-9841/poc.sh",
+        "tag": "phpunit",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300040_phpunit-cve-2017-9841/",
+      "readme": "suricata/tests/poc/9300040_phpunit-cve-2017-9841/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841) [high]\"; flow:established,to_server; http.uri.raw; content:\"/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php\"; nocase; fast_pattern; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-9841, poc_ref tests/poc/9300040_phpunit-cve-2017-9841/poc.sh, tag phpunit, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300040; rev:1;)",
+      "description": {
+        "attack": "PHPUnit eval-stdin.php remote PHP exec (CVE-2017-9841): file `/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php` membaca body request lalu langsung `eval()` — penyerang kirim `<?php system(...) ?>` sebagai body.",
+        "impact": "Remote Code Execution tanpa auth di server PHP yang masih punya PHPUnit di `vendor/` (banyak yang masih kena tahun 2024).",
+        "detects": "Request ke path `/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php` — endpoint exploit-specific tidak ada klien sah yang mengaksesnya."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300041,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache HTTPD path traversal /icons/ alias (CVE-2021-41773) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-41773",
+        "poc_ref": "tests/poc/9300041_httpd-cve-2021-41773/poc.sh",
+        "tag": "httpd",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/icons/.",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/icons\\/\\.(?:%2e|\\.)(?:%2f|\\/)[^\\r\\n]{0,200}?(?:etc\\/passwd|bin\\/sh|cgi-bin\\/|win\\.ini)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300041_httpd-cve-2021-41773/",
+      "readme": "suricata/tests/poc/9300041_httpd-cve-2021-41773/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache HTTPD path traversal /icons/ alias (CVE-2021-41773) [high]\"; flow:established,to_server; http.uri.raw; content:\"/icons/.\"; nocase; fast_pattern; pcre:\"/\\/icons\\/\\.(?:%2e|\\.)(?:%2f|\\/)[^\\r\\n]{0,200}?(?:etc\\/passwd|bin\\/sh|cgi-bin\\/|win\\.ini)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-41773, poc_ref tests/poc/9300041_httpd-cve-2021-41773/poc.sh, tag httpd, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300041; rev:1;)",
+      "description": {
+        "attack": "Apache HTTPD 2.4.49/50 path traversal (CVE-2021-41773/42013): bug normalisasi mod_alias — `/icons/.%2e/` lolos validasi traversal, lalu `%2e%2e/` membaca file di luar docroot (mis. `/etc/passwd`).",
+        "impact": "Pembacaan file sensitif tanpa auth; jika `mod_cgi` aktif, eksekusi perintah arbitrer (RCE).",
+        "detects": "Path `/icons/.` + sekuens traversal encoded (`%2e/` atau `./`) + target sensitif (etc/passwd, bin/sh, win.ini) di URL RAW."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300042,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Drupal Drupalgeddon2 #post_render Form-API RCE (CVE-2018-7600) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2018-7600",
+        "poc_ref": "tests/poc/9300042_drupalgeddon2/poc.sh",
+        "tag": "drupal",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "element_parents=account/mail/%23value",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:#post_render|%23post_render|#markup|%23markup)[\\[\\]\\w.]{0,30}=[^&\\r\\n]{0,80}?(?:exec|system|passthru|shell_exec|file_get_contents|assert)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300042_drupalgeddon2/",
+      "readme": "suricata/tests/poc/9300042_drupalgeddon2/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Drupal Drupalgeddon2 #post_render Form-API RCE (CVE-2018-7600) [high]\"; flow:established,to_server; http.uri.raw; content:\"element_parents=account/mail/%23value\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:#post_render|%23post_render|#markup|%23markup)[\\[\\]\\w.]{0,30}=[^&\\r\\n]{0,80}?(?:exec|system|passthru|shell_exec|file_get_contents|assert)/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-7600, poc_ref tests/poc/9300042_drupalgeddon2/poc.sh, tag drupal, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9300042; rev:1;)",
+      "description": {
+        "attack": "Drupal Drupalgeddon2 (CVE-2018-7600): Drupal 7/8 Form API merender properti `#post_render`/`#markup` dari POST attacker → callback function (mis. `exec`/`system`) dipanggil dengan input penyerang.",
+        "impact": "Remote Code Execution pre-auth — kampanye massal pasca-disclosure 2018, masih ke-scan rutin hingga sekarang.",
+        "detects": "URL `element_parents=account/mail/%23value` + body berisi `#post_render`/`#markup` yang nunjuk ke gadget eksekusi (exec/system/passthru/shell_exec)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300043,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache ActiveMQ Jolokia HTTP MBean exec RCE [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2022-41678",
+        "poc_ref": "tests/poc/9300043_activemq-jolokia/poc.sh",
+        "tag": "activemq",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_21",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/api/jolokia",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\x22type\\x22\\s*:\\s*\\x22exec\\x22[\\s\\S]{0,300}?org\\.apache\\.activemq\\x3atype\\x3dBroker/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300043_activemq-jolokia/",
+      "readme": "suricata/tests/poc/9300043_activemq-jolokia/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache ActiveMQ Jolokia HTTP MBean exec RCE [high]\"; flow:established,to_server; http.uri.raw; content:\"/api/jolokia\"; nocase; fast_pattern; http.request_body; pcre:\"/\\x22type\\x22\\s*:\\s*\\x22exec\\x22[\\s\\S]{0,300}?org\\.apache\\.activemq\\x3atype\\x3dBroker/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2022-41678, poc_ref tests/poc/9300043_activemq-jolokia/poc.sh, tag activemq, created_at 2026_05_20, updated_at 2026_05_21, author huntingyuk; sid:9300043; rev:1;)",
+      "description": {
+        "attack": "Apache ActiveMQ Jolokia HTTP MBean RCE: Jolokia agent expose JMX lewat HTTP `/api/jolokia`; request `exec` ke MBean `org.apache.activemq:type=Broker` membiarkan penyerang invoke method Java arbitrer (mis. menambah connector untuk pivoting).",
+        "impact": "RCE / pivot lateral di broker ActiveMQ — dipakai operator ransomware bahkan saat port OpenWire (61616) di-firewall.",
+        "detects": "POST ke `/api/jolokia` + body JSON berisi `\"type\":\"exec\"` + MBean ActiveMQ Broker."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300044,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Adobe Commerce / Magento CosmicSting XML SOAP deserialization (CVE-2024-34102) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-34102",
+        "poc_ref": "tests/poc/9300044_magento-cosmicsting/poc.sh",
+        "tag": "magento",
+        "created_at": "2026_05_21",
+        "updated_at": "2026_05_21",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/rest/V1/guest-carts",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:<!DOCTYPE\\s+[^>]*\\[|xmlns:xsi=|http:\\/\\/www\\.w3\\.org\\/2001\\/XMLSchema-instance|SimpleXMLElement|xsi:type)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300044_magento-cosmicsting/",
+      "readme": "suricata/tests/poc/9300044_magento-cosmicsting/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Adobe Commerce / Magento CosmicSting XML SOAP deserialization (CVE-2024-34102) [high]\"; flow:established,to_server; http.uri.raw; content:\"/rest/V1/guest-carts\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:<!DOCTYPE\\s+[^>]*\\[|xmlns:xsi=|http:\\/\\/www\\.w3\\.org\\/2001\\/XMLSchema-instance|SimpleXMLElement|xsi:type)/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-34102, poc_ref tests/poc/9300044_magento-cosmicsting/poc.sh, tag magento, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300044; rev:1;)",
+      "description": {
+        "attack": "Adobe Commerce/Magento 'CosmicSting' (CVE-2024-34102): pre-auth XML SOAP deserialization — body JSON ke `/rest/V1/guest-carts/.../estimate-shipping-methods` di-embed XML DOCTYPE/xsi gadget yang men-deserialize lewat SimpleXMLElement → file read / RCE via PHP gadget chains.",
+        "impact": "Pencurian file sensitif (Magento config/credentials) → eskalasi ke RCE penuh; dipakai kampanye penyerang mass-exploit toko e-commerce 2024.",
+        "detects": "POST ke `/rest/V1/guest-carts` + body JSON memuat marker SOAP-XML (`<!DOCTYPE`, `xmlns:xsi`, `SimpleXMLElement`, `xsi:type` atau namespace W3C XMLSchema) — dua buffer."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300045,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE WordPress Bricks Builder render_element RCE (CVE-2024-25600) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-25600",
+        "poc_ref": "tests/poc/9300045_wp-bricks-rce/poc.sh",
+        "tag": "wordpress",
+        "created_at": "2026_05_21",
+        "updated_at": "2026_05_21",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/wp-json/bricks/v1/render_element",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/queryEditor[\\s\\S]{0,200}?(?:eval|file_get_contents|phpinfo|passthru|system|shell_exec|assert)\\s*\\(/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300045_wp-bricks-rce/",
+      "readme": "suricata/tests/poc/9300045_wp-bricks-rce/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE WordPress Bricks Builder render_element RCE (CVE-2024-25600) [high]\"; flow:established,to_server; http.uri.raw; content:\"/wp-json/bricks/v1/render_element\"; nocase; fast_pattern; http.request_body; pcre:\"/queryEditor[\\s\\S]{0,200}?(?:eval|file_get_contents|phpinfo|passthru|system|shell_exec|assert)\\s*\\(/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-25600, poc_ref tests/poc/9300045_wp-bricks-rce/poc.sh, tag wordpress, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300045; rev:1;)",
+      "description": {
+        "attack": "WordPress Bricks Builder pre-auth RCE (CVE-2024-25600): endpoint REST `/wp-json/bricks/v1/render_element` meng-evaluasi expression PHP di field `queryEditor` dari body, sehingga penyerang menyuntik gadget `eval/system/passthru/...`.",
+        "impact": "Remote Code Execution tanpa auth di situs WordPress yang pakai Bricks Builder — situs di-takeover dalam satu request.",
+        "detects": "POST ke `/wp-json/bricks/v1/render_element` + body memuat `queryEditor` + gadget eksekusi PHP (eval/file_get_contents/phpinfo/passthru/system/shell_exec/assert) — dua buffer."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300046,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Cleo Harmony/VLTrader unauth file-upload RCE (CVE-2024-50623) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-50623",
+        "poc_ref": "tests/poc/9300046_cleo-cve-2024-50623/poc.sh",
+        "tag": "cleo",
+        "created_at": "2026_05_21",
+        "updated_at": "2026_05_21",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/Synchronization",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:\\.\\.|%2e%2e)(?:\\/|%2f)autorun(?:\\/|%2f)|host=[^&\\r\\n]{0,200}autorun(?:\\/|%2f)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300046_cleo-cve-2024-50623/",
+      "readme": "suricata/tests/poc/9300046_cleo-cve-2024-50623/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Cleo Harmony/VLTrader unauth file-upload RCE (CVE-2024-50623) [high]\"; flow:established,to_server; http.uri.raw; content:\"/Synchronization\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:\\.\\.|%2e%2e)(?:\\/|%2f)autorun(?:\\/|%2f)|host=[^&\\r\\n]{0,200}autorun(?:\\/|%2f)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-50623, poc_ref tests/poc/9300046_cleo-cve-2024-50623/poc.sh, tag cleo, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300046; rev:1;)",
+      "description": {
+        "attack": "Cleo Harmony/VLTrader/LexiCom unauth file-upload RCE (CVE-2024-50623): POST ke `/Synchronization` dengan path-traversal yang menempatkan file payload di folder `autorun/` — Cleo agent menjalankan isinya otomatis. Dieksploitasi massal oleh operator ransomware akhir 2024.",
+        "impact": "Remote Code Execution unauth di server MFT Cleo — banyak digunakan organisasi besar untuk file-transfer B2B, dampak rantai pasokan.",
+        "detects": "POST ke `/Synchronization` + body berisi marker traversal-ke-autorun (`../autorun/`, `%2e%2e/autorun/`, atau `host=...autorun/`) — dua buffer."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300047,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Log4Shell obfuscated JNDI bypass (${::-} or ${env:...:-jndi}) in HTTP header (CVE-2021-44228) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-44228",
+        "poc_ref": "tests/poc/9300047_log4shell-obfuscated/poc.sh",
+        "tag": "log4shell",
+        "created_at": "2026_05_21",
+        "updated_at": "2026_05_21",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "${::-",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\$\\{(?:::-[jJ]|env\\x3a[^}]{0,40}?:-(?:jndi|jnd\\$\\{))/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9300047_log4shell-obfuscated/",
+      "readme": "suricata/tests/poc/9300047_log4shell-obfuscated/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Log4Shell obfuscated JNDI bypass (${::-} or ${env:...:-jndi}) in HTTP header (CVE-2021-44228) [high]\"; flow:established,to_server; http.header; content:\"${::-\"; nocase; fast_pattern; pcre:\"/\\$\\{(?:::-[jJ]|env\\x3a[^}]{0,40}?:-(?:jndi|jnd\\$\\{))/i\"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-44228, poc_ref tests/poc/9300047_log4shell-obfuscated/poc.sh, tag log4shell, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300047; rev:1;)",
+      "description": {
+        "attack": "Log4Shell obfuscated JNDI bypass (CVE-2021-44228): rule 9300001 nangkep string literal `${jndi:`; varian real-world pakai trik substitusi `${::-j}${::-n}${::-d}${::-i}:` atau `${env:UNDEFINED:-jndi}:` yang di-resolve jadi `jndi:` saat log dipanggil — lolos matcher naive.",
+        "impact": "Sama parahnya dengan Log4Shell base: Remote Code Execution pre-auth, tapi diam-diam lolos sensor yang cuma cek literal `${jndi:`.",
+        "detects": "Pola `${::-` di header HTTP diikuti substitusi huruf 'j' (mengarah ke 'jndi'), atau `${env:` + `:-jndi`. Sibling 9300001 untuk bare-string."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300048,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE ThinkPHP invokefunction route RCE (CVE-2018-20062) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2018-20062",
+        "poc_ref": "tests/poc/9300048_thinkphp-invokefunction/poc.sh",
+        "tag": "thinkphp",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "invokefunction",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:s=|\\/)[^\\r\\n]{0,60}?invokefunction[^\\r\\n]{0,80}?function=[^\\r\\n]{0,30}?(?:system|exec|passthru|shell_exec|phpinfo|assert|eval|file_get_contents|call_user_func)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300048_thinkphp-invokefunction/",
+      "readme": "suricata/tests/poc/9300048_thinkphp-invokefunction/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE ThinkPHP invokefunction route RCE (CVE-2018-20062) [high]\"; flow:established,to_server; http.uri.raw; content:\"invokefunction\"; nocase; fast_pattern; pcre:\"/(?:s=|\\/)[^\\r\\n]{0,60}?invokefunction[^\\r\\n]{0,80}?function=[^\\r\\n]{0,30}?(?:system|exec|passthru|shell_exec|phpinfo|assert|eval|file_get_contents|call_user_func)/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-20062, poc_ref tests/poc/9300048_thinkphp-invokefunction/poc.sh, tag thinkphp, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300048; rev:1;)",
+      "description": {
+        "attack": "ThinkPHP 5.x invokefunction-route RCE (CVE-2018-20062 family): bug route ThinkPHP yang nge-resolve `_method`/`s=` jadi pemanggilan callable PHP arbitrer — payload klasik `?s=/Index/\\think\\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=cmd`. Ke-scan massal botnet (86 hit di 3 pcap MTA scan-and-probe).",
+        "impact": "Remote Code Execution pre-auth di aplikasi PHP yang pakai framework ThinkPHP — sering di-pwn jadi server proxy / miner / web-shell.",
+        "detects": "Path URL berisi `invokefunction` + `function=` + gadget eksekusi PHP (system/exec/passthru/shell_exec/phpinfo/assert/eval/file_get_contents/call_user_func)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300049,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE GPON home gateway auth-bypass + RCE (CVE-2018-10561) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2018-10561",
+        "poc_ref": "tests/poc/9300049_gpon-cve-2018-10561/poc.sh",
+        "tag": "gpon",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/GponForm/diag_Form",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/GponForm\\/diag_Form\\?images\\/|dest_host=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300049_gpon-cve-2018-10561/",
+      "readme": "suricata/tests/poc/9300049_gpon-cve-2018-10561/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE GPON home gateway auth-bypass + RCE (CVE-2018-10561) [high]\"; flow:established,to_server; http.uri.raw; content:\"/GponForm/diag_Form\"; nocase; fast_pattern; pcre:\"/\\/GponForm\\/diag_Form\\?images\\/|dest_host=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-10561, poc_ref tests/poc/9300049_gpon-cve-2018-10561/poc.sh, tag gpon, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300049; rev:1;)",
+      "description": {
+        "attack": "GPON home gateway auth bypass + command injection (CVE-2018-10561): router/ONT pakai Dasan/Realtek SoC; trik `?images/` di URL `/GponForm/diag_Form` ngebypass auth karena parser router salah klasifikasi sebagai static file padahal kehit handler action. Lalu parameter `dest_host=` di-pass ke shell tanpa sanitasi. Mirai variants pakai ini buat rekrut puluhan ribu CPE.",
+        "impact": "RCE unauth di home gateway ISP → botnet recruitment, pivot ke jaringan internal pelanggan ISP.",
+        "detects": "Path `/GponForm/diag_Form?images/` ATAU parameter `dest_host=` berisi metachar shell (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300050,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Oracle WebLogic WLS-WSAT SOAP RCE (CVE-2017-3506) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2017-3506",
+        "poc_ref": "tests/poc/9300050_weblogic-cve-2017-3506/poc.sh",
+        "tag": "weblogic",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/wls-wsat/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<java\\.lang\\.ProcessBuilder|<void\\s+method=\\x22start\\x22>|<string>\\/bin\\/(?:sh|bash)<\\/string>/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300050_weblogic-cve-2017-3506/",
+      "readme": "suricata/tests/poc/9300050_weblogic-cve-2017-3506/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Oracle WebLogic WLS-WSAT SOAP RCE (CVE-2017-3506) [high]\"; flow:established,to_server; http.uri.raw; content:\"/wls-wsat/\"; nocase; fast_pattern; http.request_body; pcre:\"/<java\\.lang\\.ProcessBuilder|<void\\s+method=\\x22start\\x22>|<string>\\/bin\\/(?:sh|bash)<\\/string>/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-3506, poc_ref tests/poc/9300050_weblogic-cve-2017-3506/poc.sh, tag weblogic, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300050; rev:1;)",
+      "description": {
+        "attack": "Oracle WebLogic Server WLS Security Component OS Command Injection (CVE-2017-3506): endpoint `/wls-wsat/CoordinatorPortType` menerima SOAP XML; ke-deserialize lewat XStream tanpa validasi class → `java.lang.ProcessBuilder` gadget memanggil `/bin/sh -c ...`. Tua tapi masih ke-scan rutin (18 hit di 3 pcap real).",
+        "impact": "Remote Code Execution unauth di server WebLogic — Java app server enterprise populer.",
+        "detects": "POST ke `/wls-wsat/...` + body XML berisi `java.lang.ProcessBuilder` atau `<void method=\"start\"/>` atau `/bin/sh` element — dua buffer."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300051,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Netgear DGN1000/DGN2200 setup.cgi unauth RCE (CVE-2017-6334) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2017-6334",
+        "poc_ref": "tests/poc/9300051_netgear-dgn-rce/poc.sh",
+        "tag": "netgear",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/setup.cgi",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/setup\\.cgi\\?[^\\r\\n]{0,200}?next_file=[^&\\r\\n]{0,80}?\\.htm[^\\r\\n]{0,200}?(?:cmd=|curpath=)[^\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300051_netgear-dgn-rce/",
+      "readme": "suricata/tests/poc/9300051_netgear-dgn-rce/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Netgear DGN1000/DGN2200 setup.cgi unauth RCE (CVE-2017-6334) [high]\"; flow:established,to_server; http.uri.raw; content:\"/setup.cgi\"; nocase; fast_pattern; pcre:\"/\\/setup\\.cgi\\?[^\\r\\n]{0,200}?next_file=[^&\\r\\n]{0,80}?\\.htm[^\\r\\n]{0,200}?(?:cmd=|curpath=)[^\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-6334, poc_ref tests/poc/9300051_netgear-dgn-rce/poc.sh, tag netgear, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300051; rev:1;)",
+      "description": {
+        "attack": "Netgear DGN1000/DGN2200 router unauth RCE (CVE-2017-6334): endpoint `/setup.cgi` accept parameter `next_file=` (load file config) + `todo=syscmd&cmd=...` yang executed langsung di shell tanpa sanitasi. Mass-recruited oleh Mirai (34 hit real-traffic).",
+        "impact": "RCE unauth di router rumah → botnet recruit, pivot ke jaringan internal pemakai.",
+        "detects": "Path `/setup.cgi?` + parameter `next_file=*.htm` + (`cmd=` atau `curpath=`) berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300052,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Realtek SDK formSysCmd RCE (CVE-2021-35394) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2021-35394",
+        "poc_ref": "tests/poc/9300052_realtek-sdk-rce/poc.sh",
+        "tag": "realtek",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "formSysCmd",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:boafrm\\/)?formSysCmd[^\\r\\n]{0,200}?sysCmd=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300052_realtek-sdk-rce/",
+      "readme": "suricata/tests/poc/9300052_realtek-sdk-rce/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Realtek SDK formSysCmd RCE (CVE-2021-35394) [high]\"; flow:established,to_server; http.uri.raw; content:\"formSysCmd\"; nocase; fast_pattern; pcre:\"/\\/(?:boafrm\\/)?formSysCmd[^\\r\\n]{0,200}?sysCmd=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-35394, poc_ref tests/poc/9300052_realtek-sdk-rce/poc.sh, tag realtek, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300052; rev:1;)",
+      "description": {
+        "attack": "Realtek RTL81xx/RTL83xx SDK command injection (CVE-2021-35394): SoC Realtek dipakai banyak vendor router/CPE small-brand; endpoint `boafrm/formSysCmd` accept parameter `sysCmd=` yang langsung di-shell-exec. Variant exploit mass-scanned via UDP (port 9034) dan HTTP — kita cover sisi HTTP-nya.",
+        "impact": "RCE unauth di puluhan brand router kecil yang share Realtek SDK → botnet recruit, pivot LAN.",
+        "detects": "Path `/boafrm/formSysCmd` atau `/formSysCmd` + parameter `sysCmd=` berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300053,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE MVPower DVR JAWS /shell unauth RCE (CVE-2016-20016) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2016-20016",
+        "poc_ref": "tests/poc/9300053_mvpower-dvr-shell/poc.sh",
+        "tag": "mvpower",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/shell?",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/shell\\?[^\\r\\n]{0,200}?(?:cd(?:\\s|%20|\\+)*\\/|wget(?:\\s|%20|\\+)|curl(?:\\s|%20|\\+)|busybox|chmod(?:\\s|%20|\\+)|\\/tmp\\/|\\/bin\\/sh)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300053_mvpower-dvr-shell/",
+      "readme": "suricata/tests/poc/9300053_mvpower-dvr-shell/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE MVPower DVR JAWS /shell unauth RCE (CVE-2016-20016) [high]\"; flow:established,to_server; http.uri.raw; content:\"/shell?\"; nocase; fast_pattern; pcre:\"/\\/shell\\?[^\\r\\n]{0,200}?(?:cd(?:\\s|%20|\\+)*\\/|wget(?:\\s|%20|\\+)|curl(?:\\s|%20|\\+)|busybox|chmod(?:\\s|%20|\\+)|\\/tmp\\/|\\/bin\\/sh)/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2016-20016, poc_ref tests/poc/9300053_mvpower-dvr-shell/poc.sh, tag mvpower, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300053; rev:1;)",
+      "description": {
+        "attack": "MVPower CCTV DVR JAWS webserver unauth RCE (CVE-2016-20016): endpoint `/shell?` bener-bener langsung mengirim query string ke shell — payload `/shell?cd /tmp; wget ...; chmod 777 ...; ./m.sh`. Stupidly trivial. Masih Mirai-recruited 2024 (18 hit real-traffic).",
+        "impact": "Akses shell penuh ke DVR CCTV → privacy invasion + botnet recruit.",
+        "detects": "Path `/shell?` + query string berisi shell-command pattern (cd /, wget, curl, busybox, chmod, /tmp/, /bin/sh)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300054,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE D-Link HNAP1 unauth RCE (CVE-2019-16920) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2019-16920",
+        "poc_ref": "tests/poc/9300054_dlink-hnap1-rce/poc.sh",
+        "tag": "dlink",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/HNAP1",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<service>[^<\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]|GetDeviceSettings[^<\\r\\n]{0,200}?<service>[^<\\r\\n]*?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300054_dlink-hnap1-rce/",
+      "readme": "suricata/tests/poc/9300054_dlink-hnap1-rce/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE D-Link HNAP1 unauth RCE (CVE-2019-16920) [high]\"; flow:established,to_server; http.uri.raw; content:\"/HNAP1\"; nocase; fast_pattern; http.request_body; pcre:\"/<service>[^<\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]|GetDeviceSettings[^<\\r\\n]{0,200}?<service>[^<\\r\\n]*?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-16920, poc_ref tests/poc/9300054_dlink-hnap1-rce/poc.sh, tag dlink, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300054; rev:1;)",
+      "description": {
+        "attack": "D-Link DIR-859/825 router unauth RCE (CVE-2019-16920): endpoint SOAP-RPC `/HNAP1/` accept body XML; field `service` di-pass ke shell tanpa sanitasi. Variant exploit umum 'GetDeviceSettings' + metachar di service.",
+        "impact": "RCE unauth di router D-Link → botnet recruit, pivot LAN.",
+        "detects": "POST ke `/HNAP1/` + body XML element `<service>` berisi shell metachar (` $ | ;) — dua buffer."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300055,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE LB-Link goform wifi-config RCE (CVE-2023-26801) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-26801",
+        "poc_ref": "tests/poc/9300055_lblink-cve-2023-26801/poc.sh",
+        "tag": "lblink",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/goform/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:wirelessApcli|wirelessAdvanced|wirelessReboot|formWlanWds|setSysAdm|ApCliPassWord|wirelessKeyType)[^\\r\\n]{0,40}?=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300055_lblink-cve-2023-26801/",
+      "readme": "suricata/tests/poc/9300055_lblink-cve-2023-26801/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE LB-Link goform wifi-config RCE (CVE-2023-26801) [high]\"; flow:established,to_server; http.uri.raw; content:\"/goform/\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:wirelessApcli|wirelessAdvanced|wirelessReboot|formWlanWds|setSysAdm|ApCliPassWord|wirelessKeyType)[^\\r\\n]{0,40}?=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-26801, poc_ref tests/poc/9300055_lblink-cve-2023-26801/poc.sh, tag lblink, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300055; rev:1;)",
+      "description": {
+        "attack": "LB-Link router wifi-config OS command injection (CVE-2023-26801): handler `/goform/wirelessApcli` (dan handler `/goform/*` lain) menerima POST body dengan field konfigurasi WiFi (`ApCliPassWord`, `wirelessKeyType`, dll); field dipasang langsung ke shell tanpa sanitasi. Multi-SKU LB-Link + OEM cloned routers. 111 hit real-traffic — kedua terbesar di realgap (setelah React2Shell).",
+        "impact": "RCE unauth di router rumah/SOHO → botnet recruit + pivot ke LAN pelanggan.",
+        "detects": "POST ke `/goform/...` + field wireless handler (wirelessApcli/wirelessAdvanced/setSysAdm/ApCliPassWord/dll) berisi shell metachar (` $ | ;) — dua buffer."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300056,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE TBK DVR-4104/4216 device.rsp RCE (CVE-2024-3721) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-3721",
+        "poc_ref": "tests/poc/9300056_tbk-dvr-cve-2024-3721/poc.sh",
+        "tag": "tbk-dvr",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/device.rsp",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/device\\.rsp\\?[^\\r\\n]{0,200}?opt=[^&\\r\\n]{0,30}?&[^\\r\\n]{0,200}?(?:cmd|mdc|mdb)=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300056_tbk-dvr-cve-2024-3721/",
+      "readme": "suricata/tests/poc/9300056_tbk-dvr-cve-2024-3721/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE TBK DVR-4104/4216 device.rsp RCE (CVE-2024-3721) [high]\"; flow:established,to_server; http.uri.raw; content:\"/device.rsp\"; nocase; fast_pattern; pcre:\"/\\/device\\.rsp\\?[^\\r\\n]{0,200}?opt=[^&\\r\\n]{0,30}?&[^\\r\\n]{0,200}?(?:cmd|mdc|mdb)=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-3721, poc_ref tests/poc/9300056_tbk-dvr-cve-2024-3721/poc.sh, tag tbk-dvr, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300056; rev:1;)",
+      "description": {
+        "attack": "TBK DVR-4104/4216 unauth command injection (CVE-2024-3721): URL `/device.rsp?opt=user&cmd=list&mdb=sd&mdc=...` di-pass langsung ke shell oleh DVR firmware. Mass Mirai-recruited (10 hit real-traffic).",
+        "impact": "Akses shell penuh ke DVR CCTV → privacy invasion + botnet recruit.",
+        "detects": "Path `/device.rsp?` + opt= + parameter cmd=/mdc=/mdb= berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300057,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Linksys E-Series mp parameter OS command injection (CVE-2025-34037) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2025-34037",
+        "poc_ref": "tests/poc/9300057_linksys-eseries-mp/poc.sh",
+        "tag": "linksys",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "mp=",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:Diagnostics|set_TR069|cgi-bin|goform)[^\\r\\n]{0,80}\\?[^\\r\\n]{0,200}?mp=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300057_linksys-eseries-mp/",
+      "readme": "suricata/tests/poc/9300057_linksys-eseries-mp/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Linksys E-Series mp parameter OS command injection (CVE-2025-34037) [high]\"; flow:established,to_server; http.uri.raw; content:\"mp=\"; nocase; fast_pattern; pcre:\"/\\/(?:Diagnostics|set_TR069|cgi-bin|goform)[^\\r\\n]{0,80}\\?[^\\r\\n]{0,200}?mp=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-34037, poc_ref tests/poc/9300057_linksys-eseries-mp/poc.sh, tag linksys, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300057; rev:1;)",
+      "description": {
+        "attack": "Linksys E-Series OS command injection lewat parameter `mp` CGI (CVE-2025-34037): handler `/Diagnostics.tri` atau `/set_TR069` menerima parameter `mp=` yang langsung di-shell-exec. Shape mirip dipakai Belkin/Tuoshi/Edimax/Tenda — multi-vendor lewat shared SDK.",
+        "impact": "RCE unauth di router Linksys (dan OEM clones) → botnet recruit + pivot LAN.",
+        "detects": "Path Linksys-style CGI (`Diagnostics.tri`/`set_TR069`/`cgi-bin`/`goform`) + parameter `mp=` berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

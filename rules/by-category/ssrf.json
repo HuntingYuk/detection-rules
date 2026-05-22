@@ -1,0 +1,154 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "ssrf",
+  "rules": [
+    {
+      "sid": 9150001,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/ssrf.rules",
+      "msg": "WEB SSRF to cloud metadata 169.254.169.254 in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "ssrf",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A10-SSRF",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1552",
+        "mitre_technique_name": "Unsecured-Credentials",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9150001_cloud-metadata-ip/poc.sh",
+        "tag": "ssrf-metadata",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "169.254.169.254",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/(?::\\/\\/|%3a%2f%2f)169\\.254\\.169\\.254/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9150001_cloud-metadata-ip/",
+      "readme": "suricata/tests/poc/9150001_cloud-metadata-ip/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SSRF to cloud metadata 169.254.169.254 in http.uri [high]\"; flow:established,to_server; http.uri; content:\"169.254.169.254\"; fast_pattern; pcre:\"/(?::\\/\\/|%3a%2f%2f)169\\.254\\.169\\.254/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A10-SSRF, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1552, mitre_technique_name Unsecured-Credentials, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9150001_cloud-metadata-ip/poc.sh, tag ssrf-metadata, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9150001; rev:2;)",
+      "description": {
+        "attack": "SSRF ke layanan cloud metadata via IP link-local 169.254.169.254.",
+        "impact": "Pencurian kredensial IAM instance → ambil alih akun cloud.",
+        "detects": "`169.254.169.254` tepat setelah skema (://) sebagai nilai parameter."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9150002,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/ssrf.rules",
+      "msg": "WEB SSRF dangerous URL scheme (gopher/dict/file/ldap/ftp) in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "ssrf",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A10-SSRF",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9150002_url-scheme-smuggling/poc.sh",
+        "tag": "ssrf-scheme",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "gopher://",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:=|%3d|\\x3a%2f%2f|:\\/\\/)?(?:gopher|dict|ldap|ftp|file|netdoc):(?:\\/\\/|%2f%2f)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9150002_url-scheme-smuggling/",
+      "readme": "suricata/tests/poc/9150002_url-scheme-smuggling/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SSRF dangerous URL scheme (gopher/dict/file/ldap/ftp) in http.uri [high]\"; flow:established,to_server; http.uri; content:\"gopher://\"; nocase; fast_pattern; pcre:\"/(?:=|%3d|\\x3a%2f%2f|:\\/\\/)?(?:gopher|dict|ldap|ftp|file|netdoc):(?:\\/\\/|%2f%2f)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A10-SSRF, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9150002_url-scheme-smuggling/poc.sh, tag ssrf-scheme, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9150002; rev:2;)",
+      "description": {
+        "attack": "SSRF lewat skema URL berbahaya (gopher/dict/file/ldap/ftp) di parameter.",
+        "impact": "Akses layanan internal / baca file lokal / pivot ke backend.",
+        "detects": "Skema gopher/dict/ldap/ftp/file:// sebagai nilai parameter — aplikasi normal kirim http(s)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9150003,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/ssrf.rules",
+      "msg": "WEB SSRF to GCP cloud metadata hostname metadata.google.internal in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "ssrf",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A10-SSRF",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1552",
+        "mitre_technique_name": "Unsecured-Credentials",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9150003_gcp-metadata-host/poc.sh",
+        "tag": "ssrf-metadata",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "metadata.google.internal",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?::\\/\\/|%3a%2f%2f|=|%3d)metadata\\.google\\.internal/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9150003_gcp-metadata-host/",
+      "readme": "suricata/tests/poc/9150003_gcp-metadata-host/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SSRF to GCP cloud metadata hostname metadata.google.internal in http.uri [high]\"; flow:established,to_server; http.uri; content:\"metadata.google.internal\"; nocase; fast_pattern; pcre:\"/(?::\\/\\/|%3a%2f%2f|=|%3d)metadata\\.google\\.internal/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A10-SSRF, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1552, mitre_technique_name Unsecured-Credentials, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9150003_gcp-metadata-host/poc.sh, tag ssrf-metadata, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9150003; rev:2;)",
+      "description": {
+        "attack": "SSRF ke layanan metadata GCP via hostname `metadata.google.internal` (bukan IP).",
+        "impact": "Pencurian token service-account GCP → ambil alih proyek cloud.",
+        "detects": "`metadata.google.internal` tepat setelah skema atau '=' (sebagai target, bukan teks dokumentasi)."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

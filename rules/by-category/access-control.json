@@ -1,0 +1,301 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "access-control",
+  "rules": [
+    {
+      "sid": 9170001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - /.git/config repository probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170001_git-config-exposure/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/.git/config",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170001_git-config-exposure/",
+      "readme": "suricata/tests/poc/9170001_git-config-exposure/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - /.git/config repository probe [high]\"; flow:established,to_server; http.uri.raw; content:\"/.git/config\"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170001_git-config-exposure/poc.sh, tag exposure, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9170001; rev:1;)",
+      "description": {
+        "attack": "Penyerang menebak path file internal Git yang nggak sengaja ke-publish ke web root, yaitu /.git/config.",
+        "impact": "Kalau folder .git ke-expose, seluruh source code + history + secret yang pernah ke-commit bisa diunduh.",
+        "detects": "Request ke path /.git/config — tidak ada klien sah yang minta file ini."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9170002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - /.aws/credentials cloud secret probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170002_aws-cred-exposure/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/.aws/credentials",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170002_aws-cred-exposure/",
+      "readme": "suricata/tests/poc/9170002_aws-cred-exposure/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - /.aws/credentials cloud secret probe [high]\"; flow:established,to_server; http.uri.raw; content:\"/.aws/credentials\"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170002_aws-cred-exposure/poc.sh, tag exposure, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9170002; rev:1;)",
+      "description": {
+        "attack": "Penyerang mencoba mengambil file kredensial AWS CLI (/.aws/credentials) yang bocor ke web root.",
+        "impact": "Bocornya access key + secret AWS = penyerang bisa ambil alih akun cloud (data, billing, infrastruktur).",
+        "detects": "Request ke path /.aws/credentials — klien jinak tidak pernah memintanya."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9170003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - /.svn/wc.db SVN repo probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170003_svn-wc-db-exposure/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/.svn/wc.db",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170003_svn-wc-db-exposure/",
+      "readme": "suricata/tests/poc/9170003_svn-wc-db-exposure/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - /.svn/wc.db SVN repo probe [high]\"; flow:established,to_server; http.uri.raw; content:\"/.svn/wc.db\"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170003_svn-wc-db-exposure/poc.sh, tag exposure, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9170003; rev:1;)",
+      "description": {
+        "attack": "Penyerang menebak path file internal SVN yang nggak sengaja ke-publish ke web root, yaitu `/.svn/wc.db` (working-copy database).",
+        "impact": "Bocornya seluruh source code + history versi-control + secret yang pernah ke-commit (analog ke kebocoran `.git`).",
+        "detects": "Request ke path `/.svn/wc.db` — tidak ada klien sah yang minta file ini."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9170004,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - /.env or config backup probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170004_env-backup-exposure/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/.env",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/\\.env(?:\\.(?:bak|backup|local|production|prod|dev|old|orig|save|swp))?(?:[\\?\\s\\x00]|$)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170004_env-backup-exposure/",
+      "readme": "suricata/tests/poc/9170004_env-backup-exposure/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - /.env or config backup probe [high]\"; flow:established,to_server; http.uri.raw; content:\"/.env\"; nocase; fast_pattern; pcre:\"/\\/\\.env(?:\\.(?:bak|backup|local|production|prod|dev|old|orig|save|swp))?(?:[\\?\\s\\x00]|$)/i\"; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170004_env-backup-exposure/poc.sh, tag exposure, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9170004; rev:1;)",
+      "description": {
+        "attack": "Penyerang menebak file konfigurasi rahasia (`.env`) atau backup-nya (`.env.bak`/`.env.local`/`.env.production`) yang nggak sengaja ke-publish ke web root.",
+        "impact": "Bocornya seluruh secret aplikasi: kredensial DB, API key cloud, secret JWT, password mail SMTP — pintu masuk ke kompromi penuh.",
+        "detects": "Request ke path `/.env` atau backup-variantnya (`.env.bak/.backup/.local/.production/.prod/.dev/.old/.orig/.save/.swp`) — tidak ada klien sah yang minta dotfile env config."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9170005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - phpinfo() debug page probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170005_phpinfo-probe/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "phpinfo",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:phpinfo(?:\\.php|\\.html)?|info\\.php|test\\.php|_profiler\\/phpinfo|debug\\.php)(?:[\\?\\#\\s\\x00]|$)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170005_phpinfo-probe/",
+      "readme": "suricata/tests/poc/9170005_phpinfo-probe/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - phpinfo() debug page probe [high]\"; flow:established,to_server; http.uri.raw; content:\"phpinfo\"; nocase; fast_pattern; pcre:\"/\\/(?:phpinfo(?:\\.php|\\.html)?|info\\.php|test\\.php|_profiler\\/phpinfo|debug\\.php)(?:[\\?\\#\\s\\x00]|$)/i\"; classtype:attempted-recon; metadata: asset_category web-classic, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170005_phpinfo-probe/poc.sh, tag exposure, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9170005; rev:1;)",
+      "description": {
+        "attack": "Penyerang nge-probe halaman debug `phpinfo()` yang nggak sengaja ke-publish (`/phpinfo.php`, `/info.php`, `/test.php`, `/_profiler/phpinfo` Symfony). Standar scanner recon — 48 hit di 3 pcap MTA scan-and-probe.",
+        "impact": "Bocornya konfigurasi PHP penuh: versi, ekstensi, environment vars (sering termasuk DB credentials, API keys, secret JWT), path absolut server — bahan recon untuk serangan lanjutan tepat sasaran.",
+        "detects": "Request ke salah satu path probe canonical phpinfo (`/phpinfo.php`/`/info.php`/`/test.php`/`/_profiler/phpinfo`/`/debug.php`)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9170006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - Symfony _profiler / Laravel _ignition / Rails /rails/info debug-page probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170006_framework-debug-probe/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "_profiler",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:_profiler(?:\\/|\\?|$)|_ignition\\/(?:execute-solution|health-check)|rails\\/info(?:\\/(?:properties|routes))?(?:\\/|\\?|$))/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170006_framework-debug-probe/",
+      "readme": "suricata/tests/poc/9170006_framework-debug-probe/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - Symfony _profiler / Laravel _ignition / Rails /rails/info debug-page probe [high]\"; flow:established,to_server; http.uri.raw; content:\"_profiler\"; nocase; fast_pattern; pcre:\"/\\/(?:_profiler(?:\\/|\\?|$)|_ignition\\/(?:execute-solution|health-check)|rails\\/info(?:\\/(?:properties|routes))?(?:\\/|\\?|$))/i\"; classtype:attempted-recon; metadata: asset_category web-modern, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170006_framework-debug-probe/poc.sh, tag exposure, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9170006; rev:1;)",
+      "description": {
+        "attack": "Penyerang nge-probe halaman debug framework yang nggak sengaja ke-expose ke production: Symfony Web Profiler `/_profiler`, Laravel Ignition `/_ignition/execute-solution` (CVE-2021-3129), Rails `/rails/info/routes`. Standar scanner recon.",
+        "impact": "Bocornya routes/source-paths/DB-queries/env-vars → bahan recon serangan lanjutan; Ignition `execute-solution` = RCE pre-auth (Laravel debug).",
+        "detects": "Request ke salah satu canonical debug path (`/_profiler[/*]`, `/_ignition/execute-solution`, `/_ignition/health-check`, `/rails/info`, `/rails/info/properties`, `/rails/info/routes`)."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

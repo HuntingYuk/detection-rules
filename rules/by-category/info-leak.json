@@ -1,0 +1,350 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "info-leak",
+  "rules": [
+    {
+      "sid": 9210001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - AWS access key id in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1552",
+        "mitre_technique_name": "Unsecured-Credentials",
+        "kill_chain": "Actions-on-Objectives",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210001_aws-key-in-response/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "AKIA",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/\\bAKIA[0-9A-Z]{16}\\b/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210001_aws-key-in-response/",
+      "readme": "suricata/tests/poc/9210001_aws-key-in-response/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - AWS access key id in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"AKIA\"; fast_pattern; pcre:\"/\\bAKIA[0-9A-Z]{16}\\b/\"; classtype:web-application-activity; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1552, mitre_technique_name Unsecured-Credentials, kill_chain Actions-on-Objectives, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210001_aws-key-in-response/poc.sh, tag info-leak, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9210001; rev:1;)",
+      "description": {
+        "attack": "Server keliru menampilkan AWS Access Key ID di body response (kebocoran kredensial sisi-respons).",
+        "impact": "Access key cloud bocor = jalan ke pembajakan akun AWS.",
+        "detects": "Pola `AKIA` + 16 karakter (format key id AWS) di body response — sisi to_client."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9210002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - PEM private key in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1552",
+        "mitre_technique_name": "Unsecured-Credentials",
+        "kill_chain": "Actions-on-Objectives",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210002_private-key-in-response/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "PRIVATE KEY-----",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210002_private-key-in-response/",
+      "readme": "suricata/tests/poc/9210002_private-key-in-response/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - PEM private key in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"PRIVATE KEY-----\"; nocase; fast_pattern; pcre:\"/-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----/\"; classtype:web-application-activity; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1552, mitre_technique_name Unsecured-Credentials, kill_chain Actions-on-Objectives, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210002_private-key-in-response/poc.sh, tag info-leak, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9210002; rev:1;)",
+      "description": {
+        "attack": "Server keliru membocorkan private key (PEM) di body response.",
+        "impact": "Private key bocor = penyamaran server/TLS, dekripsi, akses SSH — kompromi kepercayaan.",
+        "detects": "Header PEM `-----BEGIN ... PRIVATE KEY-----` di body response."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9210003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - AWS secret access key in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1552",
+        "mitre_technique_name": "Unsecured-Credentials",
+        "kill_chain": "Actions-on-Objectives",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210003_aws-secret-env-leak/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "AWS_SECRET_ACCESS_KEY",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/AWS_SECRET_ACCESS_KEY[\\x22\\x27]?\\s*[=:]\\s*[\\x22\\x27]?[A-Za-z0-9\\/+]{20,128}/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210003_aws-secret-env-leak/",
+      "readme": "suricata/tests/poc/9210003_aws-secret-env-leak/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - AWS secret access key in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"AWS_SECRET_ACCESS_KEY\"; nocase; fast_pattern; pcre:\"/AWS_SECRET_ACCESS_KEY[\\x22\\x27]?\\s*[=:]\\s*[\\x22\\x27]?[A-Za-z0-9\\/+]{20,128}/\"; classtype:web-application-activity; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1552, mitre_technique_name Unsecured-Credentials, kill_chain Actions-on-Objectives, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210003_aws-secret-env-leak/poc.sh, tag info-leak, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9210003; rev:1;)",
+      "description": {
+        "attack": "File .env / dump konfigurasi ter-expose dan terkirim balik lewat HTTP, membocorkan AWS secret access key.",
+        "impact": "Bocornya secret key penuh + variabel rahasia lain = ambil alih akun cloud.",
+        "detects": "`AWS_SECRET_ACCESS_KEY=<nilai>=20+` di body response — sisi to_client."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9210004,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - Python traceback / debug page in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0043",
+        "mitre_tactic_name": "Reconnaissance",
+        "mitre_technique_id": "T1592",
+        "mitre_technique_name": "Gather-Victim-Host-Information",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210004_python-traceback-leak/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Traceback (most recent call last)",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Traceback \\(most recent call last\\)[\\s\\S]{0,400}?(?:File \\x22|line \\d+|[A-Za-z]+Error:)/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210004_python-traceback-leak/",
+      "readme": "suricata/tests/poc/9210004_python-traceback-leak/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - Python traceback / debug page in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"Traceback (most recent call last)\"; nocase; fast_pattern; pcre:\"/Traceback \\(most recent call last\\)[\\s\\S]{0,400}?(?:File \\x22|line \\d+|[A-Za-z]+Error:)/\"; classtype:web-application-activity; metadata: asset_category web-mixed, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210004_python-traceback-leak/poc.sh, tag info-leak, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9210004; rev:2;)",
+      "description": {
+        "attack": "Aplikasi error dengan mode DEBUG aktif sehingga stack trace Python mentah (path file, kode, framework) terkirim ke browser penyerang.",
+        "impact": "Bocornya struktur internal aplikasi — bahan bakar serangan lanjutan yang lebih tepat sasaran.",
+        "detects": "`Traceback (most recent call last)` + struktur frame (File \"...\"/line N/...Error:) di body response."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9210005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - Java Spring Boot Whitelabel Error Page in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0043",
+        "mitre_tactic_name": "Reconnaissance",
+        "mitre_technique_id": "T1592",
+        "mitre_technique_name": "Gather-Victim-Host-Information",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210005_spring-whitelabel-leak/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Whitelabel Error Page",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Whitelabel Error Page[\\s\\S]{0,400}?(?:There was an unexpected error|status=\\d{3}|Exception|timestamp)/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210005_spring-whitelabel-leak/",
+      "readme": "suricata/tests/poc/9210005_spring-whitelabel-leak/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - Java Spring Boot Whitelabel Error Page in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"Whitelabel Error Page\"; nocase; fast_pattern; pcre:\"/Whitelabel Error Page[\\s\\S]{0,400}?(?:There was an unexpected error|status=\\d{3}|Exception|timestamp)/\"; classtype:web-application-activity; metadata: asset_category web-classic, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210005_spring-whitelabel-leak/poc.sh, tag info-leak, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9210005; rev:1;)",
+      "description": {
+        "attack": "Aplikasi Spring Boot error tapi konfigurasi salah → halaman debug default 'Whitelabel Error Page' ikut terkirim ke browser, bocorkan versi Spring + path + detail exception.",
+        "impact": "Bocornya struktur internal aplikasi Java (versi framework, path endpoint, exception) — bahan recon untuk serangan lanjutan yang lebih tepat sasaran.",
+        "detects": "`Whitelabel Error Page` + struktur error (status=/timestamp/Exception/'There was an unexpected error') di body response."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9210006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - Rails dev exception page in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0043",
+        "mitre_tactic_name": "Reconnaissance",
+        "mitre_technique_id": "T1592",
+        "mitre_technique_name": "Gather-Victim-Host-Information",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210006_rails-exception-leak/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Action Controller: Exception caught",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Action Controller: Exception caught[\\s\\S]{0,500}?(?:<h2>|extracted source|app\\/(?:controllers|views|models)\\/|Rails\\.root|RAILS_ENV)/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210006_rails-exception-leak/",
+      "readme": "suricata/tests/poc/9210006_rails-exception-leak/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - Rails dev exception page in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"Action Controller: Exception caught\"; nocase; fast_pattern; pcre:\"/Action Controller: Exception caught[\\s\\S]{0,500}?(?:<h2>|extracted source|app\\/(?:controllers|views|models)\\/|Rails\\.root|RAILS_ENV)/\"; classtype:web-application-activity; metadata: asset_category web-modern, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210006_rails-exception-leak/poc.sh, tag info-leak, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9210006; rev:1;)",
+      "description": {
+        "attack": "Aplikasi Rails error di mode development → halaman exception default 'Action Controller: Exception caught' ikut terkirim, bocorkan path file (`app/controllers/...`), nama kontroller/action, dan environment Rails.",
+        "impact": "Bocornya struktur internal aplikasi Ruby on Rails (versi, path, model/view/controller) — bahan recon untuk serangan lanjutan yang lebih tepat sasaran.",
+        "detects": "Judul `Action Controller: Exception caught` + frame Rails (`<h2>`/extracted source/`app/...` path/`Rails.root`/`RAILS_ENV`) di body response."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9210007,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/info-leak.rules",
+      "msg": "WEB Info Leak - Apache Tomcat default error page in HTTP response body [high]",
+      "classtype": "web-application-activity",
+      "category": "info-leak",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A01-Broken-Access-Control",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0043",
+        "mitre_tactic_name": "Reconnaissance",
+        "mitre_technique_id": "T1592",
+        "mitre_technique_name": "Gather-Victim-Host-Information",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9210007_tomcat-error-leak/poc.sh",
+        "tag": "info-leak",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Apache Tomcat/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Apache Tomcat\\/\\d+\\.\\d+\\.\\d+[\\s\\S]{0,800}?(?:HTTP Status \\d+|Type (?:Exception|Status) Report|<b>Description<\\/b>|root cause)/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.response_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9210007_tomcat-error-leak/",
+      "readme": "suricata/tests/poc/9210007_tomcat-error-leak/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Info Leak - Apache Tomcat default error page in HTTP response body [high]\"; flow:established,to_client; http.response_body; content:\"Apache Tomcat/\"; nocase; fast_pattern; pcre:\"/Apache Tomcat\\/\\d+\\.\\d+\\.\\d+[\\s\\S]{0,800}?(?:HTTP Status \\d+|Type (?:Exception|Status) Report|<b>Description<\\/b>|root cause)/\"; classtype:web-application-activity; metadata: asset_category web-classic, owasp A01-Broken-Access-Control, attack_target Client, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1592, mitre_technique_name Gather-Victim-Host-Information, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9210007_tomcat-error-leak/poc.sh, tag info-leak, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9210007; rev:1;)",
+      "description": {
+        "attack": "Aplikasi Java/Tomcat error tapi halaman error default 'Apache Tomcat/X.Y.Z - Error report' ikut terkirim, bocorkan versi Tomcat + stack servlet + path aplikasi.",
+        "impact": "Bocornya versi & struktur server Java (Tomcat version → exploit version-spesifik) — bahan recon untuk serangan lanjutan yang lebih tepat sasaran.",
+        "detects": "Header `Apache Tomcat/X.Y.Z` + struktur error-report (`HTTP Status N`, Exception/Status Report, Description, root cause) di body response."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

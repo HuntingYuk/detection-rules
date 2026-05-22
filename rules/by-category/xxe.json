@@ -1,0 +1,154 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "xxe",
+  "rules": [
+    {
+      "sid": 9140001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xxe.rules",
+      "msg": "WEB XXE external entity (SYSTEM/PUBLIC) in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "xxe",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0009",
+        "mitre_tactic_name": "Collection",
+        "mitre_technique_id": "T1213",
+        "mitre_technique_name": "Data-from-Information-Repositories",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9140001_doctype-entity-system/poc.sh",
+        "tag": "xxe",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "<!ENTITY",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<!ENTITY\\s+\\S+\\s+(?:SYSTEM|PUBLIC)\\s+[\\x22\\x27][^\\x22\\x27]*(?:file|https?|ftp|gopher|jar|netdoc|php|expect):/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9140001_doctype-entity-system/",
+      "readme": "suricata/tests/poc/9140001_doctype-entity-system/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XXE external entity (SYSTEM/PUBLIC) in request body [high]\"; flow:established,to_server; http.request_body; content:\"<!ENTITY\"; nocase; fast_pattern; pcre:\"/<!ENTITY\\s+\\S+\\s+(?:SYSTEM|PUBLIC)\\s+[\\x22\\x27][^\\x22\\x27]*(?:file|https?|ftp|gopher|jar|netdoc|php|expect):/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1213, mitre_technique_name Data-from-Information-Repositories, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9140001_doctype-entity-system/poc.sh, tag xxe, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9140001; rev:1;)",
+      "description": {
+        "attack": "XML External Entity (XXE): entity eksternal SYSTEM/PUBLIC di body XML untuk membaca file/SSRF.",
+        "impact": "Pembacaan file server, SSRF, kadang RCE.",
+        "detects": "`<!ENTITY` + entity EKSTERNAL (SYSTEM/PUBLIC + skema fetchable) di body request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9140002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xxe.rules",
+      "msg": "WEB XXE parameter-entity OOB (<!ENTITY % .. SYSTEM) in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "xxe",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0009",
+        "mitre_tactic_name": "Collection",
+        "mitre_technique_id": "T1213",
+        "mitre_technique_name": "Data-from-Information-Repositories",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9140002_param-entity-oob/poc.sh",
+        "tag": "xxe-oob",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "<!ENTITY %",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<!ENTITY\\s+%\\s+\\S+\\s+SYSTEM\\s+[\\x22\\x27]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9140002_param-entity-oob/",
+      "readme": "suricata/tests/poc/9140002_param-entity-oob/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XXE parameter-entity OOB (<!ENTITY % .. SYSTEM) in request body [high]\"; flow:established,to_server; http.request_body; content:\"<!ENTITY %\"; nocase; fast_pattern; pcre:\"/<!ENTITY\\s+%\\s+\\S+\\s+SYSTEM\\s+[\\x22\\x27]/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1213, mitre_technique_name Data-from-Information-Repositories, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9140002_param-entity-oob/poc.sh, tag xxe-oob, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9140002; rev:1;)",
+      "description": {
+        "attack": "XXE blind out-of-band: parameter-entity eksternal (`<!ENTITY % ... SYSTEM>`) untuk eksfiltrasi via DTD eksternal.",
+        "impact": "Eksfiltrasi file server walau respons tak menampilkan hasil.",
+        "detects": "`<!ENTITY %` yang SYSTEM (fetch DTD eksternal) di body request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9140003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xxe.rules",
+      "msg": "WEB XXE/DoS recursive entity expansion (billion laughs) in request body [high]",
+      "classtype": "attempted-dos",
+      "category": "xxe",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0040",
+        "mitre_tactic_name": "Impact",
+        "mitre_technique_id": "T1499",
+        "mitre_technique_name": "Endpoint-Denial-of-Service",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9140003_billion-laughs/poc.sh",
+        "tag": "xxe-dos",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "<!ENTITY",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<!ENTITY\\s+\\w+\\s+[\\x22\\x27](?:\\x26\\w+\\x3b\\s*){2,}[\\x22\\x27]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9140003_billion-laughs/",
+      "readme": "suricata/tests/poc/9140003_billion-laughs/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XXE/DoS recursive entity expansion (billion laughs) in request body [high]\"; flow:established,to_server; http.request_body; content:\"<!ENTITY\"; nocase; fast_pattern; pcre:\"/<!ENTITY\\s+\\w+\\s+[\\x22\\x27](?:\\x26\\w+\\x3b\\s*){2,}[\\x22\\x27]/i\"; classtype:attempted-dos; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0040, mitre_tactic_name Impact, mitre_technique_id T1499, mitre_technique_name Endpoint-Denial-of-Service, kill_chain Exploitation, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9140003_billion-laughs/poc.sh, tag xxe-dos, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9140003; rev:1;)",
+      "description": {
+        "attack": "XML entity-expansion DoS ('billion laughs'): entity rekursif yang meledak secara eksponensial.",
+        "impact": "Denial of Service — habiskan memori/CPU server XML.",
+        "detects": "`<!ENTITY` yang didefinisikan sebagai >=2 referensi ke entity lain (amplifier rekursif)."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

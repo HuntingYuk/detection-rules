@@ -1,0 +1,297 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "traversal",
+  "rules": [
+    {
+      "sid": 9130001,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/traversal.rules",
+      "msg": "WEB Path Traversal to /etc/passwd in http.uri.raw [high]",
+      "classtype": "web-application-attack",
+      "category": "traversal",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9130001_dotdot-etc-passwd/poc.sh",
+        "tag": "path-traversal",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "etc/passwd",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:\\.\\.|%2e%2e){1,8}(?:[\\/\\x5c]|%2f|%5c)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9130001_dotdot-etc-passwd/",
+      "readme": "suricata/tests/poc/9130001_dotdot-etc-passwd/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Path Traversal to /etc/passwd in http.uri.raw [high]\"; flow:established,to_server; http.uri.raw; content:\"etc/passwd\"; nocase; fast_pattern; pcre:\"/(?:\\.\\.|%2e%2e){1,8}(?:[\\/\\x5c]|%2f|%5c)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130001_dotdot-etc-passwd/poc.sh, tag path-traversal, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9130001; rev:2;)",
+      "description": {
+        "attack": "Path traversal: `../` untuk keluar dari direktori dan membaca /etc/passwd.",
+        "impact": "Pembacaan file sensitif server (LFI) — pijakan kompromi.",
+        "detects": "`etc/passwd` + token traversal (../ atau %2e%2e) di URL RAW (http.uri menormalkan ../)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9130002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/traversal.rules",
+      "msg": "WEB LFI/RFI PHP stream wrapper (php://filter etc) in http.uri.raw [high]",
+      "classtype": "web-application-attack",
+      "category": "traversal",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9130002_php-wrapper-lfi/poc.sh",
+        "tag": "lfi-wrapper",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "php://",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:php:\\/\\/(?:filter|input|data)|data:\\/\\/text|expect:\\/\\/|phar:\\/\\/|zip:\\/\\/)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9130002_php-wrapper-lfi/",
+      "readme": "suricata/tests/poc/9130002_php-wrapper-lfi/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB LFI/RFI PHP stream wrapper (php://filter etc) in http.uri.raw [high]\"; flow:established,to_server; http.uri.raw; content:\"php://\"; nocase; fast_pattern; pcre:\"/(?:php:\\/\\/(?:filter|input|data)|data:\\/\\/text|expect:\\/\\/|phar:\\/\\/|zip:\\/\\/)/i\"; classtype:web-application-attack; metadata: asset_category web-classic, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130002_php-wrapper-lfi/poc.sh, tag lfi-wrapper, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9130002; rev:1;)",
+      "description": {
+        "attack": "LFI/RFI lewat PHP stream wrapper (php://filter|input, data://, expect://, phar://, zip://).",
+        "impact": "Pembacaan source/file, kadang RCE (expect://, phar deser).",
+        "detects": "`php://` + wrapper berbahaya di URL RAW."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9130003,
+      "rev": 1,
+      "enabled": false,
+      "file": "suricata/rules/plaintext/traversal.rules",
+      "msg": "WEB Path Traversal double-URL-encoded (%252e%252e) in http.uri.raw [high]",
+      "classtype": "web-application-attack",
+      "category": "traversal",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0009",
+        "mitre_tactic_name": "Collection",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9130003_double-encoded/poc.sh",
+        "tag": "path-traversal",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "%252e",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/%252e%252e(?:%252f|%255c|\\/)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9130003_double-encoded/",
+      "readme": "suricata/tests/poc/9130003_double-encoded/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Path Traversal double-URL-encoded (%252e%252e) in http.uri.raw [high]\"; flow:established,to_server; http.uri.raw; content:\"%252e\"; nocase; fast_pattern; pcre:\"/%252e%252e(?:%252f|%255c|\\/)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0009, mitre_tactic_name Collection, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130003_double-encoded/poc.sh, tag path-traversal, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9130003; rev:1;)",
+      "description": null,
+      "bench_status_§17": null
+    },
+    {
+      "sid": 9130004,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/traversal.rules",
+      "msg": "WEB Path Traversal to Windows win.ini in http.uri.raw [high]",
+      "classtype": "web-application-attack",
+      "category": "traversal",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9130004_windows-win-ini/poc.sh",
+        "tag": "path-traversal",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "win.ini",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:(?:\\.\\.|%2e%2e)(?:[\\/\\x5c]|%2f|%5c)){1,8}[^\\r\\n]{0,40}?win\\.ini/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9130004_windows-win-ini/",
+      "readme": "suricata/tests/poc/9130004_windows-win-ini/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Path Traversal to Windows win.ini in http.uri.raw [high]\"; flow:established,to_server; http.uri.raw; content:\"win.ini\"; nocase; fast_pattern; pcre:\"/(?:(?:\\.\\.|%2e%2e)(?:[\\/\\x5c]|%2f|%5c)){1,8}[^\\r\\n]{0,40}?win\\.ini/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130004_windows-win-ini/poc.sh, tag path-traversal, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9130004; rev:2;)",
+      "description": {
+        "attack": "Path traversal menyasar Windows: keluar direktori dengan `..\\` (raw/encoded) untuk membaca file `win.ini`.",
+        "impact": "Pembacaan file sistem Windows (LFI) — pijakan pemetaan/kompromi (9130001 = target /etc/passwd di *nix).",
+        "detects": "`win.ini` didahului sekuens traversal (../ atau ..\\ raw atau %2e%2e/%5c) di URL RAW."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9130005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/traversal.rules",
+      "msg": "WEB Path Traversal Unicode overlong-UTF-8 bypass (%c0%af/%c1%9c) in http.uri.raw [high]",
+      "classtype": "web-application-attack",
+      "category": "traversal",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0005",
+        "mitre_tactic_name": "Defense-Evasion",
+        "mitre_technique_id": "T1027",
+        "mitre_technique_name": "Obfuscated-Files-or-Information",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9130005_unicode-overlong-utf8/poc.sh",
+        "tag": "path-traversal",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "%c0%af",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:(?:\\.\\.|%2e%2e)(?:%c0%af|%c1%9c)|%c0%af[^\\r\\n]{0,40}?(?:etc\\/|windows[\\/\\x5c%]|passwd|win\\.ini))/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9130005_unicode-overlong-utf8/",
+      "readme": "suricata/tests/poc/9130005_unicode-overlong-utf8/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Path Traversal Unicode overlong-UTF-8 bypass (%c0%af/%c1%9c) in http.uri.raw [high]\"; flow:established,to_server; http.uri.raw; content:\"%c0%af\"; nocase; fast_pattern; pcre:\"/(?:(?:\\.\\.|%2e%2e)(?:%c0%af|%c1%9c)|%c0%af[^\\r\\n]{0,40}?(?:etc\\/|windows[\\/\\x5c%]|passwd|win\\.ini))/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0005, mitre_tactic_name Defense-Evasion, mitre_technique_id T1027, mitre_technique_name Obfuscated-Files-or-Information, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130005_unicode-overlong-utf8/poc.sh, tag path-traversal, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9130005; rev:1;)",
+      "description": {
+        "attack": "Path traversal evasion: penyerang pakai encoding UTF-8 overlong `%c0%af` (encoding INVALID per RFC 3629 untuk '/') agar filter yang cuma blokir `%2f` lewat.",
+        "impact": "Pembacaan file sensitif (LFI) lewat bypass filter sederhana — pijakan recon/kompromi.",
+        "detects": "Byte sequence `%c0%af` (atau `%c1%9c` untuk '\\\\') dalam konteks traversal (didahului `..` atau diikuti `etc/`/`windows`/`passwd`/`win.ini`)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9130006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/traversal.rules",
+      "msg": "WEB Path Traversal nested-dot bypass ....// in http.uri.raw [high]",
+      "classtype": "web-application-attack",
+      "category": "traversal",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0005",
+        "mitre_tactic_name": "Defense-Evasion",
+        "mitre_technique_id": "T1027",
+        "mitre_technique_name": "Obfuscated-Files-or-Information",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9130006_nested-dotdot-bypass/poc.sh",
+        "tag": "path-traversal",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "....//",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\.\\.\\.\\.(?:[\\/\\x5c]|%2f|%5c){1,2}[^\\r\\n]{0,80}?(?:etc\\/(?:passwd|shadow|hosts)|windows[\\/\\x5c%]|win\\.ini|boot\\.ini|\\/proc\\/self)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9130006_nested-dotdot-bypass/",
+      "readme": "suricata/tests/poc/9130006_nested-dotdot-bypass/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Path Traversal nested-dot bypass ....// in http.uri.raw [high]\"; flow:established,to_server; http.uri.raw; content:\"....//\"; nocase; fast_pattern; pcre:\"/\\.\\.\\.\\.(?:[\\/\\x5c]|%2f|%5c){1,2}[^\\r\\n]{0,80}?(?:etc\\/(?:passwd|shadow|hosts)|windows[\\/\\x5c%]|win\\.ini|boot\\.ini|\\/proc\\/self)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0005, mitre_tactic_name Defense-Evasion, mitre_technique_id T1027, mitre_technique_name Obfuscated-Files-or-Information, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9130006_nested-dotdot-bypass/poc.sh, tag path-traversal, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9130006; rev:1;)",
+      "description": {
+        "attack": "Path traversal evasion: pola `....//` — setelah filter single-pass mencabut `..`, sisa karakter jadi `../`. WAF yang blokir `../` literal akan lewat.",
+        "impact": "Pembacaan file sistem sensitif (LFI) lewat bypass filter sederhana — pijakan recon/kompromi.",
+        "detects": "Literal `....//` di URL RAW + konteks sensitif setelahnya (`etc/passwd`, `windows`, `win.ini`, `/proc/self`)."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

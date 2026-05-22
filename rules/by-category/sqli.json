@@ -1,0 +1,301 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "sqli",
+  "rules": [
+    {
+      "sid": 9100001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/sqli.rules",
+      "msg": "WEB SQLi UNION-based in http.uri (canonical) [medium]",
+      "classtype": "web-application-attack",
+      "category": "sqli",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9100001_union-select/poc.sh",
+        "tag": "sqli-union",
+        "created_at": "2026_05_18",
+        "updated_at": "2026_05_18",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "union select",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\bunion\\b(?:\\s|%20|\\+|(?>\\/\\*+[^*]*?\\*+\\/))++select\\b/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9100001_union-select/",
+      "readme": "suricata/tests/poc/9100001_union-select/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SQLi UNION-based in http.uri (canonical) [medium]\"; flow:established,to_server; http.uri; content:\"union select\"; nocase; fast_pattern; pcre:\"/\\bunion\\b(?:\\s|%20|\\+|(?>\\/\\*+[^*]*?\\*+\\/))++select\\b/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100001_union-select/poc.sh, tag sqli-union, created_at 2026_05_18, updated_at 2026_05_18, author huntingyuk; sid:9100001; rev:1;)",
+      "description": {
+        "attack": "SQL injection UNION-based: penyerang menggabungkan query lewat `UNION SELECT` untuk menarik data dari tabel lain.",
+        "impact": "Pencurian isi database (kredensial, data pelanggan).",
+        "detects": "`union select` di URL + struktur pcre; threshold 3/60 detik per-src sebagai kompensator FP."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9100002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/sqli.rules",
+      "msg": "WEB SQLi time-based blind (SLEEP/BENCHMARK/WAITFOR) in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "sqli",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9100002_time-based-blind/poc.sh",
+        "tag": "sqli-timebased",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "sleep(",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:sleep\\(\\s*\\d|pg_sleep\\(|benchmark\\(\\s*\\d|waitfor\\s+delay)/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9100002_time-based-blind/",
+      "readme": "suricata/tests/poc/9100002_time-based-blind/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SQLi time-based blind (SLEEP/BENCHMARK/WAITFOR) in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"sleep(\"; nocase; fast_pattern; pcre:\"/(?:sleep\\(\\s*\\d|pg_sleep\\(|benchmark\\(\\s*\\d|waitfor\\s+delay)/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100002_time-based-blind/poc.sh, tag sqli-timebased, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9100002; rev:1;)",
+      "description": {
+        "attack": "SQL injection blind time-based: penyerang memakai SLEEP/BENCHMARK/WAITFOR untuk menyimpulkan data dari delay respons.",
+        "impact": "Eksfiltrasi data perlahan walau hasil query tak terlihat.",
+        "detects": "Primitif waktu (SLEEP()/PG_SLEEP()/BENCHMARK()/WAITFOR DELAY) di URL; threshold 3/60 detik."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9100003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/sqli.rules",
+      "msg": "WEB SQLi error-based (extractvalue/updatexml/exp) in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "sqli",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9100003_error-based/poc.sh",
+        "tag": "sqli-errorbased",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "extractvalue(",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:extractvalue\\(\\s*\\d*\\s*,|updatexml\\(|exp\\(\\s*~\\s*\\(\\s*select|convert\\(\\s*int\\s*,\\s*\\(\\s*select)/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9100003_error-based/",
+      "readme": "suricata/tests/poc/9100003_error-based/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SQLi error-based (extractvalue/updatexml/exp) in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"extractvalue(\"; nocase; fast_pattern; pcre:\"/(?:extractvalue\\(\\s*\\d*\\s*,|updatexml\\(|exp\\(\\s*~\\s*\\(\\s*select|convert\\(\\s*int\\s*,\\s*\\(\\s*select)/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100003_error-based/poc.sh, tag sqli-errorbased, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9100003; rev:1;)",
+      "description": {
+        "attack": "SQL injection error-based: memaksa DB membocorkan data lewat pesan error (extractvalue/updatexml/exp).",
+        "impact": "Pencurian data lewat pesan error DB.",
+        "detects": "Primitif error-extraction (extractvalue(/updatexml(/exp(~(select/convert(int,(select); threshold 3/60 detik."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9100004,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/sqli.rules",
+      "msg": "WEB SQLi boolean-blind tautology in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "sqli",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9100004_boolean-blind/poc.sh",
+        "tag": "sqli-boolean",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "or 1=1",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:[\\x27\\x22]\\s*\\)?\\s*or\\s+[\\x27\\x22]?1[\\x27\\x22]?\\s*=\\s*[\\x27\\x22]?1|\\bor\\s+1\\s*=\\s*1\\s*(?:--|#|\\/\\*|\\)|\\x3b|$))/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9100004_boolean-blind/",
+      "readme": "suricata/tests/poc/9100004_boolean-blind/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SQLi boolean-blind tautology in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"or 1=1\"; nocase; fast_pattern; pcre:\"/(?:[\\x27\\x22]\\s*\\)?\\s*or\\s+[\\x27\\x22]?1[\\x27\\x22]?\\s*=\\s*[\\x27\\x22]?1|\\bor\\s+1\\s*=\\s*1\\s*(?:--|#|\\/\\*|\\)|\\x3b|$))/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100004_boolean-blind/poc.sh, tag sqli-boolean, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9100004; rev:1;)",
+      "description": {
+        "attack": "SQL injection blind boolean: tautologi `OR 1=1` dengan batas quote/paren untuk menyimpulkan data dari beda respons.",
+        "impact": "Eksfiltrasi data / bypass kondisi (mis. login).",
+        "detects": "Tautologi SQL dengan batas quote/paren ('or'1'='1 / )or(1=1 / or 1=1--); threshold 3/60 detik."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9100005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/sqli.rules",
+      "msg": "WEB SQLi MSSQL xp_cmdshell OS command execution in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "sqli",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9100005_mssql-xp-cmdshell/poc.sh",
+        "tag": "sqli-rce",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "xp_cmdshell",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:exec(?:ute)?(?:\\s|%20|\\+)+|master\\.\\.|\\x3b(?:\\s|%20|\\+)*)xp_cmdshell|xp_cmdshell(?:\\s|%20|\\+|%28)*[\\x28\\x27\\x22]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9100005_mssql-xp-cmdshell/",
+      "readme": "suricata/tests/poc/9100005_mssql-xp-cmdshell/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SQLi MSSQL xp_cmdshell OS command execution in http.uri [high]\"; flow:established,to_server; http.uri; content:\"xp_cmdshell\"; nocase; fast_pattern; pcre:\"/(?:exec(?:ute)?(?:\\s|%20|\\+)+|master\\.\\.|\\x3b(?:\\s|%20|\\+)*)xp_cmdshell|xp_cmdshell(?:\\s|%20|\\+|%28)*[\\x28\\x27\\x22]/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100005_mssql-xp-cmdshell/poc.sh, tag sqli-rce, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9100005; rev:1;)",
+      "description": {
+        "attack": "SQL injection eskalasi ke eksekusi perintah OS MSSQL via `xp_cmdshell`.",
+        "impact": "Remote Code Execution di server database (kendali penuh).",
+        "detects": "`xp_cmdshell` sebagai invokasi (didahului EXEC/master../; atau diikuti (/quote) — high conf, tanpa threshold."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9100006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/sqli.rules",
+      "msg": "WEB SQLi Oracle out-of-band exfiltration via UTL_HTTP in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "sqli",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0010",
+        "mitre_tactic_name": "Exfiltration",
+        "mitre_technique_id": "T1041",
+        "mitre_technique_name": "Exfiltration-Over-C2-Channel",
+        "kill_chain": "Actions-on-Objectives",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9100006_oracle-oob-utlhttp/poc.sh",
+        "tag": "sqli-oob",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "UTL_HTTP",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/utl_http\\s*\\.\\s*(?:request|set_(?:body_charset|header|response_error_check))\\s*\\(|httpuritype\\s*\\(/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9100006_oracle-oob-utlhttp/",
+      "readme": "suricata/tests/poc/9100006_oracle-oob-utlhttp/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SQLi Oracle out-of-band exfiltration via UTL_HTTP in http.uri [high]\"; flow:established,to_server; http.uri; content:\"UTL_HTTP\"; nocase; fast_pattern; pcre:\"/utl_http\\s*\\.\\s*(?:request|set_(?:body_charset|header|response_error_check))\\s*\\(|httpuritype\\s*\\(/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0010, mitre_tactic_name Exfiltration, mitre_technique_id T1041, mitre_technique_name Exfiltration-Over-C2-Channel, kill_chain Actions-on-Objectives, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9100006_oracle-oob-utlhttp/poc.sh, tag sqli-oob, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9100006; rev:1;)",
+      "description": {
+        "attack": "SQL injection out-of-band Oracle: DB 'menelepon keluar' lewat `UTL_HTTP.request` membawa data hasil query.",
+        "impact": "Pencurian isi database diam-diam walau hasil tak terlihat (blind/OOB).",
+        "detects": "Invokasi `UTL_HTTP.request(`/`.set_*` / `HTTPURITYPE(` di URL — high conf, tanpa threshold."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

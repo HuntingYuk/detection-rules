@@ -1,39 +1,22 @@
 #!/usr/bin/env python3
-"""gen-manifest — emit `rules.json` (repo-root) with EVERY rule + all metadata,
-file paths, fast_pattern, pcre, classtype, §17 status, description, README/PoC
-locations, and corpus-level counts. Single JSON for downstream tooling.
+"""gen-manifest — emit a manifest of EVERY rule + all metadata + file paths.
+Split into:
 
-Schema (top-level):
-  {
-    "generated_at": "ISO-8601",
-    "corpus": { "active": N, "deprecated": N, "by_category": {...},
-                "by_owasp": {...}, "by_confidence": {...},
-                "by_network_mode": {...} },
-    "rules": [
-      {
-        "sid": 9300001,
-        "rev": 1,
-        "enabled": true|false,
-        "file": "suricata/rules/plaintext/known-cve.rules",
-        "msg": "...",
-        "classtype": "attempted-admin",
-        "category": "known-cve",
-        "metadata": { all controlled-vocab keys },
-        "fast_pattern": { "content": "...", "nocase": bool } | null,
-        "has_pcre": bool,
-        "pcre": "..." | null,
-        "has_detection_filter": bool,
-        "has_threshold": bool,
-        "buffers": ["http.uri.raw","http.request_body",...],
-        "poc_dir": "suricata/tests/poc/<sid>_<slug>/",
-        "readme": "suricata/tests/poc/<sid>_<slug>/README.md",
-        "description": { "attack": "...", "impact": "...", "detects": "..." } | null,
-        "bench_status_§17": "GAP" | "OVERLAP" | null,
-        "raw": "<full alert line>"
-      },
-      ...
-    ]
-  }
+  rules.json                    — index file (corpus stats + lightweight
+                                  per-rule entries + pointers to detail)
+  rules/by-category/<cat>.json  — full per-rule detail (one file per category)
+
+This keeps `rules.json` small (~30 KB) and lets downstream tools fetch only
+the category they need. Each rule's index entry includes `ref` pointing to
+its detail file (`rules/by-category/<cat>.json`).
+
+Per-rule (in detail file): sid, rev, enabled, file, msg, classtype, category,
+metadata (all controlled-vocab keys), fast_pattern (content + nocase),
+has_pcre, pcre, has_detection_filter, has_threshold, buffers, poc_dir,
+readme, description (attack/impact/detects), bench_status_§17, raw.
+
+`--check` (used by `rulectl ci`) re-runs the manifest generation in-memory
+and fails on any drift (missing/stale/orphan) vs on-disk files.
 """
 import os, re, sys, json, glob, datetime
 
@@ -43,7 +26,9 @@ RULES = os.path.join(SUR, "rules")
 TESTS = os.path.join(SUR, "tests", "poc")
 DESC  = os.path.join(TESTS, "_descriptions.json")
 BENCH = os.path.join(TESTS, "_bench_status.json")
-OUT   = os.path.join(ROOT, "rules.json")
+OUT_INDEX = os.path.join(ROOT, "rules.json")
+OUT_DIR   = os.path.join(ROOT, "rules")
+OUT_BYCAT = os.path.join(OUT_DIR, "by-category")
 
 KNOWN_BUFFERS = ["http.uri.raw","http.uri","http.request_body","http.response_body",
                  "http.header","http.cookie","http.user_agent","http.method",
@@ -67,7 +52,6 @@ def _parse_rule(line, file_path):
     cls_m  = re.search(r'\bclasstype:([\w-]+)', line)
     if not sid_m: return None
 
-    # fast_pattern content
     fp = None
     for cm in re.finditer(r'content:"([^"]*)"', line):
         tail = line[cm.end():cm.end()+40]
@@ -75,7 +59,6 @@ def _parse_rule(line, file_path):
             fp = {"content": cm.group(1),
                   "nocase": ("nocase" in line[cm.start():cm.end()+40])}
             break
-    # if no explicit fast_pattern marker, first content (which is implicit fast_pattern)
     if fp is None:
         cm = re.search(r'content:"([^"]*)"', line)
         if cm:
@@ -84,13 +67,11 @@ def _parse_rule(line, file_path):
                   "implicit": True}
 
     pcre_m = re.search(r'pcre:"([^"]*)"', line)
-
     buffers = [b for b in KNOWN_BUFFERS if (b+";") in line or (b+" ") in line]
 
     md = _parse_metadata(line)
     poc_ref = md.get("poc_ref", "")
-    poc_dir = ""
-    readme = ""
+    poc_dir = ""; readme = ""
     if poc_ref:
         d = os.path.dirname(poc_ref)
         poc_dir = "suricata/" + d + "/"
@@ -99,7 +80,7 @@ def _parse_rule(line, file_path):
     return {
         "sid": int(sid_m.group(1)),
         "rev": int(rev_m.group(1)) if rev_m else 1,
-        "enabled": True,   # patched later for `# alert` deprecated lines
+        "enabled": True,
         "file": os.path.relpath(file_path, ROOT),
         "msg": msg_m.group(1) if msg_m else "",
         "classtype": cls_m.group(1) if cls_m else "",
@@ -116,7 +97,7 @@ def _parse_rule(line, file_path):
         "raw": line.rstrip("\n"),
     }
 
-def main():
+def _build():
     desc = json.load(open(DESC)) if os.path.exists(DESC) else {}
     bench = json.load(open(BENCH)) if os.path.exists(BENCH) else {}
 
@@ -127,7 +108,7 @@ def main():
             is_active   = bool(re.match(r'^\s*alert\b', ln))
             is_deprecated = stripped.startswith("# alert")
             if not (is_active or is_deprecated): continue
-            line = stripped[2:] if is_deprecated else ln   # un-comment "# alert ..."
+            line = stripped[2:] if is_deprecated else ln
             r = _parse_rule(line if is_active else line, f)
             if not r: continue
             r["enabled"] = is_active
@@ -136,54 +117,120 @@ def main():
             r["bench_status_§17"] = bench.get(sid_str)
             rules.append(r)
 
-    # corpus-level counts
     active = [r for r in rules if r["enabled"]]
-    by_cat = {}; by_owasp = {}; by_conf = {}; by_nm = {}
-    for r in active:
-        by_cat[r["category"]]   = by_cat.get(r["category"], 0) + 1
-        by_owasp[r["metadata"].get("owasp","?")] = by_owasp.get(r["metadata"].get("owasp","?"), 0) + 1
-        by_conf[r["metadata"].get("confidence","?")] = by_conf.get(r["metadata"].get("confidence","?"), 0) + 1
-        by_nm[r["metadata"].get("network_mode","?")] = by_nm.get(r["metadata"].get("network_mode","?"), 0) + 1
+    rules.sort(key=lambda r: r["sid"])
 
-    out = {
-        "$schema":      "1.0",
-        "generated_at": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-        "source":       "HuntingYuk detection-rules — scripts/gen-manifest",
-        "corpus": {
-            "total":           len(rules),
-            "active":          len(active),
-            "deprecated":      len(rules) - len(active),
-            "by_category":     dict(sorted(by_cat.items())),
-            "by_owasp":        dict(sorted(by_owasp.items())),
-            "by_confidence":   dict(sorted(by_conf.items())),
-            "by_network_mode": dict(sorted(by_nm.items())),
-            "bench_§17_summary": {
-                "GAP":     sum(1 for r in active if r["bench_status_§17"] == "GAP"),
-                "OVERLAP": sum(1 for r in active if r["bench_status_§17"] == "OVERLAP"),
-                "unmeasured": sum(1 for r in active if r["bench_status_§17"] is None),
-            },
+    by_cat = {}
+    for r in rules: by_cat.setdefault(r["category"], []).append(r)
+
+    cnt_cat = {k: sum(1 for r in v if r["enabled"]) for k,v in by_cat.items()}
+    def count_meta(key):
+        d = {}
+        for r in active:
+            v = r["metadata"].get(key, "?")
+            d[v] = d.get(v,0)+1
+        return dict(sorted(d.items()))
+    corpus = {
+        "total":           len(rules),
+        "active":          len(active),
+        "deprecated":      len(rules) - len(active),
+        "by_category":     dict(sorted(cnt_cat.items())),
+        "by_owasp":        count_meta("owasp"),
+        "by_confidence":   count_meta("confidence"),
+        "by_network_mode": count_meta("network_mode"),
+        "bench_§17_summary": {
+            "GAP":     sum(1 for r in active if r["bench_status_§17"] == "GAP"),
+            "OVERLAP": sum(1 for r in active if r["bench_status_§17"] == "OVERLAP"),
+            "unmeasured": sum(1 for r in active if r["bench_status_§17"] is None),
         },
-        "rules": sorted(rules, key=lambda r: r["sid"]),
     }
-    new_text = json.dumps(out, indent=2, ensure_ascii=False) + "\n"
+
+    now = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+    files = {}
+    bycat_pointers = {}
+    for cat in sorted(by_cat):
+        path = os.path.join(OUT_BYCAT, f"{cat}.json")
+        rel  = os.path.relpath(path, ROOT)
+        bycat_pointers[cat] = rel
+        files[path] = json.dumps({
+            "$schema":      "1.0",
+            "generated_at": now,
+            "category":     cat,
+            "rules":        sorted(by_cat[cat], key=lambda r: r["sid"]),
+        }, indent=2, ensure_ascii=False) + "\n"
+
+    index_rules = []
+    for r in rules:
+        index_rules.append({
+            "sid":              r["sid"],
+            "rev":              r["rev"],
+            "enabled":          r["enabled"],
+            "category":         r["category"],
+            "file":             r["file"],
+            "msg":              r["msg"],
+            "owasp":            r["metadata"].get("owasp","?"),
+            "confidence":       r["metadata"].get("confidence","?"),
+            "network_mode":     r["metadata"].get("network_mode","?"),
+            "cve":              r["metadata"].get("cve","none"),
+            "bench_status_§17": r["bench_status_§17"],
+            "poc_dir":          r["poc_dir"],
+            "ref":              bycat_pointers[r["category"]],
+        })
+    files[OUT_INDEX] = json.dumps({
+        "$schema":      "1.0",
+        "generated_at": now,
+        "source":       "HuntingYuk detection-rules — scripts/gen-manifest",
+        "corpus":       corpus,
+        "split": {
+            "by_category": bycat_pointers,
+            "schema": "rules.json = lightweight index (THIS FILE); "
+                      "rules/by-category/<cat>.json = full per-rule detail "
+                      "(metadata, fast_pattern, pcre, buffers, poc_dir, "
+                      "readme, description, raw alert line).",
+        },
+        "rules_index": index_rules,
+    }, indent=2, ensure_ascii=False) + "\n"
+
+    return files
+
+def _stable(s):
+    return re.sub(r'"generated_at":\s*"[^"]+"', '"generated_at": "STABLE"', s)
+
+def main():
+    files = _build()
     if "--check" in sys.argv:
-        if not os.path.exists(OUT):
-            print(f"gen-manifest --check: {os.path.relpath(OUT, ROOT)} missing — run scripts/gen-manifest",
-                  file=sys.stderr); sys.exit(1)
-        cur = open(OUT).read()
-        # strip generated_at to make the check stable across runs
-        cur_n = re.sub(r'"generated_at":\s*"[^"]+"', '"generated_at": "STABLE"', cur)
-        new_n = re.sub(r'"generated_at":\s*"[^"]+"', '"generated_at": "STABLE"', new_text)
-        if cur_n != new_n:
-            print("gen-manifest --check: rules.json stale — run scripts/gen-manifest",
-                  file=sys.stderr); sys.exit(1)
-        print(f"gen-manifest --check: rules.json up to date "
-              f"({len(active)} active + {len(rules)-len(active)} deprecated).")
+        bad = []
+        for p, want in files.items():
+            if not os.path.exists(p):
+                bad.append(("missing", os.path.relpath(p, ROOT))); continue
+            cur = open(p).read()
+            if _stable(cur) != _stable(want):
+                bad.append(("stale", os.path.relpath(p, ROOT)))
+        existing = set(glob.glob(os.path.join(OUT_BYCAT, "*.json")))
+        wanted = set(p for p in files if p.startswith(OUT_BYCAT))
+        for p in existing - wanted:
+            bad.append(("orphan", os.path.relpath(p, ROOT)))
+        if bad:
+            print("gen-manifest --check: %d issue(s) — run scripts/gen-manifest" % len(bad),
+                  file=sys.stderr)
+            for kind, p in bad: print(f"  [{kind}] {p}", file=sys.stderr)
+            sys.exit(1)
+        print(f"gen-manifest --check: rules.json + {len([p for p in files if p != OUT_INDEX])} category files up to date.")
         return
-    open(OUT, "w").write(new_text)
-    print("wrote %s — %d rules (%d active + %d deprecated), %d bytes" %
-          (os.path.relpath(OUT, ROOT), len(rules), len(active), len(rules)-len(active),
-           os.path.getsize(OUT)))
+    os.makedirs(OUT_BYCAT, exist_ok=True)
+    existing = set(glob.glob(os.path.join(OUT_BYCAT, "*.json")))
+    wanted = set(p for p in files if p.startswith(OUT_BYCAT))
+    for p in existing - wanted:
+        os.remove(p); print(f"  removed orphan: {os.path.relpath(p, ROOT)}")
+    for p, content in files.items():
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        open(p, "w").write(content)
+    total_size = sum(os.path.getsize(p) for p in files)
+    cat_files = [p for p in files if p != OUT_INDEX]
+    print(f"wrote rules.json ({os.path.getsize(OUT_INDEX)} B) + "
+          f"{len(cat_files)} category files in rules/by-category/ "
+          f"({total_size} B total).")
 
 if __name__ == "__main__":
     main()

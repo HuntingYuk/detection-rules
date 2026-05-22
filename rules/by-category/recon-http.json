@@ -1,0 +1,105 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "recon-http",
+  "rules": [
+    {
+      "sid": 9200001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/recon-http.rules",
+      "msg": "WEB Recon - sqlmap scanner User-Agent [high]",
+      "classtype": "attempted-recon",
+      "category": "recon-http",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "none",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0043",
+        "mitre_tactic_name": "Reconnaissance",
+        "mitre_technique_id": "T1595",
+        "mitre_technique_name": "Active-Scanning",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9200001_sqlmap-ua/poc.sh",
+        "tag": "scanner-ua",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "sqlmap",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.user_agent"
+      ],
+      "poc_dir": "suricata/tests/poc/9200001_sqlmap-ua/",
+      "readme": "suricata/tests/poc/9200001_sqlmap-ua/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Recon - sqlmap scanner User-Agent [high]\"; flow:established,to_server; http.user_agent; content:\"sqlmap\"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp none, attack_target Server, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1595, mitre_technique_name Active-Scanning, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9200001_sqlmap-ua/poc.sh, tag scanner-ua, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9200001; rev:1;)",
+      "description": {
+        "attack": "Recon: pemindaian otomatis oleh sqlmap (tool SQLi) yang memakai User-Agent default-nya.",
+        "impact": "Indikator awal serangan SQLi terotomasi terhadap aplikasi.",
+        "detects": "User-Agent `sqlmap` — tidak ada klien sah yang mengiklankannya."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9200002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/recon-http.rules",
+      "msg": "WEB Recon - nuclei scanner User-Agent [high]",
+      "classtype": "attempted-recon",
+      "category": "recon-http",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "none",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0043",
+        "mitre_tactic_name": "Reconnaissance",
+        "mitre_technique_id": "T1595",
+        "mitre_technique_name": "Active-Scanning",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9200002_nuclei-ua/poc.sh",
+        "tag": "scanner-ua",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Nuclei -",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.user_agent"
+      ],
+      "poc_dir": "suricata/tests/poc/9200002_nuclei-ua/",
+      "readme": "suricata/tests/poc/9200002_nuclei-ua/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Recon - nuclei scanner User-Agent [high]\"; flow:established,to_server; http.user_agent; content:\"Nuclei -\"; nocase; fast_pattern; classtype:attempted-recon; metadata: asset_category web-mixed, owasp none, attack_target Server, mitre_tactic_id TA0043, mitre_tactic_name Reconnaissance, mitre_technique_id T1595, mitre_technique_name Active-Scanning, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9200002_nuclei-ua/poc.sh, tag scanner-ua, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9200002; rev:1;)",
+      "description": {
+        "attack": "Recon: pemindaian otomatis oleh **nuclei** (ProjectDiscovery template scanner) yang memakai User-Agent default-nya.",
+        "impact": "Indikator awal pemindaian otomatis lebar (banyak template CVE/PoC) terhadap aplikasi.",
+        "detects": "User-Agent berisi prefix `Nuclei -` — tidak ada klien sah yang mengiklankannya."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

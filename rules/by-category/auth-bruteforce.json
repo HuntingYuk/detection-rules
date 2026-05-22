@@ -1,0 +1,106 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "auth-bruteforce",
+  "rules": [
+    {
+      "sid": 9180001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/auth-bruteforce.rules",
+      "msg": "WEB Auth brute-force - high POST rate to login endpoint from one source [medium]",
+      "classtype": "attempted-recon",
+      "category": "auth-bruteforce",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A07-Identification-and-Authentication-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1110",
+        "mitre_technique_name": "Brute-Force",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9180001_http-login-flood/poc.sh",
+        "tag": "auth-bruteforce",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "login",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": true,
+      "buffers": [
+        "http.uri",
+        "http.method"
+      ],
+      "poc_dir": "suricata/tests/poc/9180001_http-login-flood/",
+      "readme": "suricata/tests/poc/9180001_http-login-flood/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Auth brute-force - high POST rate to login endpoint from one source [medium]\"; flow:established,to_server; http.method; content:\"POST\"; http.uri; content:\"login\"; nocase; fast_pattern; threshold:type threshold, track by_src, count 20, seconds 60; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A07-Identification-and-Authentication-Failures, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1110, mitre_technique_name Brute-Force, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9180001_http-login-flood/poc.sh, tag auth-bruteforce, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9180001; rev:1;)",
+      "description": {
+        "attack": "Brute-force / credential-stuffing: penyerang membombardir endpoint login dengan banyak percobaan password dari satu sumber.",
+        "impact": "Akun bisa jebol kalau ada password lemah/bocor; bisa juga jadi DoS ke layanan auth.",
+        "detects": "Laju POST yang tinggi ke endpoint berisi 'login' dari satu IP (threshold 20/60 detik) — body gagal-login tidak selalu terlihat jadi volume yang jadi sinyal."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9180002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/auth-bruteforce.rules",
+      "msg": "WEB Auth brute-force - high Basic-Auth header rate from one source [medium]",
+      "classtype": "attempted-recon",
+      "category": "auth-bruteforce",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A07-Identification-and-Authentication-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1110",
+        "mitre_technique_name": "Brute-Force",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9180002_basic-auth-spray/poc.sh",
+        "tag": "auth-bruteforce",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Authorization: Basic ",
+        "nocase": true
+      },
+      "has_pcre": false,
+      "pcre": null,
+      "has_detection_filter": false,
+      "has_threshold": true,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9180002_basic-auth-spray/",
+      "readme": "suricata/tests/poc/9180002_basic-auth-spray/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Auth brute-force - high Basic-Auth header rate from one source [medium]\"; flow:established,to_server; http.header; content:\"Authorization: Basic \"; nocase; fast_pattern; threshold:type threshold, track by_src, count 30, seconds 60; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A07-Identification-and-Authentication-Failures, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1110, mitre_technique_name Brute-Force, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9180002_basic-auth-spray/poc.sh, tag auth-bruteforce, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9180002; rev:1;)",
+      "description": {
+        "attack": "Penyerang spray kombinasi `username:password` lewat header `Authorization: Basic` ke endpoint berproteksi (login HTTP Basic) — varian credential-stuffing yang nggak lewat form login.",
+        "impact": "Akun jebol kalau ada password lemah/bocor; bisa juga DoS layanan auth.",
+        "detects": "Laju header `Authorization: Basic` tinggi dari satu IP (threshold 30/60 detik) — sibling 9180001 (POST login form)."
+      },
+      "bench_status_§17": "OVERLAP"
+    }
+  ]
+}

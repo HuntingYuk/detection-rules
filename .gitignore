@@ -42,3 +42,6 @@ __pycache__/
 *.pyc
 .idea/
 .vscode/
+
+# Authoring contract — private internal-only (user request 2026-05-22 "maluu")
+CLAUDE.md

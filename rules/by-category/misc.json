@@ -1,0 +1,56 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "misc",
+  "rules": [
+    {
+      "sid": 9600001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/misc.rules",
+      "msg": "WEB A02 JWT alg:none signature-strip token presented [high]",
+      "classtype": "web-application-attack",
+      "category": "misc",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A02-Cryptographic-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0006",
+        "mitre_tactic_name": "Credential-Access",
+        "mitre_technique_id": "T1556",
+        "mitre_technique_name": "Modify-Authentication-Process",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9600001_jwt-alg-none/poc.sh",
+        "tag": "jwt-alg-none",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "eyJhbGciOiJub25l",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/(?:authorization|cookie|token)[^\\r\\n]*eyJhbGciOiJub25l/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.header"
+      ],
+      "poc_dir": "suricata/tests/poc/9600001_jwt-alg-none/",
+      "readme": "suricata/tests/poc/9600001_jwt-alg-none/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB A02 JWT alg:none signature-strip token presented [high]\"; flow:established,to_server; http.header; content:\"eyJhbGciOiJub25l\"; fast_pattern; pcre:\"/(?:authorization|cookie|token)[^\\r\\n]*eyJhbGciOiJub25l/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A02-Cryptographic-Failures, attack_target Server, mitre_tactic_id TA0006, mitre_tactic_name Credential-Access, mitre_technique_id T1556, mitre_technique_name Modify-Authentication-Process, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9600001_jwt-alg-none/poc.sh, tag jwt-alg-none, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9600001; rev:1;)",
+      "description": {
+        "attack": "OWASP A02 — JWT `alg:none`: penyerang menanggalkan tanda tangan token JWT dan menyetel algoritma ke 'none'.",
+        "impact": "Pemalsuan token = bypass autentikasi / privilege escalation.",
+        "detects": "Base64url blok-aligned dari header {\"alg\":\"none → `eyJhbGciOiJub25l` pada token yang dikirim."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

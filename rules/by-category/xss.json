@@ -1,0 +1,252 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "xss",
+  "rules": [
+    {
+      "sid": 9110001,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xss.rules",
+      "msg": "WEB XSS attribute-breakout into <script> in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "xss",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9110001_attr-breakout-script/poc.sh",
+        "tag": "xss-reflected",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "><script",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/[\\x22\\x27]>\\s*<script/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9110001_attr-breakout-script/",
+      "readme": "suricata/tests/poc/9110001_attr-breakout-script/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XSS attribute-breakout into <script> in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"><script\"; nocase; fast_pattern; pcre:\"/[\\x22\\x27]>\\s*<script/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9110001_attr-breakout-script/poc.sh, tag xss-reflected, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9110001; rev:2;)",
+      "description": {
+        "attack": "Reflected XSS: breakout dari atribut HTML lalu inject `<script>` lewat parameter URL.",
+        "impact": "Eksekusi JavaScript di browser korban (curi sesi/aksi atas nama korban).",
+        "detects": "Pola `\"'>` breakout atribut tepat sebelum `<script` di URL (threshold 3/60 detik)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9110002,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xss.rules",
+      "msg": "WEB XSS event-handler injection (on*=) in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "xss",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9110002_event-handler/poc.sh",
+        "tag": "xss-reflected",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "onerror=",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\bon(?:error|load|mouseover|focus|toggle|animationstart)\\s*=/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9110002_event-handler/",
+      "readme": "suricata/tests/poc/9110002_event-handler/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XSS event-handler injection (on*=) in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"onerror=\"; nocase; fast_pattern; pcre:\"/\\bon(?:error|load|mouseover|focus|toggle|animationstart)\\s*=/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Client, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9110002_event-handler/poc.sh, tag xss-reflected, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9110002; rev:2;)",
+      "description": {
+        "attack": "Reflected XSS via event-handler HTML (onerror=/onload=/onmouseover= dll) di parameter URL.",
+        "impact": "Eksekusi JavaScript di browser korban.",
+        "detects": "Handler on*= dengan tanda = di URL; threshold 3/60 detik kompensator FP."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9110003,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xss.rules",
+      "msg": "WEB XSS javascript:/data: URI scheme in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "xss",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9110003_js-scheme/poc.sh",
+        "tag": "xss-reflected",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "javascript:",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:javascript|data:text\\/html|data:application\\/x|vbscript)\\s*:/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9110003_js-scheme/",
+      "readme": "suricata/tests/poc/9110003_js-scheme/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XSS javascript:/data: URI scheme in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"javascript:\"; nocase; fast_pattern; pcre:\"/(?:javascript|data:text\\/html|data:application\\/x|vbscript)\\s*:/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Client, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9110003_js-scheme/poc.sh, tag xss-reflected, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9110003; rev:2;)",
+      "description": {
+        "attack": "XSS via skema URI berbahaya (javascript:/data:text/html/vbscript:) yang direfleksikan.",
+        "impact": "Eksekusi JavaScript di browser korban.",
+        "detects": "Skema `javascript:`/`data:text/html`/`vbscript:` di URL; threshold 3/60 detik (javascript: kadang sah)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9110004,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xss.rules",
+      "msg": "WEB XSS client-side template injection (AngularJS constructor.constructor) in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "xss",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A03-Injection",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9110004_angular-csti/poc.sh",
+        "tag": "xss-csti",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "constructor.constructor",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/constructor(?:\\.|%2e)constructor(?:\\(|%28|\\['|\\[%22|%5b)/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9110004_angular-csti/",
+      "readme": "suricata/tests/poc/9110004_angular-csti/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XSS client-side template injection (AngularJS constructor.constructor) in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"constructor.constructor\"; nocase; fast_pattern; pcre:\"/constructor(?:\\.|%2e)constructor(?:\\(|%28|\\['|\\[%22|%5b)/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-modern, owasp A03-Injection, attack_target Client, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9110004_angular-csti/poc.sh, tag xss-csti, created_at 2026_05_19, updated_at 2026_05_20, author huntingyuk; sid:9110004; rev:2;)",
+      "description": {
+        "attack": "Client-Side Template Injection (AngularJS sandbox-escape): payload `{{constructor.constructor('...')()}}` direfleksikan & dieksekusi di browser.",
+        "impact": "Eksekusi JavaScript di browser korban (curi sesi / aksi atas nama korban) — meski input dipantulkan sebagai 'template', bukan HTML mentah.",
+        "detects": "Gadget `constructor.constructor(` di URL; threshold 3/60 detik kompensator FP."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9110005,
+      "rev": 2,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/xss.rules",
+      "msg": "WEB XSS <iframe srcdoc=> attribute payload in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "xss",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Client",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9110005_iframe-srcdoc/poc.sh",
+        "tag": "xss-reflected",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "iframe srcdoc=",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/iframe\\s+srcdoc\\s*=\\s*[\\x22\\x27%][^\\r\\n]{0,200}?(?:<script|on(?:error|load|click|focus)\\s*=|javascript\\x3a)/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9110005_iframe-srcdoc/",
+      "readme": "suricata/tests/poc/9110005_iframe-srcdoc/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB XSS <iframe srcdoc=> attribute payload in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"iframe srcdoc=\"; nocase; fast_pattern; pcre:\"/iframe\\s+srcdoc\\s*=\\s*[\\x22\\x27%][^\\r\\n]{0,200}?(?:<script|on(?:error|load|click|focus)\\s*=|javascript\\x3a)/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Client, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9110005_iframe-srcdoc/poc.sh, tag xss-reflected, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9110005; rev:2;)",
+      "description": {
+        "attack": "Reflected XSS via atribut `<iframe srcdoc=\"...\">`: srcdoc memungkinkan penyerang menanam HTML lengkap (termasuk `<script>`) di dalam atribut iframe, melewati sanitizer yang cuma escape `<script>` di body.",
+        "impact": "Eksekusi JavaScript di browser korban (curi sesi / aksi atas nama korban).",
+        "detects": "`iframe srcdoc=` + payload (`<script>`, `on*=`, atau `javascript:`) di dalam nilai srcdoc; threshold 3/60 detik."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

@@ -1,0 +1,350 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "deserialization",
+  "rules": [
+    {
+      "sid": 9160001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - Java serialized object (base64 rO0AB) in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160001_java-serialized-b64/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "rO0AB",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/rO0AB[A-Za-z0-9+\\/]{8,}/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160001_java-serialized-b64/",
+      "readme": "suricata/tests/poc/9160001_java-serialized-b64/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - Java serialized object (base64 rO0AB) in request body [high]\"; flow:established,to_server; http.request_body; content:\"rO0AB\"; fast_pattern; pcre:\"/rO0AB[A-Za-z0-9+\\/]{8,}/\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160001_java-serialized-b64/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160001; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization Java: penyerang mengirim objek Java ter-serialisasi (ysoserial gadget) yang langsung mengeksekusi perintah saat di-deserialize.",
+        "impact": "Remote Code Execution penuh di server aplikasi Java.",
+        "detects": "Magic base64 `rO0AB` (header serialisasi Java AC ED 00 05) di body request — tidak pernah ada di data jinak."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9160002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - .NET ysoserial gadget in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160002_dotnet-ysoserial/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "ObjectDataProvider",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:ObjectDataProvider|ExpandedWrapperOf|TypeConfuseDelegate|WindowsIdentity|ResourceDictionary|PSObject)/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160002_dotnet-ysoserial/",
+      "readme": "suricata/tests/poc/9160002_dotnet-ysoserial/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - .NET ysoserial gadget in request body [high]\"; flow:established,to_server; http.request_body; content:\"ObjectDataProvider\"; nocase; fast_pattern; pcre:\"/(?:ObjectDataProvider|ExpandedWrapperOf|TypeConfuseDelegate|WindowsIdentity|ResourceDictionary|PSObject)/\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160002_dotnet-ysoserial/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160002; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization .NET via gadget XML/teks ysoserial.net (mis. ObjectDataProvider).",
+        "impact": "Remote Code Execution penuh di server .NET.",
+        "detects": "Nama gadget .NET (ObjectDataProvider/TypeConfuseDelegate/dll) di body request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9160003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - Node.js node-serialize RCE marker in body [high]",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160003_node-serialize-rce/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "_$$ND_FUNC$$_",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/_\\$\\$ND_FUNC\\$\\$_[^\\r\\n]*function\\s*\\(/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160003_node-serialize-rce/",
+      "readme": "suricata/tests/poc/9160003_node-serialize-rce/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - Node.js node-serialize RCE marker in body [high]\"; flow:established,to_server; http.request_body; content:\"_$$ND_FUNC$$_\"; fast_pattern; pcre:\"/_\\$\\$ND_FUNC\\$\\$_[^\\r\\n]*function\\s*\\(/i\"; classtype:web-application-attack; metadata: asset_category web-modern, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160003_node-serialize-rce/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160003; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization Node.js: penyerang menyalahgunakan node-serialize `unserialize()` dengan marker fungsi IIFE.",
+        "impact": "Remote Code Execution di server Node.js.",
+        "detects": "Marker `_$$ND_FUNC$$_` + fungsi IIFE di body request — unik ke payload node-serialize."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9160004,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - Python YAML object injection (!!python/object) in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160004_python-yaml-objinject/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "!!python/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/!!python\\/(?:object\\/(?:apply|new)|object|module)[\\x3a\\/]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160004_python-yaml-objinject/",
+      "readme": "suricata/tests/poc/9160004_python-yaml-objinject/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - Python YAML object injection (!!python/object) in request body [high]\"; flow:established,to_server; http.request_body; content:\"!!python/\"; nocase; fast_pattern; pcre:\"/!!python\\/(?:object\\/(?:apply|new)|object|module)[\\x3a\\/]/i\"; classtype:web-application-attack; metadata: asset_category web-modern, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160004_python-yaml-objinject/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160004; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization Python: `yaml.load` tidak aman dengan tag `!!python/object/apply` untuk membangun objek arbitrer.",
+        "impact": "Remote Code Execution di server Python.",
+        "detects": "Tag PyYAML `!!python/object|module|apply` di body request — tidak ada di data YAML/JSON jinak."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9160005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - .NET BinaryFormatter serialized stream (base64 AAEAAAD) in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160005_dotnet-binaryformatter/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "AAEAAAD/////",
+        "nocase": false
+      },
+      "has_pcre": true,
+      "pcre": "/AAEAAAD\\/\\/\\/\\/\\/[A-Za-z0-9+\\/]{16,}/",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160005_dotnet-binaryformatter/",
+      "readme": "suricata/tests/poc/9160005_dotnet-binaryformatter/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - .NET BinaryFormatter serialized stream (base64 AAEAAAD) in request body [high]\"; flow:established,to_server; http.request_body; content:\"AAEAAAD/////\"; fast_pattern; pcre:\"/AAEAAAD\\/\\/\\/\\/\\/[A-Za-z0-9+\\/]{16,}/\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160005_dotnet-binaryformatter/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160005; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization .NET: stream biner BinaryFormatter/LosFormatter mentah (ysoserial.net) di-base64, mis. lewat __VIEWSTATE.",
+        "impact": "Remote Code Execution penuh di server .NET — salah satu bug terparah di ekosistem .NET.",
+        "detects": "Magic base64 `AAEAAAD/////` (header BinaryFormatter) diikuti stream base64 di body request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9160006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - Ruby YAML object injection (!ruby/object) in request body [high]",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160006_ruby-yaml-objinject/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "!ruby/object",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/!ruby\\/(?:object|hash|struct|class|sym)(?::|%3a)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160006_ruby-yaml-objinject/",
+      "readme": "suricata/tests/poc/9160006_ruby-yaml-objinject/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - Ruby YAML object injection (!ruby/object) in request body [high]\"; flow:established,to_server; http.request_body; content:\"!ruby/object\"; nocase; fast_pattern; pcre:\"/!ruby\\/(?:object|hash|struct|class|sym)(?::|%3a)/i\"; classtype:web-application-attack; metadata: asset_category web-modern, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160006_ruby-yaml-objinject/poc.sh, tag deserialization, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9160006; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization Ruby: YAML tidak aman (Psych) dengan tag `!ruby/object:` membangun objek Ruby arbitrer (Universal gadget).",
+        "impact": "Remote Code Execution di server Ruby/Rails.",
+        "detects": "Tag Psych `!ruby/object|hash|struct|class:` di body request — tidak ada di data jinak."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9160007,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/deserialization.rules",
+      "msg": "WEB Insecure Deserialization - PHP object injection Monolog POP chain (O:NN:\\",
+      "classtype": "web-application-attack",
+      "category": "deserialization",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A08-Software-and-Data-Integrity-Failures",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9160007_php-monolog-pop/poc.sh",
+        "tag": "deserialization",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "Monolog|5c|Handler",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/O:\\d{1,3}:\\x22Monolog\\x5c(?:Handler|Formatter|Logger)\\x5c[A-Za-z0-9_]{3,60}\\x22/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9160007_php-monolog-pop/",
+      "readme": "suricata/tests/poc/9160007_php-monolog-pop/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Insecure Deserialization - PHP object injection Monolog POP chain (O:NN:\\\"Monolog\\\\Handler\\\\...\\\") in request body [high]\"; flow:established,to_server; http.request_body; content:\"Monolog|5c|Handler\"; nocase; fast_pattern; pcre:\"/O:\\d{1,3}:\\x22Monolog\\x5c(?:Handler|Formatter|Logger)\\x5c[A-Za-z0-9_]{3,60}\\x22/i\"; classtype:web-application-attack; metadata: asset_category web-classic, owasp A08-Software-and-Data-Integrity-Failures, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9160007_php-monolog-pop/poc.sh, tag deserialization, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9160007; rev:1;)",
+      "description": {
+        "attack": "Insecure deserialization PHP: object injection memakai class gadget Monolog (POP-chain Laravel/Symfony) — objek ter-serialisasi `O:NN:\"Monolog\\Handler\\...\"` di-deserialize jadi panggilan berbahaya.",
+        "impact": "Remote Code Execution di server PHP yang men-`unserialize()` data tidak terpercaya.",
+        "detects": "Marker `Monolog\\Handler` dalam struktur PHP serialized-object `O:NN:\"...\":` di body request."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}

