@@ -338,3 +338,30 @@ alert http any any -> any any (msg:"KNOWN-CVE Cleo Harmony/VLTrader unauth file-
 # mentioning "${::-" as text without a JNDI letter substitution after
 # → reaches pcre, rejected → silent.
 alert http any any -> any any (msg:"KNOWN-CVE Log4Shell obfuscated JNDI bypass (${::-} or ${env:...:-jndi}) in HTTP header (CVE-2021-44228) [high]"; flow:established,to_server; http.header; content:"${::-"; nocase; fast_pattern; pcre:"/\$\{(?:::-[jJ]|env\x3a[^}]{0,40}?:-(?:jndi|jnd\$\{))/i"; classtype:attempted-admin; metadata: asset_category web-mixed, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-44228, poc_ref tests/poc/9300047_log4shell-obfuscated/poc.sh, tag log4shell, created_at 2026_05_21, updated_at 2026_05_21, author huntingyuk; sid:9300047; rev:1;)
+# FP-reasoning: HIGH, plain. ThinkPHP 5.x RCE — the framework's _method
+# field + invokefunction route abuse executes arbitrary PHP callables.
+# Mass-scanned by botnets (86 hits across 3 MTA scan-and-probe pcaps,
+# AUDIT-REALGAP). Clean-room from public advisories. Scope http.uri.raw.
+# fast_pattern "invokefunction" -> the canonical exploit URL marker;
+# attacker-unique (no benign ThinkPHP URL contains it). pcre confirms the
+# function= + vars[]= gadget shape calling a dangerous primitive. Negative:
+# a docs URI mentioning "invokefunction" with no &function= gadget ->
+# reaches pcre, rejected -> silent (§19 T6).
+alert http any any -> any any (msg:"KNOWN-CVE ThinkPHP invokefunction route RCE (CVE-2018-20062) [high]"; flow:established,to_server; http.uri.raw; content:"invokefunction"; nocase; fast_pattern; pcre:"/(?:s=|\/)[^\r\n]{0,60}?invokefunction[^\r\n]{0,80}?function=[^\r\n]{0,30}?(?:system|exec|passthru|shell_exec|phpinfo|assert|eval|file_get_contents|call_user_func)/i"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-20062, poc_ref tests/poc/9300048_thinkphp-invokefunction/poc.sh, tag thinkphp, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300048; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2018-10561 GPON home-gateway auth-bypass +
+# command-injection (Dasan/Realtek-based ISP CPEs — heavily Mirai-recruited).
+# Clean-room from advisory. Scope http.uri.raw. fast_pattern "/GponForm/
+# diag_Form" (the auth-bypass endpoint; the trick is appending "?images/"
+# suffix which the router parses as a static file but reaches the action
+# handler). pcre confirms images/ bypass OR dest_host injection param.
+# Negative: a normal /GponForm path without the images/ bypass and without
+# metachar in dest_host -> reaches pcre, rejected.
+alert http any any -> any any (msg:"KNOWN-CVE GPON home gateway auth-bypass + RCE (CVE-2018-10561) [high]"; flow:established,to_server; http.uri.raw; content:"/GponForm/diag_Form"; nocase; fast_pattern; pcre:"/\/GponForm\/diag_Form\?images\/|dest_host=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-10561, poc_ref tests/poc/9300049_gpon-cve-2018-10561/poc.sh, tag gpon, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300049; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2017-3506 Oracle WebLogic WLS Security
+# Component OS command injection via /wls-wsat/CoordinatorPortType (SOAP
+# XML body containing a java.lang.ProcessBuilder gadget). Two-buffer:
+# http.uri.raw "/wls-wsat/" + http.request_body pcre requires the SOAP
+# gadget (ProcessBuilder, void method=start, or /bin/sh string element).
+# Negative: a benign /wls-wsat/ SOAP request without ProcessBuilder ->
+# body pcre rejects -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE Oracle WebLogic WLS-WSAT SOAP RCE (CVE-2017-3506) [high]"; flow:established,to_server; http.uri.raw; content:"/wls-wsat/"; nocase; fast_pattern; http.request_body; pcre:"/<java\.lang\.ProcessBuilder|<void\s+method=\x22start\x22>|<string>\/bin\/(?:sh|bash)<\/string>/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-3506, poc_ref tests/poc/9300050_weblogic-cve-2017-3506/poc.sh, tag weblogic, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300050; rev:1;)

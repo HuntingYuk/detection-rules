@@ -38,17 +38,20 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 128
-GAP  ours fires / ET silent  : 101  <- custom corpus value-add (§17)
-OVERLAP both fire            : 27   (ET Open already covers; audited below)
+attack pcaps measured        : 131
+GAP  ours fires / ET silent  : 102  <- custom corpus value-add (§17)
+OVERLAP both fire            : 29   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0    (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 128 (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 131 (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 101/128 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. Ten category-deepening batches (2026-05-19
-through 21) added 49 rules; 38 pure-GAP + 11 audited OVERLAP across batches, raising
-GAP 62→101 (+39). The 10 OVERLAPs split into ET-misclassify (6 — ET tags
+**Read:** 102/131 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Eleven category-deepening batches (2026-05-19
+through 22) added 52 rules; 39 pure-GAP + 13 audited OVERLAP across batches, raising
+GAP 62→102 (+40). The most recent batch was data-driven from `scripts/audit-realgap`
+(top real-traffic exploit families ET catches that we didn't) — added ThinkPHP /
+GPON / WebLogic; our real-traffic fired-SID count rose from **14 → 18 distinct SIDs**
+on the same 3 MTA scan-and-probe captures. The 10 OVERLAPs split into ET-misclassify (6 — ET tags
 `exec/eval/php-tag` as SQLi or generic when it's CVE-specific Java/SpEL/PHP/Node),
 ET-INFO-tier-posture (2 — Basic-auth-unencrypted, generic Host-anomaly), and
 scan-vs-brute classtype diff (2 — RDP and SSH brute-force rules where ET has
@@ -139,7 +142,11 @@ remaining available/unchanged:
 
 `9300001` Log4Shell · `9300006` F5 iControl · `9300008` FortiOS SSL VPN ·
 `9300012` Ivanti Connect Secure · `9300017` PaperCut · `9300020` Bitbucket ·
-`9300023` PAN-OS GlobalProtect · `9300026` GoAnywhere MFT.
+`9300023` PAN-OS GlobalProtect · `9300026` GoAnywhere MFT ·
+`9300048` ThinkPHP CVE-2018-20062 (ET 2026731 equivalent — keep for own
+SID/PoC/MITRE on a real-traffic-massive scan target, 86 hits in AUDIT-REALGAP) ·
+`9300050` WebLogic CVE-2017-3506 (ET 2048259 equivalent — keep on the same
+ET-independence rationale).
 
 This audit is reproducible: `scripts/benchmark --audit-overlap` regenerates the
 co-firing evidence; `config/deprecated.log` records the retirement.

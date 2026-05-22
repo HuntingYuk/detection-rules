@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+"""audit-realgap — real-traffic coverage gap. Runs OUR ruleset + ET Open
+against attack pcaps; filters ET fires to EXPLOIT/WEB_SERVER/WEB_SPECIFIC_APPS
+tiers (server-side attack classes we author for, ignoring ET MALWARE/INFO/
+HUNTING/SCAN noise); surfaces the top families of real-attacker behaviour we
+DON'T catch yet. Output: AUDIT-REALGAP.md (regenerable).
+
+Usage:
+  scripts/audit-realgap --pcap-dir ../reference/mta/attacks
+"""
+import os, re, sys, json, glob, shutil, subprocess, tempfile, argparse, collections
+
+SUR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(SUR)
+RULES = os.path.join(SUR, "rules")
+CFG  = os.path.join(SUR, "config", "suricata-test.yaml")
+ETDIR = os.path.join(ROOT, "reference", "et-open")
+OUT_MD = os.path.join(SUR, "AUDIT-REALGAP.md")
+
+# ET msg prefixes that are SERVER-SIDE EXPLOIT class = what we author for.
+EXPLOIT_PREFIXES = (
+    "ET EXPLOIT",         # generic exploitation (often CVE-specific)
+    "ET WEB_SERVER",      # web-server attacks (PHP/Apache/IIS exploits)
+    "ET WEB_SPECIFIC_APPS",  # vendor-specific (WordPress/Confluence/etc)
+    "ET ATTACK_RESPONSE", # callback / RCE response (still attack-class)
+)
+# Things to EXCLUDE — out of our scope per project policy:
+EXCLUDE_PREFIXES = (
+    "ET MALWARE",    # IoC / family — IP-rep pipeline space
+    "ET INFO",       # posture / hygiene
+    "ET HUNTING",    # broad heuristics
+    "ET SCAN",       # we have our own L3/L4 recon family
+    "ET DNS",        # DNS-tunnel — we have our own
+    "ET POLICY",     # corporate-policy hygiene
+    "ET CURRENT_EVENTS",  # short-lived campaigns (IoC-like)
+    "SURICATA",      # engine anomaly — we already cover what matters
+    "GPL ",          # GPL ruleset (different ruleset, not always EXPLOIT)
+    "ET P2P",
+    "ET ADWARE",
+    "ET COINMINER",
+    "ET CHAT",
+    "ET GAMES",
+    "ET TROJAN",     # malware-family (handled by IP-rep)
+    "ET MOBILE_MALWARE",
+)
+
+def die(m): print("ERROR: "+m, file=sys.stderr); sys.exit(1)
+
+def _combined_ours(td):
+    files = sorted(glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True))
+    p = os.path.join(td, "_ours.rules")
+    with open(p, "w") as o:
+        for f in files: o.write(open(f).read().rstrip()+"\n")
+    return p
+
+def _et_yaml(td):
+    y = open(CFG).read()
+    y = y.replace('default-rule-path: rules', 'default-rule-path: '+ETDIR)
+    y = re.sub(r'rule-files:\n(?:  - .*\n)+', 'rule-files:\n  - suricata.rules\n', y)
+    y = y.replace('classification-file: config/classification.config',
+                  'classification-file: '+os.path.join(ETDIR, 'classification.config'))
+    p = os.path.join(td, "et.yaml"); open(p, "w").write(y); return p
+
+def _et_msgs():
+    out = {}
+    p = os.path.join(ETDIR, "suricata.rules")
+    if not os.path.exists(p): return out
+    for ln in open(p, errors="replace"):
+        s = ln.strip()
+        if s.startswith("#"): continue
+        sm = re.search(r'\bsid:(\d+)', ln); mm = re.search(r'\bmsg:"([^"]*)"', ln)
+        if sm: out[int(sm.group(1))] = mm.group(1) if mm else ""
+    return out
+
+def _our_msgs():
+    out = {}
+    for f in glob.glob(os.path.join(RULES, "**", "*.rules"), recursive=True):
+        for ln in open(f, errors="replace"):
+            if re.match(r'^\s*alert\b', ln):
+                sm = re.search(r'\bsid:(\d+)', ln); mm = re.search(r'\bmsg:"([^"]*)"', ln)
+                if sm: out[int(sm.group(1))] = mm.group(1) if mm else ""
+    return out
+
+def _run(suri, pcap, td, mode, ours_S=None, et_yaml=None):
+    out = tempfile.mkdtemp(dir=td)
+    if mode == "ours":
+        cmd = [suri, "-k", "none", "-l", out, "-r", pcap, "-c", CFG, "-S", ours_S]
+    else:
+        cmd = [suri, "-k", "none", "-l", out, "-r", pcap, "-c", et_yaml]
+    subprocess.run(cmd, cwd=SUR, capture_output=True)
+    fired = collections.Counter()
+    ev = os.path.join(out, "eve.json")
+    if os.path.exists(ev):
+        for line in open(ev):
+            try:
+                j = json.loads(line)
+                if j.get("event_type") == "alert":
+                    fired[int(j["alert"]["signature_id"])] += 1
+            except Exception: pass
+    shutil.rmtree(out, ignore_errors=True)
+    return fired
+
+def _is_exploit(msg):
+    return any(msg.startswith(p) for p in EXPLOIT_PREFIXES)
+
+def _is_excluded(msg):
+    return any(msg.startswith(p) for p in EXCLUDE_PREFIXES)
+
+def _family(msg):
+    """Heuristic: group ET exploit messages by vendor/product/CVE."""
+    m = re.search(r'CVE-\d{4}-\d{4,7}', msg)
+    if m: return m.group(0)
+    # otherwise grab the first vendor/product-ish noun
+    m = re.search(r'ET (?:EXPLOIT|WEB_SERVER|WEB_SPECIFIC_APPS|ATTACK_RESPONSE)\s+([\w./-]+)', msg)
+    if m: return m.group(1)
+    return msg[:60]
+
+def main():
+    ap = argparse.ArgumentParser(prog="audit-realgap")
+    ap.add_argument("--pcap-dir", required=True)
+    a = ap.parse_args()
+
+    suri = shutil.which("suricata") or die("suricata not on PATH")
+    if not os.path.exists(os.path.join(ETDIR, "suricata.rules")):
+        die("ET Open not present — run scripts/benchmark and ensure reference/et-open/")
+    pcaps = sorted(glob.glob(os.path.join(a.pcap_dir, "*.pcap")))
+    if not pcaps: die(f"no .pcap in {a.pcap_dir}")
+
+    et_msg = _et_msgs(); our_msg = _our_msgs()
+    td = tempfile.mkdtemp(prefix="_realgap_")
+    try:
+        oS = _combined_ours(td); ey = _et_yaml(td)
+        et_total = collections.Counter()
+        our_total = collections.Counter()
+        for pf in pcaps:
+            print(f"  scan: {os.path.basename(pf)}")
+            o = _run(suri, pf, td, "ours", oS)
+            e = _run(suri, pf, td, "et", et_yaml=ey)
+            our_total.update(o); et_total.update(e)
+
+        # classify ET sids
+        exploit_et = {sid: ct for sid, ct in et_total.items()
+                      if _is_exploit(et_msg.get(sid, ""))}
+        excluded_et = {sid: ct for sid, ct in et_total.items()
+                       if _is_excluded(et_msg.get(sid, ""))}
+        other_et = {sid: ct for sid, ct in et_total.items()
+                    if sid not in exploit_et and sid not in excluded_et}
+
+        # group exploits by family
+        by_family = collections.defaultdict(lambda: {"sids": [], "hits": 0})
+        for sid, ct in exploit_et.items():
+            fam = _family(et_msg.get(sid, ""))
+            by_family[fam]["sids"].append(sid)
+            by_family[fam]["hits"] += ct
+        families = sorted(by_family.items(), key=lambda x: -x[1]["hits"])
+
+        # report
+        L = ["# AUDIT-REALGAP.md — real-traffic coverage gap analysis", "",
+             "> Auto-generated by `scripts/audit-realgap`. Runs ours + ET Open on real "
+             "attack pcaps, filters ET fires to EXPLOIT/WEB_SERVER/WEB_SPECIFIC_APPS "
+             "tier (the server-side attack class we author for), groups by family/CVE. "
+             "Output = data-driven backlog of what real attackers do that we don't "
+             "catch yet.",
+             "",
+             "## Headline", "",
+             f"- Attack pcaps analysed: **{len(pcaps)}**",
+             f"- OUR rules fired: {len(our_total)} distinct SIDs ({sum(our_total.values())} alerts)",
+             f"- ET Open fired: {len(et_total)} distinct SIDs ({sum(et_total.values())} alerts)",
+             f"- ET fires in EXPLOIT class (our scope): **{len(exploit_et)} distinct SIDs "
+             f"({sum(exploit_et.values())} alerts)** — these are the real coverage targets",
+             f"- ET fires excluded (MALWARE/INFO/HUNTING/SCAN/DNS/POLICY/SURICATA — "
+             f"out-of-scope per project policy): {len(excluded_et)} distinct SIDs ({sum(excluded_et.values())} alerts)",
+             f"- ET fires other (uncategorised): {len(other_et)} distinct SIDs ({sum(other_et.values())} alerts)",
+             "", "## Top 30 exploit-class families ET catches (data-driven backlog)", ""]
+        L += ["| Family / CVE | Hits | ET SIDs (sample msg) |",
+              "|---|---|---|"]
+        for fam, info in families[:30]:
+            # show first 2 SIDs + their msgs (truncated)
+            sample = []
+            for s in info["sids"][:2]:
+                sample.append(f"`{s}` {et_msg.get(s,'')[:80]}")
+            L.append(f"| **{fam}** | {info['hits']} | {' / '.join(sample)} |")
+        L += ["", "## Other (uncategorised) ET fires — top 20", "",
+              "Tier ambiguous; some may be real attack classes worth adding, others "
+              "are noise. Sample for context.", ""]
+        for sid, ct in sorted(other_et.items(), key=lambda x:-x[1])[:20]:
+            L.append(f"- `{sid}` × {ct} — {et_msg.get(sid,'?')[:120]}")
+        L += ["", "---", "",
+              "**Read**: each row in the top table is a real-attacker pattern that "
+              "ET catches on this real perimeter traffic. Rows where the family/CVE "
+              "is HIGH-hit-count are the strongest candidates for our next category-"
+              "deepening batch — they represent attacks happening in the wild, not "
+              "just in our synthetic-PoC corpus. Cross-reference with our existing "
+              "SIDs in `rules.json` to avoid dup.",
+              "",
+              "**Note on `other_et`**: rules without ET EXPLOIT/WEB_SERVER prefix "
+              "but also not in the explicit excludes. Hand-triage if a candidate is "
+              "actually an attack-class we should add."]
+
+        open(OUT_MD, "w").write("\n".join(L) + "\n")
+        print(f"\nwrote {os.path.relpath(OUT_MD, ROOT)} — "
+              f"{len(exploit_et)} EXPLOIT-class SIDs across {len(families)} families")
+    finally:
+        shutil.rmtree(td, ignore_errors=True)
+
+if __name__ == "__main__":
+    main()

@@ -1,10 +1,10 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-21T05:29:21Z",
+  "generated_at": "2026-05-22T03:22:41Z",
   "source": "HuntingYuk detection-rules — scripts/gen-manifest",
   "corpus": {
-    "total": 129,
-    "active": 128,
+    "total": 132,
+    "active": 131,
     "deprecated": 1,
     "by_category": {
       "access-control": 4,
@@ -14,7 +14,7 @@
       "dns-tunnel": 3,
       "info-leak": 7,
       "infra-bruteforce": 2,
-      "known-cve": 47,
+      "known-cve": 50,
       "l34-recon": 5,
       "misc": 1,
       "protocol-anomaly": 9,
@@ -32,24 +32,24 @@
       "A02-Cryptographic-Failures": 1,
       "A03-Injection": 34,
       "A05-Security-Misconfiguration": 4,
-      "A06-Vulnerable-and-Outdated-Components": 37,
+      "A06-Vulnerable-and-Outdated-Components": 40,
       "A07-Identification-and-Authentication-Failures": 2,
       "A08-Software-and-Data-Integrity-Failures": 9,
       "A10-SSRF": 3,
       "none": 24
     },
     "by_confidence": {
-      "high": 96,
+      "high": 99,
       "medium": 32
     },
     "by_network_mode": {
       "any": 19,
-      "plain": 106,
+      "plain": 109,
       "tls-meta": 3
     },
     "bench_§17_summary": {
-      "GAP": 101,
-      "OVERLAP": 27,
+      "GAP": 102,
+      "OVERLAP": 29,
       "unmeasured": 0
     }
   },
@@ -5252,6 +5252,154 @@
         "attack": "Log4Shell obfuscated JNDI bypass (CVE-2021-44228): rule 9300001 nangkep string literal `${jndi:`; varian real-world pakai trik substitusi `${::-j}${::-n}${::-d}${::-i}:` atau `${env:UNDEFINED:-jndi}:` yang di-resolve jadi `jndi:` saat log dipanggil — lolos matcher naive.",
         "impact": "Sama parahnya dengan Log4Shell base: Remote Code Execution pre-auth, tapi diam-diam lolos sensor yang cuma cek literal `${jndi:`.",
         "detects": "Pola `${::-` di header HTTP diikuti substitusi huruf 'j' (mengarah ke 'jndi'), atau `${env:` + `:-jndi`. Sibling 9300001 untuk bare-string."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300048,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE ThinkPHP invokefunction route RCE (CVE-2018-20062) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "web-classic",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2018-20062",
+        "poc_ref": "tests/poc/9300048_thinkphp-invokefunction/poc.sh",
+        "tag": "thinkphp",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "invokefunction",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:s=|\\/)[^\\r\\n]{0,60}?invokefunction[^\\r\\n]{0,80}?function=[^\\r\\n]{0,30}?(?:system|exec|passthru|shell_exec|phpinfo|assert|eval|file_get_contents|call_user_func)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300048_thinkphp-invokefunction/",
+      "readme": "suricata/tests/poc/9300048_thinkphp-invokefunction/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE ThinkPHP invokefunction route RCE (CVE-2018-20062) [high]\"; flow:established,to_server; http.uri.raw; content:\"invokefunction\"; nocase; fast_pattern; pcre:\"/(?:s=|\\/)[^\\r\\n]{0,60}?invokefunction[^\\r\\n]{0,80}?function=[^\\r\\n]{0,30}?(?:system|exec|passthru|shell_exec|phpinfo|assert|eval|file_get_contents|call_user_func)/i\"; classtype:attempted-admin; metadata: asset_category web-classic, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-20062, poc_ref tests/poc/9300048_thinkphp-invokefunction/poc.sh, tag thinkphp, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300048; rev:1;)",
+      "description": {
+        "attack": "ThinkPHP 5.x invokefunction-route RCE (CVE-2018-20062 family): bug route ThinkPHP yang nge-resolve `_method`/`s=` jadi pemanggilan callable PHP arbitrer — payload klasik `?s=/Index/\\think\\app/invokefunction&function=call_user_func_array&vars[0]=system&vars[1][]=cmd`. Ke-scan massal botnet (86 hit di 3 pcap MTA scan-and-probe).",
+        "impact": "Remote Code Execution pre-auth di aplikasi PHP yang pakai framework ThinkPHP — sering di-pwn jadi server proxy / miner / web-shell.",
+        "detects": "Path URL berisi `invokefunction` + `function=` + gadget eksekusi PHP (system/exec/passthru/shell_exec/phpinfo/assert/eval/file_get_contents/call_user_func)."
+      },
+      "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300049,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE GPON home gateway auth-bypass + RCE (CVE-2018-10561) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2018-10561",
+        "poc_ref": "tests/poc/9300049_gpon-cve-2018-10561/poc.sh",
+        "tag": "gpon",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/GponForm/diag_Form",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/GponForm\\/diag_Form\\?images\\/|dest_host=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300049_gpon-cve-2018-10561/",
+      "readme": "suricata/tests/poc/9300049_gpon-cve-2018-10561/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE GPON home gateway auth-bypass + RCE (CVE-2018-10561) [high]\"; flow:established,to_server; http.uri.raw; content:\"/GponForm/diag_Form\"; nocase; fast_pattern; pcre:\"/\\/GponForm\\/diag_Form\\?images\\/|dest_host=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2018-10561, poc_ref tests/poc/9300049_gpon-cve-2018-10561/poc.sh, tag gpon, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300049; rev:1;)",
+      "description": {
+        "attack": "GPON home gateway auth bypass + command injection (CVE-2018-10561): router/ONT pakai Dasan/Realtek SoC; trik `?images/` di URL `/GponForm/diag_Form` ngebypass auth karena parser router salah klasifikasi sebagai static file padahal kehit handler action. Lalu parameter `dest_host=` di-pass ke shell tanpa sanitasi. Mirai variants pakai ini buat rekrut puluhan ribu CPE.",
+        "impact": "RCE unauth di home gateway ISP → botnet recruitment, pivot ke jaringan internal pelanggan ISP.",
+        "detects": "Path `/GponForm/diag_Form?images/` ATAU parameter `dest_host=` berisi metachar shell (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300050,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Oracle WebLogic WLS-WSAT SOAP RCE (CVE-2017-3506) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2017-3506",
+        "poc_ref": "tests/poc/9300050_weblogic-cve-2017-3506/poc.sh",
+        "tag": "weblogic",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/wls-wsat/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/<java\\.lang\\.ProcessBuilder|<void\\s+method=\\x22start\\x22>|<string>\\/bin\\/(?:sh|bash)<\\/string>/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300050_weblogic-cve-2017-3506/",
+      "readme": "suricata/tests/poc/9300050_weblogic-cve-2017-3506/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Oracle WebLogic WLS-WSAT SOAP RCE (CVE-2017-3506) [high]\"; flow:established,to_server; http.uri.raw; content:\"/wls-wsat/\"; nocase; fast_pattern; http.request_body; pcre:\"/<java\\.lang\\.ProcessBuilder|<void\\s+method=\\x22start\\x22>|<string>\\/bin\\/(?:sh|bash)<\\/string>/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-3506, poc_ref tests/poc/9300050_weblogic-cve-2017-3506/poc.sh, tag weblogic, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300050; rev:1;)",
+      "description": {
+        "attack": "Oracle WebLogic Server WLS Security Component OS Command Injection (CVE-2017-3506): endpoint `/wls-wsat/CoordinatorPortType` menerima SOAP XML; ke-deserialize lewat XStream tanpa validasi class → `java.lang.ProcessBuilder` gadget memanggil `/bin/sh -c ...`. Tua tapi masih ke-scan rutin (18 hit di 3 pcap real).",
+        "impact": "Remote Code Execution unauth di server WebLogic — Java app server enterprise populer.",
+        "detects": "POST ke `/wls-wsat/...` + body XML berisi `java.lang.ProcessBuilder` atau `<void method=\"start\"/>` atau `/bin/sh` element — dua buffer."
       },
       "bench_status_§17": "OVERLAP"
     },
