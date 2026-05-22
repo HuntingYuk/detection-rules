@@ -1,20 +1,20 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-22T05:30:43Z",
+  "generated_at": "2026-05-22T08:40:02Z",
   "source": "HuntingYuk detection-rules — scripts/gen-manifest",
   "corpus": {
-    "total": 141,
-    "active": 140,
+    "total": 145,
+    "active": 144,
     "deprecated": 1,
     "by_category": {
-      "access-control": 6,
+      "access-control": 7,
       "auth-bruteforce": 2,
       "cmdi": 10,
       "deserialization": 7,
       "dns-tunnel": 3,
       "info-leak": 7,
       "infra-bruteforce": 2,
-      "known-cve": 57,
+      "known-cve": 60,
       "l34-recon": 5,
       "misc": 1,
       "protocol-anomaly": 9,
@@ -31,24 +31,24 @@
       "A01-Broken-Access-Control": 14,
       "A02-Cryptographic-Failures": 1,
       "A03-Injection": 34,
-      "A05-Security-Misconfiguration": 6,
-      "A06-Vulnerable-and-Outdated-Components": 47,
+      "A05-Security-Misconfiguration": 7,
+      "A06-Vulnerable-and-Outdated-Components": 50,
       "A07-Identification-and-Authentication-Failures": 2,
       "A08-Software-and-Data-Integrity-Failures": 9,
       "A10-SSRF": 3,
       "none": 24
     },
     "by_confidence": {
-      "high": 108,
+      "high": 112,
       "medium": 32
     },
     "by_network_mode": {
       "any": 19,
-      "plain": 118,
+      "plain": 122,
       "tls-meta": 3
     },
     "bench_§17_summary": {
-      "GAP": 107,
+      "GAP": 111,
       "OVERLAP": 33,
       "unmeasured": 0
     }
@@ -766,6 +766,21 @@
       "cve": "none",
       "bench_status_§17": "GAP",
       "poc_dir": "suricata/tests/poc/9170006_framework-debug-probe/",
+      "ref": "rules/by-category/access-control.json"
+    },
+    {
+      "sid": 9170007,
+      "rev": 1,
+      "enabled": true,
+      "category": "access-control",
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - Apache mod_status /server-status /server-info probe [high]",
+      "owasp": "A05-Security-Misconfiguration",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "none",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9170007_apache-server-status/",
       "ref": "rules/by-category/access-control.json"
     },
     {
@@ -1846,6 +1861,51 @@
       "cve": "CVE-2025-34037",
       "bench_status_§17": "GAP",
       "poc_dir": "suricata/tests/poc/9300057_linksys-eseries-mp/",
+      "ref": "rules/by-category/known-cve.json"
+    },
+    {
+      "sid": 9300058,
+      "rev": 1,
+      "enabled": true,
+      "category": "known-cve",
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE QNAP Viostor server.cgi SPECIFIC_SERVER OS command injection (CVE-2023-47565) [high]",
+      "owasp": "A06-Vulnerable-and-Outdated-Components",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "CVE-2023-47565",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9300058_qnap-viostor/",
+      "ref": "rules/by-category/known-cve.json"
+    },
+    {
+      "sid": 9300059,
+      "rev": 1,
+      "enabled": true,
+      "category": "known-cve",
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Tuoshi/Belkin/DigiEver ntpserver parameter OS command injection (CVE-2025-43989) [high]",
+      "owasp": "A06-Vulnerable-and-Outdated-Components",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "CVE-2025-43989",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9300059_tuoshi-ntpserver/",
+      "ref": "rules/by-category/known-cve.json"
+    },
+    {
+      "sid": 9300060,
+      "rev": 1,
+      "enabled": true,
+      "category": "known-cve",
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813) [high]",
+      "owasp": "A06-Vulnerable-and-Outdated-Components",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "CVE-2025-24813",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9300060_tomcat-cve-2025-24813/",
       "ref": "rules/by-category/known-cve.json"
     },
     {

@@ -425,3 +425,33 @@ alert http any any -> any any (msg:"KNOWN-CVE TBK DVR-4104/4216 device.rsp RCE (
 # CGI path + shell metachar in mp value. Negative: a docs URL mentioning
 # "mp=" parameter -> pcre rejects.
 alert http any any -> any any (msg:"KNOWN-CVE Linksys E-Series mp parameter OS command injection (CVE-2025-34037) [high]"; flow:established,to_server; http.uri.raw; content:"mp="; nocase; fast_pattern; pcre:"/\/(?:Diagnostics|set_TR069|cgi-bin|goform)[^\r\n]{0,80}\?[^\r\n]{0,200}?mp=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-34037, poc_ref tests/poc/9300057_linksys-eseries-mp/poc.sh, tag linksys, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300057; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2023-47565 QNAP Viostor IP camera unauth
+# command injection via server.cgi (the SPECIFIC_SERVER parameter on the
+# NVRC_RemoteCmd / setRtspMulticastInfo action gets pasted into a shell call
+# without sanitisation). 19 real-traffic hits in AUDIT-REALGAP. Clean-room
+# from advisory. Scope http.uri.raw. fast_pattern "SPECIFIC_SERVER" (15B,
+# attacker-shaped — no benign client passes this parameter outside the
+# exploit). pcre confirms it carries a shell metachar. Negative: a docs
+# URL mentioning the parameter → pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE QNAP Viostor server.cgi SPECIFIC_SERVER OS command injection (CVE-2023-47565) [high]"; flow:established,to_server; http.uri.raw; content:"SPECIFIC_SERVER"; nocase; fast_pattern; pcre:"/\/server\.cgi[^\r\n]{0,200}?SPECIFIC_SERVER=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-47565, poc_ref tests/poc/9300058_qnap-viostor/poc.sh, tag qnap, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300058; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2025-43989 Tuoshi (and Belkin / DigiEver
+# / many small-router OEMs) `ntpserver=` command-injection — the CGI handler
+# pasted attacker-controlled ntpserver value straight into a shell call.
+# 10 real-traffic hits (Tuoshi alone; family-shape adds Belkin+DigiEver+
+# others). Clean-room from advisory. Scope http.uri.raw. fast_pattern
+# "ntpserver=" (10B, attacker-shaped in the URI; legit clients set NTP
+# server via app menu, not URL param). pcre requires a CGI path AND a
+# shell metachar in the ntpserver value. Negative: a docs URL mentioning
+# the parameter → pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE Tuoshi/Belkin/DigiEver ntpserver parameter OS command injection (CVE-2025-43989) [high]"; flow:established,to_server; http.uri.raw; content:"ntpserver="; nocase; fast_pattern; pcre:"/\/(?:[\w-]+)?\.(?:cgi|asp)\??[^\r\n]{0,200}?ntpserver=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-43989, poc_ref tests/poc/9300059_tuoshi-ntpserver/poc.sh, tag tuoshi, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300059; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2025-24813 Apache Tomcat partial-PUT
+# session-file deserialization RCE. The default `readonly=false` servlet
+# accepts PUT, writes the body to a partial path; combined with path-
+# equivalence + a crafted serialised Java session, Tomcat then deserialises
+# attacker-controlled bytes from the session store → RCE. Network-
+# detectable: PUT method + a path with `/.` (the path-equivalence trick) +
+# Content-Range header (the partial-write marker). Clean-room from advisory.
+# Two-buffer: http.method content "PUT" (fast_pattern) + http.header pcre
+# requires Content-Range AND the path/uri has the `/.` equivalence marker.
+# Negative: a benign PUT with no Content-Range → pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813) [high]"; flow:established,to_server; http.method; content:"PUT"; nocase; fast_pattern; http.uri.raw; content:"/."; http.header; pcre:"/Content-Range:\s*bytes\s+\d+-\d+\/\d+/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-24813, poc_ref tests/poc/9300060_tomcat-cve-2025-24813/poc.sh, tag tomcat, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300060; rev:1;)

@@ -1,6 +1,6 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-22T05:30:43Z",
+  "generated_at": "2026-05-22T08:40:02Z",
   "category": "access-control",
   "rules": [
     {
@@ -294,6 +294,55 @@
         "attack": "Penyerang nge-probe halaman debug framework yang nggak sengaja ke-expose ke production: Symfony Web Profiler `/_profiler`, Laravel Ignition `/_ignition/execute-solution` (CVE-2021-3129), Rails `/rails/info/routes`. Standar scanner recon.",
         "impact": "Bocornya routes/source-paths/DB-queries/env-vars → bahan recon serangan lanjutan; Ignition `execute-solution` = RCE pre-auth (Laravel debug).",
         "detects": "Request ke salah satu canonical debug path (`/_profiler[/*]`, `/_ignition/execute-solution`, `/_ignition/health-check`, `/rails/info`, `/rails/info/properties`, `/rails/info/routes`)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9170007,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - Apache mod_status /server-status /server-info probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170007_apache-server-status/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/server-status",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/server-(?:status|info)(?:\\?(?:auto|refresh=\\d+))?(?:[\\?\\#\\s\\x00]|$)/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170007_apache-server-status/",
+      "readme": "suricata/tests/poc/9170007_apache-server-status/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - Apache mod_status /server-status /server-info probe [high]\"; flow:established,to_server; http.uri.raw; content:\"/server-status\"; nocase; fast_pattern; pcre:\"/\\/server-(?:status|info)(?:\\?(?:auto|refresh=\\d+))?(?:[\\?\\#\\s\\x00]|$)/i\"; classtype:attempted-recon; metadata: asset_category infra, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170007_apache-server-status/poc.sh, tag exposure, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9170007; rev:1;)",
+      "description": {
+        "attack": "Penyerang nge-probe halaman `/server-status` atau `/server-info` (Apache mod_status / mod_info) yang nggak sengaja aktif di production. Halaman ini ke-leak tabel worker process, URL request masuk, IP internal, config vhost.",
+        "impact": "Bocornya struktur internal server Apache + traffic real-time (URL+IP) → bahan recon serangan lanjutan + privacy untuk klien.",
+        "detects": "Request ke `/server-status` atau `/server-info` (dengan/tanpa `?auto` atau `?refresh=N`)."
       },
       "bench_status_§17": "GAP"
     }

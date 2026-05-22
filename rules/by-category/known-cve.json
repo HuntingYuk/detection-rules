@@ -1,6 +1,6 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-22T05:30:43Z",
+  "generated_at": "2026-05-22T08:40:02Z",
   "category": "known-cve",
   "rules": [
     {
@@ -2806,6 +2806,155 @@
         "attack": "Linksys E-Series OS command injection lewat parameter `mp` CGI (CVE-2025-34037): handler `/Diagnostics.tri` atau `/set_TR069` menerima parameter `mp=` yang langsung di-shell-exec. Shape mirip dipakai Belkin/Tuoshi/Edimax/Tenda — multi-vendor lewat shared SDK.",
         "impact": "RCE unauth di router Linksys (dan OEM clones) → botnet recruit + pivot LAN.",
         "detects": "Path Linksys-style CGI (`Diagnostics.tri`/`set_TR069`/`cgi-bin`/`goform`) + parameter `mp=` berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300058,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE QNAP Viostor server.cgi SPECIFIC_SERVER OS command injection (CVE-2023-47565) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-47565",
+        "poc_ref": "tests/poc/9300058_qnap-viostor/poc.sh",
+        "tag": "qnap",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "SPECIFIC_SERVER",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/server\\.cgi[^\\r\\n]{0,200}?SPECIFIC_SERVER=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300058_qnap-viostor/",
+      "readme": "suricata/tests/poc/9300058_qnap-viostor/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE QNAP Viostor server.cgi SPECIFIC_SERVER OS command injection (CVE-2023-47565) [high]\"; flow:established,to_server; http.uri.raw; content:\"SPECIFIC_SERVER\"; nocase; fast_pattern; pcre:\"/\\/server\\.cgi[^\\r\\n]{0,200}?SPECIFIC_SERVER=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-47565, poc_ref tests/poc/9300058_qnap-viostor/poc.sh, tag qnap, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300058; rev:1;)",
+      "description": {
+        "attack": "QNAP Viostor IP-camera unauth command injection (CVE-2023-47565): handler `server.cgi` accept parameter `SPECIFIC_SERVER=` di-pass langsung ke shell. 19 hit real-traffic di MTA scan-and-probe.",
+        "impact": "RCE unauth di IP camera QNAP → privacy invasion + botnet recruit.",
+        "detects": "Path `/server.cgi` + parameter `SPECIFIC_SERVER=` berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300059,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Tuoshi/Belkin/DigiEver ntpserver parameter OS command injection (CVE-2025-43989) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2025-43989",
+        "poc_ref": "tests/poc/9300059_tuoshi-ntpserver/poc.sh",
+        "tag": "tuoshi",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "ntpserver=",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:[\\w-]+)?\\.(?:cgi|asp)\\??[^\\r\\n]{0,200}?ntpserver=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300059_tuoshi-ntpserver/",
+      "readme": "suricata/tests/poc/9300059_tuoshi-ntpserver/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Tuoshi/Belkin/DigiEver ntpserver parameter OS command injection (CVE-2025-43989) [high]\"; flow:established,to_server; http.uri.raw; content:\"ntpserver=\"; nocase; fast_pattern; pcre:\"/\\/(?:[\\w-]+)?\\.(?:cgi|asp)\\??[^\\r\\n]{0,200}?ntpserver=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-43989, poc_ref tests/poc/9300059_tuoshi-ntpserver/poc.sh, tag tuoshi, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300059; rev:1;)",
+      "description": {
+        "attack": "Tuoshi/Belkin/DigiEver/Edimax NTP-server-config command injection (CVE-2025-43989 family): handler CGI NTP-config accept parameter `ntpserver=` di-pass langsung ke shell. Shape dipakai banyak OEM small-router. 10 hit real-traffic (Tuoshi alone, family-shape lebih besar).",
+        "impact": "RCE unauth di puluhan brand router kecil → botnet recruit + pivot LAN.",
+        "detects": "Path CGI (`*.cgi`/`*.asp`) + parameter `ntpserver=` berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300060,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2025-24813",
+        "poc_ref": "tests/poc/9300060_tomcat-cve-2025-24813/poc.sh",
+        "tag": "tomcat",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "PUT",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/Content-Range:\\s*bytes\\s+\\d+-\\d+\\/\\d+/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.header",
+        "http.method"
+      ],
+      "poc_dir": "suricata/tests/poc/9300060_tomcat-cve-2025-24813/",
+      "readme": "suricata/tests/poc/9300060_tomcat-cve-2025-24813/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813) [high]\"; flow:established,to_server; http.method; content:\"PUT\"; nocase; fast_pattern; http.uri.raw; content:\"/.\"; http.header; pcre:\"/Content-Range:\\s*bytes\\s+\\d+-\\d+\\/\\d+/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-24813, poc_ref tests/poc/9300060_tomcat-cve-2025-24813/poc.sh, tag tomcat, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300060; rev:1;)",
+      "description": {
+        "attack": "Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813): server default `readonly=false` accept PUT method; PUT ke path dengan `/.` (path-equivalence trick) + header `Content-Range` ngebikin Tomcat nulis body ke partial path session file; saat session di-deserialize, gadget Java jalanin → RCE unauth.",
+        "impact": "Remote Code Execution unauth di Tomcat — Java app server enterprise populer (recent CVE 2025).",
+        "detects": "Metode PUT + URL path mengandung `/.` + header `Content-Range: bytes N-N/N` (tiga buffer: method + uri + header)."
       },
       "bench_status_§17": "GAP"
     }
