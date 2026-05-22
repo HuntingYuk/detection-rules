@@ -1,0 +1,370 @@
+#!/usr/bin/env python3
+"""gen-dashboard — emit a single self-contained `rules.html` at repo root.
+
+Reads `rules.json` + every `rules/by-category/*.json`, inlines all data into
+ONE HTML file with vanilla JS + minimal CSS. Opens with file:// (no server
+needed). Features:
+  - corpus headline (active / GAP / OVERLAP / MISS / by-category)
+  - filter bar (category, §17 status, confidence, free-text search)
+  - rule table — click a row to expand full detail panel inline
+  - dark / light toggle, mobile-friendly, zero deps
+"""
+import os, sys, json, glob, html, re, datetime
+
+SUR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(SUR)
+OUT  = os.path.join(ROOT, "rules.html")
+INDEX_JSON = os.path.join(ROOT, "rules.json")
+BYCAT_DIR  = os.path.join(ROOT, "rules", "by-category")
+
+def main():
+    idx = json.load(open(INDEX_JSON))
+    bycat = {}
+    for f in sorted(glob.glob(os.path.join(BYCAT_DIR, "*.json"))):
+        cat = os.path.basename(f).replace(".json", "")
+        bycat[cat] = json.load(open(f))
+
+    # build a flat sid -> full-detail map for embedded use
+    detail = {}
+    for cat, blob in bycat.items():
+        for r in blob.get("rules", []):
+            detail[str(r["sid"])] = r
+
+    # strip generated_at fields so dashboard isn't a daily diff
+    idx_stable = dict(idx)
+    idx_stable.pop("generated_at", None)
+    payload = {
+        "corpus": idx["corpus"],
+        "index":  idx["rules_index"],
+        "detail": detail,
+        "split":  idx["split"]["by_category"],
+    }
+    data_json = json.dumps(payload, ensure_ascii=False)
+
+    now = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    page = HTML.replace("__GENERATED_AT__", now).replace("__DATA__", data_json)
+    open(OUT, "w").write(page)
+    print(f"wrote {os.path.relpath(OUT, ROOT)} — {os.path.getsize(OUT)//1024} KB, "
+          f"{len(payload['index'])} rules ({payload['corpus']['active']} active)")
+
+HTML = r"""<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HuntingYuk Detection Rules — Dashboard</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --border:#30363d; --fg:#c9d1d9;
+  --muted:#8b949e; --link:#58a6ff; --gap:#56d364; --overlap:#d29922;
+  --crit:#f85149; --good:#3fb950; --warn:#d29922; --high:#58a6ff;
+  --row:#161b22; --row-hover:#1f242c;
+}
+[data-theme=light]{
+  --bg:#ffffff; --panel:#f6f8fa; --border:#d0d7de; --fg:#1f2328;
+  --muted:#656d76; --link:#0969da; --row:#ffffff; --row-hover:#f6f8fa;
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);color:var(--fg)}
+header{padding:20px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+header h1{margin:0;font-size:18px;font-weight:600}
+header .sub{color:var(--muted);font-size:12px}
+header .badge{font-family:"SF Mono",Menlo,monospace;font-size:12px;
+  padding:3px 8px;border-radius:4px;background:var(--panel);border:1px solid var(--border)}
+header .badge.gap{color:var(--gap)}
+header .badge.over{color:var(--overlap)}
+header .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+header button{background:var(--panel);color:var(--fg);border:1px solid var(--border);
+  padding:6px 12px;border-radius:6px;cursor:pointer;font:inherit}
+header button:hover{background:var(--row-hover)}
+
+.controls{padding:14px 24px;border-bottom:1px solid var(--border);
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:var(--panel)}
+.controls input,.controls select{background:var(--bg);color:var(--fg);
+  border:1px solid var(--border);padding:6px 10px;border-radius:6px;font:inherit;
+  min-width:180px}
+.controls input[type=search]{min-width:280px}
+.controls label{color:var(--muted);font-size:12px;margin-right:4px}
+
+#stats{padding:16px 24px;border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--border);padding:12px 14px;
+  border-radius:8px}
+.stat h3{margin:0 0 4px 0;font-size:11px;color:var(--muted);font-weight:500;
+  text-transform:uppercase;letter-spacing:.05em}
+.stat .v{font-size:22px;font-weight:600;font-family:"SF Mono",Menlo,monospace}
+.stat .v.gap{color:var(--gap)}.stat .v.over{color:var(--overlap)}
+
+.bars{padding:12px 24px;border-bottom:1px solid var(--border)}
+.bars .row{display:flex;gap:8px;margin:6px 0;font-size:12px;align-items:center}
+.bars .row label{flex:0 0 140px;color:var(--muted)}
+.bars .row .bar{flex:1;height:14px;background:var(--panel);border:1px solid var(--border);
+  border-radius:4px;overflow:hidden;display:flex}
+.bars .row .bar div{height:100%;background:var(--link)}
+.bars .row .n{flex:0 0 60px;text-align:right;font-family:"SF Mono",Menlo,monospace}
+
+table{width:100%;border-collapse:collapse}
+thead{position:sticky;top:0;background:var(--panel);z-index:1}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+th{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;
+  letter-spacing:.05em;cursor:pointer;user-select:none}
+th:hover{color:var(--fg)}
+tbody tr{background:var(--row);cursor:pointer}
+tbody tr:hover{background:var(--row-hover)}
+tbody tr.expanded{background:var(--row-hover)}
+td.sid{font-family:"SF Mono",Menlo,monospace;font-size:12px}
+td.cat{font-size:11px;color:var(--muted)}
+td.msg{max-width:none}
+td.pill span{display:inline-block;padding:1px 6px;border-radius:3px;font-size:11px;
+  font-family:"SF Mono",Menlo,monospace}
+td.pill .gap{background:rgba(86,211,100,.15);color:var(--gap)}
+td.pill .overlap{background:rgba(210,153,34,.15);color:var(--overlap)}
+td.pill .none{color:var(--muted)}
+td.pill .high{color:var(--high)}
+td.pill .medium{color:var(--warn)}
+tr.detail{cursor:default}
+tr.detail td{background:var(--bg);padding:16px 24px;border-left:3px solid var(--link)}
+tr.detail .grid{display:grid;grid-template-columns:160px 1fr;gap:8px 16px;font-size:13px}
+tr.detail .grid b{color:var(--muted);font-weight:500}
+tr.detail pre{background:var(--panel);padding:10px;border-radius:6px;
+  overflow-x:auto;font-size:12px;margin:6px 0;border:1px solid var(--border);
+  font-family:"SF Mono",Menlo,monospace;color:var(--fg);white-space:pre-wrap;
+  word-break:break-all}
+tr.detail .desc{background:var(--panel);padding:12px;border-radius:6px;
+  border:1px solid var(--border);margin:8px 0}
+tr.detail .desc h4{margin:0 0 4px 0;font-size:12px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em}
+tr.detail .desc p{margin:0 0 8px 0}
+.deprecated td{opacity:.5;text-decoration:line-through}
+footer{padding:14px 24px;color:var(--muted);font-size:12px;text-align:center;
+  border-top:1px solid var(--border)}
+footer a{color:var(--link)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>HuntingYuk Detection Rules</h1>
+  <span class="sub">generated __GENERATED_AT__</span>
+  <span class="badge" id="hCount">— rules</span>
+  <span class="badge gap" id="hGap">GAP —</span>
+  <span class="badge over" id="hOver">OVERLAP —</span>
+  <div class="right">
+    <button onclick="toggleTheme()">◐ theme</button>
+  </div>
+</header>
+
+<section id="stats"></section>
+<section class="bars" id="bars"></section>
+
+<div class="controls">
+  <label>cat:</label><select id="fCat"><option value="">all</option></select>
+  <label>§17:</label><select id="f17"><option value="">all</option>
+    <option value="GAP">GAP only</option><option value="OVERLAP">OVERLAP only</option>
+    <option value="null">unmeasured</option></select>
+  <label>conf:</label><select id="fConf"><option value="">all</option>
+    <option value="high">high</option><option value="medium">medium</option></select>
+  <label>net:</label><select id="fNet"><option value="">all</option>
+    <option value="plain">plain</option><option value="any">any</option>
+    <option value="tls-meta">tls-meta</option></select>
+  <input type="search" id="q" placeholder="search msg / sid / cve / owasp …">
+  <span style="color:var(--muted);font-size:12px" id="matchCount"></span>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th data-key="sid">SID</th>
+      <th data-key="category">Category</th>
+      <th data-key="msg">Rule msg</th>
+      <th data-key="owasp">OWASP</th>
+      <th data-key="confidence">Conf</th>
+      <th data-key="network_mode">Net</th>
+      <th data-key="cve">CVE</th>
+      <th data-key="bench_status_§17">§17</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<footer>
+  HuntingYuk Detection Rules · <a href="rules.json">rules.json</a> ·
+  <a href="rules/by-category/">rules/by-category/</a> ·
+  <a href="CATALOG.md">CATALOG.md</a> ·
+  open-source clean-room — see <code>suricata/BENCHMARK.md</code> for §17 method.
+</footer>
+
+<script>
+const DATA = __DATA__;
+
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute("data-theme");
+  document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+}
+
+function esc(s){ return s == null ? "" : String(s)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;"); }
+
+function buildHeader(){
+  const c = DATA.corpus;
+  document.getElementById("hCount").textContent = c.active + " rules";
+  document.getElementById("hGap").textContent = "GAP " + c["bench_§17_summary"].GAP;
+  document.getElementById("hOver").textContent = "OVERLAP " + c["bench_§17_summary"].OVERLAP;
+
+  const stats = [
+    ["active rules", c.active, ""],
+    ["GAP (§17)", c["bench_§17_summary"].GAP, "gap"],
+    ["OVERLAP", c["bench_§17_summary"].OVERLAP, "over"],
+    ["deprecated", c.deprecated, ""],
+    ["categories", Object.keys(c.by_category).length, ""],
+    ["conf high", c.by_confidence.high || 0, ""],
+    ["conf medium", c.by_confidence.medium || 0, ""],
+    ["network plain", c.by_network_mode.plain || 0, ""],
+  ];
+  document.getElementById("stats").innerHTML = stats.map(s =>
+    `<div class="stat"><h3>${s[0]}</h3><div class="v ${s[2]}">${s[1]}</div></div>`
+  ).join("");
+
+  // bars
+  const total = c.active;
+  const bars = [];
+  const renderBars = (title, obj) => {
+    const max = Math.max(...Object.values(obj));
+    return Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v]) =>
+      `<div class="row"><label>${esc(k)}</label>
+        <div class="bar"><div style="width:${(v/max*100).toFixed(1)}%"></div></div>
+        <span class="n">${v}</span></div>`).join("");
+  };
+  document.getElementById("bars").innerHTML =
+    `<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">by category</div>` +
+    renderBars("category", c.by_category);
+}
+
+function buildCatFilter(){
+  const opts = Object.keys(DATA.corpus.by_category).sort()
+    .map(c => `<option value="${esc(c)}">${esc(c)} (${DATA.corpus.by_category[c]})</option>`)
+    .join("");
+  document.getElementById("fCat").insertAdjacentHTML("beforeend", opts);
+}
+
+let sortKey = "sid", sortDir = 1, expanded = new Set();
+
+function render(){
+  const cat = document.getElementById("fCat").value;
+  const status17 = document.getElementById("f17").value;
+  const conf = document.getElementById("fConf").value;
+  const net = document.getElementById("fNet").value;
+  const q = document.getElementById("q").value.toLowerCase().trim();
+
+  let rows = DATA.index.filter(r => {
+    if (cat && r.category !== cat) return false;
+    if (status17) {
+      if (status17 === "null" && r.bench_status_§17 != null) return false;
+      if (status17 !== "null" && r.bench_status_§17 !== status17) return false;
+    }
+    if (conf && r.confidence !== conf) return false;
+    if (net && r.network_mode !== net) return false;
+    if (q) {
+      const hay = (String(r.sid) + " " + r.msg + " " + r.cve + " " + r.owasp + " " + r.category).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  rows.sort((a,b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1; if (bv == null) return -1;
+    if (typeof av === "number") return (av - bv) * sortDir;
+    return String(av).localeCompare(String(bv)) * sortDir;
+  });
+
+  document.getElementById("matchCount").textContent =
+    rows.length === DATA.index.length ? "" : rows.length + " match";
+
+  const html = rows.map(r => {
+    const stat = r["bench_status_§17"];
+    const pill = stat ? `<span class="${stat.toLowerCase()}">${stat}</span>` :
+                        `<span class="none">—</span>`;
+    const confPill = `<span class="${r.confidence}">${r.confidence}</span>`;
+    const cve = r.cve === "none" ? "—" : r.cve;
+    const klass = r.enabled ? "" : "deprecated";
+    const isExp = expanded.has(r.sid);
+    const trMain = `<tr class="${klass} ${isExp ? 'expanded' : ''}" onclick="toggle(${r.sid})">
+      <td class="sid">${r.sid}</td>
+      <td class="cat">${esc(r.category)}</td>
+      <td class="msg">${esc(r.msg)}</td>
+      <td>${esc(r.owasp)}</td>
+      <td class="pill">${confPill}</td>
+      <td>${esc(r.network_mode)}</td>
+      <td>${esc(cve)}</td>
+      <td class="pill">${pill}</td></tr>`;
+    if (!isExp) return trMain;
+    return trMain + renderDetail(r.sid);
+  }).join("");
+  document.getElementById("rows").innerHTML = html;
+}
+
+function renderDetail(sid){
+  const d = DATA.detail[String(sid)];
+  if (!d) return `<tr class="detail"><td colspan="8">(no detail loaded)</td></tr>`;
+  const md = d.metadata || {};
+  const desc = d.description;
+  const descHtml = desc ?
+    `<div class="desc"><h4>Serangan apa?</h4><p>${esc(desc.attack)}</p>
+       <h4>Kalau kena, dampaknya?</h4><p>${esc(desc.impact)}</p>
+       <h4>Apa yang rule ini deteksi?</h4><p>${esc(desc.detects)}</p></div>` :
+    `<div class="desc"><em>no description in _descriptions.json</em></div>`;
+  const fp = d.fast_pattern ?
+    `<pre>content:"${esc(d.fast_pattern.content)}"${d.fast_pattern.nocase ? "; nocase" : ""}</pre>` :
+    "<em>(non-payload — no fast_pattern by design, §22 C1)</em>";
+  const pcre = d.has_pcre ? `<pre>${esc(d.pcre)}</pre>` : "<em>(no pcre — content-only)</em>";
+  return `<tr class="detail"><td colspan="8">
+    ${descHtml}
+    <div class="grid">
+      <b>file</b><div>${esc(d.file)}</div>
+      <b>classtype</b><div>${esc(d.classtype)}</div>
+      <b>MITRE</b><div>${esc(md.mitre_tactic_id || "—")} ${esc(md.mitre_tactic_name || "")} / ${esc(md.mitre_technique_id || "—")} ${esc(md.mitre_technique_name || "")}</div>
+      <b>kill_chain</b><div>${esc(md.kill_chain || "—")}</div>
+      <b>asset_category</b><div>${esc(md.asset_category || "—")}</div>
+      <b>signature_severity</b><div>${esc(md.signature_severity || "—")}</div>
+      <b>buffers</b><div>${(d.buffers || []).map(esc).join(", ") || "—"}</div>
+      <b>fast_pattern</b><div>${fp}</div>
+      <b>pcre</b><div>${pcre}</div>
+      <b>has_detection_filter</b><div>${d.has_detection_filter ? "yes" : "no"}</div>
+      <b>has_threshold</b><div>${d.has_threshold ? "yes" : "no"}</div>
+      <b>poc_dir</b><div>${esc(d.poc_dir)}</div>
+      <b>readme</b><div>${esc(d.readme)}</div>
+      <b>raw alert</b><div><pre>${esc(d.raw)}</pre></div>
+    </div></td></tr>`;
+}
+
+function toggle(sid){
+  if (expanded.has(sid)) expanded.delete(sid); else expanded.add(sid);
+  render();
+}
+
+document.querySelectorAll("th[data-key]").forEach(th => {
+  th.onclick = () => {
+    const k = th.dataset.key;
+    if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+    render();
+  };
+});
+["fCat","f17","fConf","fNet","q"].forEach(id => {
+  document.getElementById(id).oninput = render;
+  document.getElementById(id).onchange = render;
+});
+
+buildHeader();
+buildCatFilter();
+render();
+</script>
+</body></html>
+"""
+
+if __name__ == "__main__":
+    main()
