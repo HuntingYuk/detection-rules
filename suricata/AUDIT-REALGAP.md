@@ -5,11 +5,11 @@
 ## Headline
 
 - Attack pcaps analysed: **3**
-- OUR rules fired: 20 distinct SIDs (2799 alerts)
-- ET Open fired: 471 distinct SIDs (116549 alerts)
+- OUR rules fired: 20 distinct SIDs (2839 alerts)
+- ET Open fired: 471 distinct SIDs (118282 alerts)
 - ET fires in EXPLOIT class (our scope): **39 distinct SIDs (1170 alerts)** — these are the real coverage targets
-- ET fires excluded (MALWARE/INFO/HUNTING/SCAN/DNS/POLICY/SURICATA — out-of-scope per project policy): 129 distinct SIDs (23374 alerts)
-- ET fires other (uncategorised): 303 distinct SIDs (92005 alerts)
+- ET fires excluded (MALWARE/INFO/HUNTING/SCAN/DNS/POLICY/SURICATA — out-of-scope per project policy): 129 distinct SIDs (23382 alerts)
+- ET fires other (uncategorised): 303 distinct SIDs (93730 alerts)
 
 ## Top 30 exploit-class families ET catches (data-driven backlog)
 
@@ -23,18 +23,18 @@
 | **ThinkPHP** | 86 | `2026731` ET WEB_SERVER ThinkPHP RCE Exploitation Attempt |
 | **WEB-PHP** | 48 | `2019526` ET WEB_SERVER WEB-PHP phpinfo access |
 | **Netgear** | 34 | `2029215` ET EXPLOIT Netgear DGN1000/DGN2200 Unauthenticated Command Execution Outbound / `2024916` ET EXPLOIT Netgear DGN Remote Command Execution |
-| **CVE-2021-35394** | 24 | `2044008` ET EXPLOIT Realtek SDK - Command Execution/Backdoor Access Inbound (CVE-2021-353 |
+| **CVE-2021-35394** | 23 | `2044008` ET EXPLOIT Realtek SDK - Command Execution/Backdoor Access Inbound (CVE-2021-353 |
 | **Linksys** | 19 | `2026102` ET EXPLOIT Linksys E-Series Device RCE Attempt / `2027153` ET EXPLOIT Linksys E-Series Device RCE Attempt Outbound |
 | **CVE-2023-47565** | 19 | `2059878` ET WEB_SPECIFIC_APPS QNAP Viostor server.cgi SPECIFIC_SERVER Parameter Command I |
 | **CVE-2017-3506** | 18 | `2048259` ET WEB_SPECIFIC_APPS Oracle WebLogic Server OS Command Injection Attempt Inbound |
 | **MVPower** | 18 | `2025883` ET EXPLOIT MVPower DVR Shell UCE |
 | **CVE-2016-20016** | 18 | `2030092` ET WEB_SPECIFIC_APPS MVPower CCTV DVR /shell JAWS Webserver Unauthenticated Remo |
+| **CVE-2024-14007** | 13 | `2065916` ET WEB_SPECIFIC_APPS Shenzhen TVT NVMS-9000 Information Disclosure Attempt (CVE- |
 | **CVE-2018-10561** | 12 | `2027063` ET EXPLOIT Outbound GPON Authentication Bypass Attempt (CVE-2018-10561) |
-| **CVE-2024-14007** | 12 | `2065916` ET WEB_SPECIFIC_APPS Shenzhen TVT NVMS-9000 Information Disclosure Attempt (CVE- |
-| **CVE-2019-16920** | 10 | `2030277` ET EXPLOIT Multiple DLink Routers Remote Code Execution CVE-2019-16920 |
 | **CVE-2023-31983** | 10 | `2062301` ET WEB_SPECIFIC_APPS Edimax N300 mp command Parameter Command Injection Attempt  |
 | **CVE-2025-7083** | 10 | `2067094` ET WEB_SPECIFIC_APPS Belkin mp command Parameter Command Injection Attempt (CVE- |
 | **CVE-2025-43989** | 10 | `2066604` ET WEB_SPECIFIC_APPS Tuoshi set_timesetting ntpserver Parameter Command Injectio |
+| **CVE-2019-16920** | 10 | `2030277` ET EXPLOIT Multiple DLink Routers Remote Code Execution CVE-2019-16920 |
 | **CVE-2024-3721** | 10 | `2061111` ET WEB_SPECIFIC_APPS TBK DVR-4104/4216 Command Injection Attempt (CVE-2024-3721) |
 | **CVE-2025-34037** | 9 | `2068292` ET WEB_SPECIFIC_APPS Linksys E-Series OS Command Injection (CVE-2025-34037) M1 |
 | **CVE-2023-52163** | 9 | `2062137` ET WEB_SPECIFIC_APPS DigiEver DS-2105 Pro time_tzsetup.cgi ntp Parameter Command |
@@ -42,34 +42,34 @@
 | **CVE-2024-12856** | 7 | `2063281` ET WEB_SPECIFIC_APPS Four-Faith adjust_sys_time adj_time Command Injection Attem |
 | **VisualDoor** | 7 | `2031543` ET EXPLOIT VisualDoor Sonicwall SSL VPN Exploit Attempt |
 | **HackingTrio** | 6 | `2025576` ET EXPLOIT HackingTrio UA (Hello, World) |
-| **CVE-2024-10914** | 6 | `2057330` ET WEB_SPECIFIC_APPS D-Link NAS OS Command Injection in cgi_user_add Function (C |
 | **CVE-2016-20017** | 6 | `2049120` ET EXPLOIT Korenix JetWave/Edimax formSysCmd Command Injection Attempt (CVE-2016 |
+| **CVE-2024-10914** | 6 | `2057330` ET WEB_SPECIFIC_APPS D-Link NAS OS Command Injection in cgi_user_add Function (C |
 | **D-Link** | 3 | `2020899` ET EXPLOIT D-Link Devices Home Network Administration Protocol Command Execution |
 
 ## Other (uncategorised) ET fires — top 20
 
 Tier ambiguous; some may be real attack classes worth adding, others are noise. Sample for context.
 
-- `2402000` × 25817 — ET DROP Dshield Block Listed Source group 1
-- `2400035` × 4876 — ET DROP Spamhaus DROP Listed Traffic Inbound group 36
-- `2400012` × 2563 — ET DROP Spamhaus DROP Listed Traffic Inbound group 13
-- `2403536` × 2102 — ET CINS Active Threat Intelligence Poor Reputation IP group 237
-- `2400006` × 1742 — ET DROP Spamhaus DROP Listed Traffic Inbound group 7
-- `2403357` × 1506 — ET CINS Active Threat Intelligence Poor Reputation IP group 58
-- `2403489` × 1364 — ET CINS Active Threat Intelligence Poor Reputation IP group 190
-- `2400015` × 1360 — ET DROP Spamhaus DROP Listed Traffic Inbound group 16
-- `2403433` × 1283 — ET CINS Active Threat Intelligence Poor Reputation IP group 134
-- `2403358` × 1270 — ET CINS Active Threat Intelligence Poor Reputation IP group 59
-- `2400037` × 1199 — ET DROP Spamhaus DROP Listed Traffic Inbound group 38
-- `2403496` × 1146 — ET CINS Active Threat Intelligence Poor Reputation IP group 197
-- `2403577` × 1111 — ET CINS Active Threat Intelligence Poor Reputation IP group 278
-- `2403360` × 1035 — ET CINS Active Threat Intelligence Poor Reputation IP group 61
+- `2402000` × 26079 — ET DROP Dshield Block Listed Source group 1
+- `2400035` × 5006 — ET DROP Spamhaus DROP Listed Traffic Inbound group 36
+- `2400012` × 2674 — ET DROP Spamhaus DROP Listed Traffic Inbound group 13
+- `2403536` × 2191 — ET CINS Active Threat Intelligence Poor Reputation IP group 237
+- `2400006` × 1765 — ET DROP Spamhaus DROP Listed Traffic Inbound group 7
+- `2403357` × 1549 — ET CINS Active Threat Intelligence Poor Reputation IP group 58
+- `2400015` × 1413 — ET DROP Spamhaus DROP Listed Traffic Inbound group 16
+- `2403489` × 1388 — ET CINS Active Threat Intelligence Poor Reputation IP group 190
+- `2403433` × 1323 — ET CINS Active Threat Intelligence Poor Reputation IP group 134
+- `2403358` × 1309 — ET CINS Active Threat Intelligence Poor Reputation IP group 59
+- `2400037` × 1236 — ET DROP Spamhaus DROP Listed Traffic Inbound group 38
+- `2403496` × 1153 — ET CINS Active Threat Intelligence Poor Reputation IP group 197
+- `2403577` × 1148 — ET CINS Active Threat Intelligence Poor Reputation IP group 278
+- `2403360` × 1059 — ET CINS Active Threat Intelligence Poor Reputation IP group 61
 - `2024897` × 929 — ET USER_AGENTS Go HTTP Client User-Agent
-- `2403523` × 847 — ET CINS Active Threat Intelligence Poor Reputation IP group 224
-- `2403423` × 831 — ET CINS Active Threat Intelligence Poor Reputation IP group 124
-- `2403432` × 816 — ET CINS Active Threat Intelligence Poor Reputation IP group 133
-- `2403436` × 812 — ET CINS Active Threat Intelligence Poor Reputation IP group 137
-- `2400010` × 807 — ET DROP Spamhaus DROP Listed Traffic Inbound group 11
+- `2403423` × 856 — ET CINS Active Threat Intelligence Poor Reputation IP group 124
+- `2403523` × 855 — ET CINS Active Threat Intelligence Poor Reputation IP group 224
+- `2403488` × 835 — ET CINS Active Threat Intelligence Poor Reputation IP group 189
+- `2400054` × 833 — ET DROP Spamhaus DROP Listed Traffic Inbound group 55
+- `2403432` × 832 — ET CINS Active Threat Intelligence Poor Reputation IP group 133
 
 ---
 

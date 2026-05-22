@@ -1,20 +1,20 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-22T03:34:28Z",
+  "generated_at": "2026-05-22T03:49:30Z",
   "source": "HuntingYuk detection-rules — scripts/gen-manifest",
   "corpus": {
-    "total": 137,
-    "active": 136,
+    "total": 141,
+    "active": 140,
     "deprecated": 1,
     "by_category": {
-      "access-control": 5,
+      "access-control": 6,
       "auth-bruteforce": 2,
       "cmdi": 10,
       "deserialization": 7,
       "dns-tunnel": 3,
       "info-leak": 7,
       "infra-bruteforce": 2,
-      "known-cve": 54,
+      "known-cve": 57,
       "l34-recon": 5,
       "misc": 1,
       "protocol-anomaly": 9,
@@ -31,24 +31,24 @@
       "A01-Broken-Access-Control": 14,
       "A02-Cryptographic-Failures": 1,
       "A03-Injection": 34,
-      "A05-Security-Misconfiguration": 5,
-      "A06-Vulnerable-and-Outdated-Components": 44,
+      "A05-Security-Misconfiguration": 6,
+      "A06-Vulnerable-and-Outdated-Components": 47,
       "A07-Identification-and-Authentication-Failures": 2,
       "A08-Software-and-Data-Integrity-Failures": 9,
       "A10-SSRF": 3,
       "none": 24
     },
     "by_confidence": {
-      "high": 104,
+      "high": 108,
       "medium": 32
     },
     "by_network_mode": {
       "any": 19,
-      "plain": 114,
+      "plain": 118,
       "tls-meta": 3
     },
     "bench_§17_summary": {
-      "GAP": 103,
+      "GAP": 107,
       "OVERLAP": 33,
       "unmeasured": 0
     }
@@ -2254,6 +2254,55 @@
         "detects": "Request ke salah satu path probe canonical phpinfo (`/phpinfo.php`/`/info.php`/`/test.php`/`/_profiler/phpinfo`/`/debug.php`)."
       },
       "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9170006,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - Symfony _profiler / Laravel _ignition / Rails /rails/info debug-page probe [high]",
+      "classtype": "attempted-recon",
+      "category": "access-control",
+      "metadata": {
+        "asset_category": "web-modern",
+        "owasp": "A05-Security-Misconfiguration",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0007",
+        "mitre_tactic_name": "Discovery",
+        "mitre_technique_id": "T1083",
+        "mitre_technique_name": "File-and-Directory-Discovery",
+        "kill_chain": "Recon",
+        "confidence": "high",
+        "signature_severity": "Major",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "none",
+        "poc_ref": "tests/poc/9170006_framework-debug-probe/poc.sh",
+        "tag": "exposure",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "_profiler",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:_profiler(?:\\/|\\?|$)|_ignition\\/(?:execute-solution|health-check)|rails\\/info(?:\\/(?:properties|routes))?(?:\\/|\\?|$))/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9170006_framework-debug-probe/",
+      "readme": "suricata/tests/poc/9170006_framework-debug-probe/README.md",
+      "raw": "alert http any any -> any any (msg:\"WEB Exposure - Symfony _profiler / Laravel _ignition / Rails /rails/info debug-page probe [high]\"; flow:established,to_server; http.uri.raw; content:\"_profiler\"; nocase; fast_pattern; pcre:\"/\\/(?:_profiler(?:\\/|\\?|$)|_ignition\\/(?:execute-solution|health-check)|rails\\/info(?:\\/(?:properties|routes))?(?:\\/|\\?|$))/i\"; classtype:attempted-recon; metadata: asset_category web-modern, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170006_framework-debug-probe/poc.sh, tag exposure, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9170006; rev:1;)",
+      "description": {
+        "attack": "Penyerang nge-probe halaman debug framework yang nggak sengaja ke-expose ke production: Symfony Web Profiler `/_profiler`, Laravel Ignition `/_ignition/execute-solution` (CVE-2021-3129), Rails `/rails/info/routes`. Standar scanner recon.",
+        "impact": "Bocornya routes/source-paths/DB-queries/env-vars → bahan recon serangan lanjutan; Ignition `execute-solution` = RCE pre-auth (Laravel debug).",
+        "detects": "Request ke salah satu canonical debug path (`/_profiler[/*]`, `/_ignition/execute-solution`, `/_ignition/health-check`, `/rails/info`, `/rails/info/properties`, `/rails/info/routes`)."
+      },
+      "bench_status_§17": "GAP"
     },
     {
       "sid": 9180001,
@@ -5648,6 +5697,154 @@
         "detects": "POST ke `/HNAP1/` + body XML element `<service>` berisi shell metachar (` $ | ;) — dua buffer."
       },
       "bench_status_§17": "OVERLAP"
+    },
+    {
+      "sid": 9300055,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE LB-Link goform wifi-config RCE (CVE-2023-26801) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2023-26801",
+        "poc_ref": "tests/poc/9300055_lblink-cve-2023-26801/poc.sh",
+        "tag": "lblink",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/goform/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:wirelessApcli|wirelessAdvanced|wirelessReboot|formWlanWds|setSysAdm|ApCliPassWord|wirelessKeyType)[^\\r\\n]{0,40}?=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300055_lblink-cve-2023-26801/",
+      "readme": "suricata/tests/poc/9300055_lblink-cve-2023-26801/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE LB-Link goform wifi-config RCE (CVE-2023-26801) [high]\"; flow:established,to_server; http.uri.raw; content:\"/goform/\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:wirelessApcli|wirelessAdvanced|wirelessReboot|formWlanWds|setSysAdm|ApCliPassWord|wirelessKeyType)[^\\r\\n]{0,40}?=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-26801, poc_ref tests/poc/9300055_lblink-cve-2023-26801/poc.sh, tag lblink, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300055; rev:1;)",
+      "description": {
+        "attack": "LB-Link router wifi-config OS command injection (CVE-2023-26801): handler `/goform/wirelessApcli` (dan handler `/goform/*` lain) menerima POST body dengan field konfigurasi WiFi (`ApCliPassWord`, `wirelessKeyType`, dll); field dipasang langsung ke shell tanpa sanitasi. Multi-SKU LB-Link + OEM cloned routers. 111 hit real-traffic — kedua terbesar di realgap (setelah React2Shell).",
+        "impact": "RCE unauth di router rumah/SOHO → botnet recruit + pivot ke LAN pelanggan.",
+        "detects": "POST ke `/goform/...` + field wireless handler (wirelessApcli/wirelessAdvanced/setSysAdm/ApCliPassWord/dll) berisi shell metachar (` $ | ;) — dua buffer."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300056,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE TBK DVR-4104/4216 device.rsp RCE (CVE-2024-3721) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-3721",
+        "poc_ref": "tests/poc/9300056_tbk-dvr-cve-2024-3721/poc.sh",
+        "tag": "tbk-dvr",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/device.rsp",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/device\\.rsp\\?[^\\r\\n]{0,200}?opt=[^&\\r\\n]{0,30}?&[^\\r\\n]{0,200}?(?:cmd|mdc|mdb)=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300056_tbk-dvr-cve-2024-3721/",
+      "readme": "suricata/tests/poc/9300056_tbk-dvr-cve-2024-3721/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE TBK DVR-4104/4216 device.rsp RCE (CVE-2024-3721) [high]\"; flow:established,to_server; http.uri.raw; content:\"/device.rsp\"; nocase; fast_pattern; pcre:\"/\\/device\\.rsp\\?[^\\r\\n]{0,200}?opt=[^&\\r\\n]{0,30}?&[^\\r\\n]{0,200}?(?:cmd|mdc|mdb)=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-3721, poc_ref tests/poc/9300056_tbk-dvr-cve-2024-3721/poc.sh, tag tbk-dvr, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300056; rev:1;)",
+      "description": {
+        "attack": "TBK DVR-4104/4216 unauth command injection (CVE-2024-3721): URL `/device.rsp?opt=user&cmd=list&mdb=sd&mdc=...` di-pass langsung ke shell oleh DVR firmware. Mass Mirai-recruited (10 hit real-traffic).",
+        "impact": "Akses shell penuh ke DVR CCTV → privacy invasion + botnet recruit.",
+        "detects": "Path `/device.rsp?` + opt= + parameter cmd=/mdc=/mdb= berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300057,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Linksys E-Series mp parameter OS command injection (CVE-2025-34037) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2025-34037",
+        "poc_ref": "tests/poc/9300057_linksys-eseries-mp/poc.sh",
+        "tag": "linksys",
+        "created_at": "2026_05_22",
+        "updated_at": "2026_05_22",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "mp=",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\/(?:Diagnostics|set_TR069|cgi-bin|goform)[^\\r\\n]{0,80}\\?[^\\r\\n]{0,200}?mp=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300057_linksys-eseries-mp/",
+      "readme": "suricata/tests/poc/9300057_linksys-eseries-mp/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Linksys E-Series mp parameter OS command injection (CVE-2025-34037) [high]\"; flow:established,to_server; http.uri.raw; content:\"mp=\"; nocase; fast_pattern; pcre:\"/\\/(?:Diagnostics|set_TR069|cgi-bin|goform)[^\\r\\n]{0,80}\\?[^\\r\\n]{0,200}?mp=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-34037, poc_ref tests/poc/9300057_linksys-eseries-mp/poc.sh, tag linksys, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300057; rev:1;)",
+      "description": {
+        "attack": "Linksys E-Series OS command injection lewat parameter `mp` CGI (CVE-2025-34037): handler `/Diagnostics.tri` atau `/set_TR069` menerima parameter `mp=` yang langsung di-shell-exec. Shape mirip dipakai Belkin/Tuoshi/Edimax/Tenda — multi-vendor lewat shared SDK.",
+        "impact": "RCE unauth di router Linksys (dan OEM clones) → botnet recruit + pivot LAN.",
+        "detects": "Path Linksys-style CGI (`Diagnostics.tri`/`set_TR069`/`cgi-bin`/`goform`) + parameter `mp=` berisi shell metachar (` $ | ;)."
+      },
+      "bench_status_§17": "GAP"
     },
     {
       "sid": 9400001,

@@ -401,3 +401,27 @@ alert http any any -> any any (msg:"KNOWN-CVE MVPower DVR JAWS /shell unauth RCE
 # `$`) → no benign HNAP1 client sends those. Negative: a normal HNAP1 SOAP
 # request → body pcre rejects.
 alert http any any -> any any (msg:"KNOWN-CVE D-Link HNAP1 unauth RCE (CVE-2019-16920) [high]"; flow:established,to_server; http.uri.raw; content:"/HNAP1"; nocase; fast_pattern; http.request_body; pcre:"/<service>[^<\r\n]{0,80}?[\x60\x24\x7c\x3b]|GetDeviceSettings[^<\r\n]{0,200}?<service>[^<\r\n]*?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-16920, poc_ref tests/poc/9300054_dlink-hnap1-rce/poc.sh, tag dlink, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300054; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2023-26801 LB-Link wifi-config OS command
+# injection via /goform/ endpoints (multiple SKUs: BL-AC1900, BL-WR1300H,
+# etc.). Second-biggest realgap (111 real-traffic hits, AUDIT-REALGAP).
+# Clean-room from advisory. Two-buffer: http.uri.raw "/goform/" (LB-Link /
+# many-OEM action prefix) + http.request_body pcre requires a wireless-
+# action field + shell metachar. Negative: a normal /goform/ wifi POST
+# without metachar -> body pcre rejects -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE LB-Link goform wifi-config RCE (CVE-2023-26801) [high]"; flow:established,to_server; http.uri.raw; content:"/goform/"; nocase; fast_pattern; http.request_body; pcre:"/(?:wirelessApcli|wirelessAdvanced|wirelessReboot|formWlanWds|setSysAdm|ApCliPassWord|wirelessKeyType)[^\r\n]{0,40}?=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2023-26801, poc_ref tests/poc/9300055_lblink-cve-2023-26801/poc.sh, tag lblink, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300055; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-3721 TBK DVR-4104/4216 (+clones)
+# unauth command injection — /device.rsp?opt=user&cmd=...&mdc= style.
+# Mirai-recruited (10 real-traffic hits). Clean-room from advisory. Scope
+# http.uri.raw. fast_pattern "/device.rsp" + pcre requires opt= + (cmd=/
+# mdc=/mdb=) + shell metachar. Negative: a benign /device.rsp without the
+# cmd-injection combo -> pcre rejects -> silent.
+alert http any any -> any any (msg:"KNOWN-CVE TBK DVR-4104/4216 device.rsp RCE (CVE-2024-3721) [high]"; flow:established,to_server; http.uri.raw; content:"/device.rsp"; nocase; fast_pattern; pcre:"/\/device\.rsp\?[^\r\n]{0,200}?opt=[^&\r\n]{0,30}?&[^\r\n]{0,200}?(?:cmd|mdc|mdb)=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-3721, poc_ref tests/poc/9300056_tbk-dvr-cve-2024-3721/poc.sh, tag tbk-dvr, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300056; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2025-34037 Linksys E-Series OS command
+# injection via the "mp" CGI parameter (Diagnostics.tri / set_TR069 / similar
+# handler — shared across multiple Linksys SKUs; Belkin/Tuoshi/Edimax/Tenda
+# variants use very similar shapes — 9 real-traffic hits in AUDIT-REALGAP).
+# Clean-room from advisory. Scope http.uri.raw. fast_pattern "mp=" — the
+# URI carries the cmd-injection vector. pcre anchors it to a Linksys-style
+# CGI path + shell metachar in mp value. Negative: a docs URL mentioning
+# "mp=" parameter -> pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE Linksys E-Series mp parameter OS command injection (CVE-2025-34037) [high]"; flow:established,to_server; http.uri.raw; content:"mp="; nocase; fast_pattern; pcre:"/\/(?:Diagnostics|set_TR069|cgi-bin|goform)[^\r\n]{0,80}\?[^\r\n]{0,200}?mp=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-34037, poc_ref tests/poc/9300057_linksys-eseries-mp/poc.sh, tag linksys, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300057; rev:1;)
