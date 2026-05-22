@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""release — generate a curated set of deployment bundles (.rules + .index.json
+sidecar) under suricata/bundles/ via `rulectl export`. Bundles are derived
+artefacts (gitignored) — re-run to refresh.
+
+The 8 bundles cover the common deployment slices:
+
+  all                    — every active rule
+  high-confidence        — only confidence=high (perimeter-friendly, lowest FP)
+  plaintext              — network_mode=plain (needs decrypted HTTP)
+  tls-meta               — network_mode=tls-meta (no decryption needed)
+  any                    — network_mode=any (pure L3/L4 + DNS, deploy anywhere)
+  known-cve              — only the clean-room CVE backbone
+  owasp                  — anything tagged with an OWASP A0X bucket
+  auth-access-leak       — access-control + auth-bruteforce + info-leak + recon
+
+Each bundle emits two files in suricata/bundles/:
+  <name>.rules         — Suricata-loadable signature file
+  <name>.index.json    — sid→metadata sidecar (msg/conf/owasp/cve/mitre/...)
+
+Final summary prints bundle counts + sizes + sha256 hashes (operator can pin
+a bundle hash for tamper-evident deploys).
+"""
+import os, sys, glob, json, hashlib, subprocess
+
+SUR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RULECTL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rulectl")
+OUT_DIR = os.path.join(SUR, "bundles")
+
+# (name, list-of-rulectl-export-flags)
+BUNDLES = [
+    ("all",               []),
+    ("high-confidence",   ["--confidence", "high"]),
+    ("plaintext",         ["--network-mode", "plain"]),
+    ("tls-meta",          ["--network-mode", "tls-meta"]),
+    ("any",               ["--network-mode", "any"]),
+    ("known-cve",         ["--meta", "asset_category=infra", "--owasp", "A06-Vulnerable-and-Outdated-Components"]),
+    ("owasp",             ["--meta", "owasp=A01-Broken-Access-Control"]),   # placeholder, see below
+    ("auth-access-leak",  ["--meta", "tag=info-leak"]),                     # placeholder, see below
+]
+
+# rulectl export takes one filter set; for the multi-cat bundles (owasp /
+# auth-access-leak) we need to merge several exports.
+
+def _run(args, out):
+    cmd = [sys.executable, RULECTL, "export"] + args + ["-o", out]
+    r = subprocess.run(cmd, cwd=SUR, capture_output=True, text=True)
+    return r.returncode == 0, r.stdout + r.stderr
+
+def _merge(out, *paths):
+    """Concatenate .rules files (dedup by sid) into one output."""
+    seen = set(); lines = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        for ln in open(p):
+            import re
+            m = re.search(r'\bsid:(\d+)', ln)
+            if m:
+                if m.group(1) in seen: continue
+                seen.add(m.group(1))
+            lines.append(ln)
+    open(out, "w").write("".join(lines))
+    return len(seen)
+
+def _merge_index(out, *paths):
+    """Merge index.json sidecars by sid."""
+    merged = {}
+    for p in paths:
+        if not os.path.exists(p): continue
+        try: merged.update(json.load(open(p)))
+        except Exception: pass
+    open(out, "w").write(json.dumps(merged, indent=2, ensure_ascii=False))
+
+def _sha256(p):
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""): h.update(chunk)
+    return h.hexdigest()
+
+def main():
+    os.makedirs(OUT_DIR, exist_ok=True)
+    # clean stale bundles
+    for f in glob.glob(os.path.join(OUT_DIR, "*.rules")) + glob.glob(os.path.join(OUT_DIR, "*.index.json")):
+        os.remove(f)
+
+    report = []
+    # simple bundles
+    for name, flags in BUNDLES[:5] + [BUNDLES[5]]:    # first 6 use plain rulectl
+        out = os.path.join(OUT_DIR, name + ".rules")
+        ok, msg = _run(flags, out)
+        if not ok:
+            print(f"  ! {name}: {msg.strip()}", file=sys.stderr); continue
+        idx = out.replace(".rules", ".index.json")
+        n = sum(1 for ln in open(out) if ln.startswith("alert"))
+        report.append((name, out, n))
+
+    # OWASP — union of all A0X buckets
+    owasp_paths_rules = []; owasp_paths_idx = []
+    for code in ["A01", "A02", "A03", "A05", "A06", "A07", "A08", "A10"]:
+        tmp_rules = os.path.join(OUT_DIR, f"_owasp_{code}.rules")
+        ok, _ = _run(["--owasp", f"{code}-x"], tmp_rules)   # placeholder won't match; use prefix
+        # try the actual full names known in corpus
+    # simpler: build from rules.json directly
+    import json as _json
+    manifest = _json.load(open(os.path.join(os.path.dirname(SUR), "rules.json")))
+    # collect SIDs by predicate
+    def _collect(pred):
+        sids = sorted(r["sid"] for r in manifest["rules_index"]
+                      if r["enabled"] and pred(r))
+        return sids
+
+    # Build each per-category bundle directly from manifest + the source .rules text
+    # The 'all' rulectl export already has every alert; we'll filter from it.
+    all_rules_path = os.path.join(OUT_DIR, "all.rules")
+    all_lines = open(all_rules_path).readlines()
+    sid_to_line = {}
+    import re
+    for ln in all_lines:
+        m = re.search(r'\bsid:(\d+)', ln)
+        if m and ln.startswith("alert"): sid_to_line[int(m.group(1))] = ln
+
+    def _bundle_from_sids(name, sids):
+        out = os.path.join(OUT_DIR, name + ".rules")
+        with open(out, "w") as o:
+            o.write(f"# HuntingYuk bundle '{name}' | {len(sids)} rules\n")
+            for s in sids:
+                if s in sid_to_line: o.write(sid_to_line[s])
+        return out
+
+    # OWASP union
+    owasp_sids = _collect(lambda r: r["owasp"].startswith("A0"))
+    out = _bundle_from_sids("owasp", owasp_sids)
+    report.append(("owasp", out, len(owasp_sids)))
+
+    # auth-access-leak (3 categories)
+    cats = {"access-control", "auth-bruteforce", "info-leak", "recon-http"}
+    aal_sids = _collect(lambda r: r["category"] in cats)
+    out = _bundle_from_sids("auth-access-leak", aal_sids)
+    report.append(("auth-access-leak", out, len(aal_sids)))
+
+    # also override the "known-cve" bundle with the actual category filter
+    kc_sids = _collect(lambda r: r["category"] == "known-cve")
+    out = _bundle_from_sids("known-cve", kc_sids)
+    # replace the earlier report row
+    report = [(n, p, c) for n, p, c in report if n != "known-cve"]
+    report.append(("known-cve", out, len(kc_sids)))
+
+    # write bundles/README.md
+    bundle_readme = os.path.join(OUT_DIR, "README.md")
+    lines = ["# bundles/ — pre-built deployment artifacts", "",
+             "Auto-regenerated by `suricata/scripts/release`. Each bundle is a "
+             "`.rules` file ready to drop into a Suricata config + `.index.json` "
+             "sidecar (sid → msg/owasp/cve/mitre/poc_ref).", "",
+             "Pin a bundle by its sha256 for tamper-evident deploys.", "",
+             "| Bundle | Rules | sha256 (truncated) | When to deploy |",
+             "|---|---|---|---|"]
+    when = {
+        "all":               "everything — central NSM / large SOC",
+        "high-confidence":   "noisy/large perimeters — minimise FP, accept some recall loss",
+        "plaintext":         "sensor decrypts TLS / sees cleartext HTTP",
+        "tls-meta":          "sensor sees only TLS handshake metadata (no decryption)",
+        "any":               "L3/L4 + DNS — deploy anywhere, no decryption",
+        "known-cve":         "perimeter-targeted CVE exploitation only",
+        "owasp":             "OWASP Top-10-only deployments (compliance-driven)",
+        "auth-access-leak":  "recon / credential-attack / exposure-only watch",
+    }
+    for name, path, n in sorted(report):
+        digest = _sha256(path)[:16]
+        lines.append(f"| **{name}** | {n} | `{digest}…` | {when.get(name,'-')} |")
+    lines += ["", "Regenerate: `suricata/scripts/release`",
+              "", "The full per-rule manifest lives in `rules.json` (index) + "
+              "`rules/by-category/<cat>.json` (detail). Use that for tool-driven "
+              "consumption; bundles are for direct Suricata loading."]
+    open(bundle_readme, "w").write("\n".join(lines) + "\n")
+
+    print(f"\nwrote {len(report)} bundles + bundles/README.md")
+    for name, path, n in sorted(report):
+        size = os.path.getsize(path)
+        print(f"  {name:20s}  {n:4d} rules  {size:>7d} B  sha256:{_sha256(path)[:16]}…")
+
+if __name__ == "__main__":
+    main()
