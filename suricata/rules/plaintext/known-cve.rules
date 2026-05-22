@@ -365,3 +365,39 @@ alert http any any -> any any (msg:"KNOWN-CVE GPON home gateway auth-bypass + RC
 # Negative: a benign /wls-wsat/ SOAP request without ProcessBuilder ->
 # body pcre rejects -> silent.
 alert http any any -> any any (msg:"KNOWN-CVE Oracle WebLogic WLS-WSAT SOAP RCE (CVE-2017-3506) [high]"; flow:established,to_server; http.uri.raw; content:"/wls-wsat/"; nocase; fast_pattern; http.request_body; pcre:"/<java\.lang\.ProcessBuilder|<void\s+method=\x22start\x22>|<string>\/bin\/(?:sh|bash)<\/string>/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-3506, poc_ref tests/poc/9300050_weblogic-cve-2017-3506/poc.sh, tag weblogic, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300050; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2017-6334 Netgear DGN1000/DGN2200 unauth RCE
+# via setup.cgi (the `?next_file=` parameter loads a config file but the
+# attendant `?todo=` + cmd= injects shell). Mass-Mirai-scanned (34 real-
+# traffic hits in AUDIT-REALGAP). Clean-room from advisory. Scope http.uri.
+# raw. fast_pattern "/setup.cgi" + pcre requires the `next_file=` exploit
+# parameter + a shell-metachar in cmd. Negative: a benign /setup.cgi GET
+# without next_file → reaches pcre, rejected → silent.
+alert http any any -> any any (msg:"KNOWN-CVE Netgear DGN1000/DGN2200 setup.cgi unauth RCE (CVE-2017-6334) [high]"; flow:established,to_server; http.uri.raw; content:"/setup.cgi"; nocase; fast_pattern; pcre:"/\/setup\.cgi\?[^\r\n]{0,200}?next_file=[^&\r\n]{0,80}?\.htm[^\r\n]{0,200}?(?:cmd=|curpath=)[^\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2017-6334, poc_ref tests/poc/9300051_netgear-dgn-rce/poc.sh, tag netgear, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300051; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2021-35394 Realtek RTL81xx/RTL83xx SDK
+# UDPServer command injection (multi-vendor SoC — used in many small-router
+# brands: D-Link, TP-Link, Edimax, Tenda, etc.). Network-detectable via
+# UDP/9034 NetCore/Cudy probe → here we cover the HTTP-side variant via
+# CGI `formSysCmd` or `boafrm/formSysCmd` (the same Realtek BoA web server
+# also exposes the command sink over HTTP on some firmwares). Clean-room
+# from advisory. Scope http.uri.raw. fast_pattern "formSysCmd" + pcre
+# requires the sysCmd= injection parameter with a shell metachar. Negative:
+# a docs URL mentioning formSysCmd → pcre rejects (no sysCmd= + metachar).
+alert http any any -> any any (msg:"KNOWN-CVE Realtek SDK formSysCmd RCE (CVE-2021-35394) [high]"; flow:established,to_server; http.uri.raw; content:"formSysCmd"; nocase; fast_pattern; pcre:"/\/(?:boafrm\/)?formSysCmd[^\r\n]{0,200}?sysCmd=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2021-35394, poc_ref tests/poc/9300052_realtek-sdk-rce/poc.sh, tag realtek, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300052; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2016-20016 MVPower CCTV DVR JAWS webserver
+# unauth RCE via the `/shell` endpoint that blindly executes the query
+# string as a shell command. Stupidly trivial, still Mirai-recruited daily
+# (18 real-traffic hits in AUDIT-REALGAP). Clean-room from advisory. Scope
+# http.uri.raw. fast_pattern "/shell?" + pcre requires a shell command
+# pattern (cd /, wget, curl, busybox) in the query → benign URL never has
+# this combo. Negative: a docs path containing /shell? without a cmd-like
+# payload → pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE MVPower DVR JAWS /shell unauth RCE (CVE-2016-20016) [high]"; flow:established,to_server; http.uri.raw; content:"/shell?"; nocase; fast_pattern; pcre:"/\/shell\?[^\r\n]{0,200}?(?:cd(?:\s|%20|\+)*\/|wget(?:\s|%20|\+)|curl(?:\s|%20|\+)|busybox|chmod(?:\s|%20|\+)|\/tmp\/|\/bin\/sh)/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2016-20016, poc_ref tests/poc/9300053_mvpower-dvr-shell/poc.sh, tag mvpower, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300053; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2019-16920 D-Link DIR-859/825 unauth RCE
+# via HNAP1 SOAP-XML body command injection in `service` parameter. Many
+# variants exploit the same `/HNAP1/` endpoint with shell-metachar in
+# SOAPAction or body. Clean-room from advisory. Two-buffer: http.uri.raw
+# "/HNAP1" (fast_pattern; the legacy SOAP RPC endpoint) + http.request_body
+# pcre requires a SOAP action injecting shell metachar (`;`, `|`, backtick,
+# `$`) → no benign HNAP1 client sends those. Negative: a normal HNAP1 SOAP
+# request → body pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE D-Link HNAP1 unauth RCE (CVE-2019-16920) [high]"; flow:established,to_server; http.uri.raw; content:"/HNAP1"; nocase; fast_pattern; http.request_body; pcre:"/<service>[^<\r\n]{0,80}?[\x60\x24\x7c\x3b]|GetDeviceSettings[^<\r\n]{0,200}?<service>[^<\r\n]*?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2019-16920, poc_ref tests/poc/9300054_dlink-hnap1-rce/poc.sh, tag dlink, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300054; rev:1;)

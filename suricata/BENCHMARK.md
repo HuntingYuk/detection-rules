@@ -38,20 +38,21 @@ sampled from production, so this is a smoke test, not a production FP rate).
 ## Latest result (2026-05-19, post OVERLAP-audit + category-deepening, ET Open 50,169 enabled rules)
 
 ```
-attack pcaps measured        : 131
-GAP  ours fires / ET silent  : 102  <- custom corpus value-add (§17)
-OVERLAP both fire            : 29   (ET Open already covers; audited below)
+attack pcaps measured        : 136
+GAP  ours fires / ET silent  : 103  <- custom corpus value-add (§17)
+OVERLAP both fire            : 33   (ET Open already covers; audited below)
 MISS ours did NOT fire       : 0    (gate guarantees 0  ✓)
-ET Open FP on our benign     : 2 / 131 (caveat: negatives tuned to OUR rules)
+ET Open FP on our benign     : 2 / 136 (caveat: negatives tuned to OUR rules)
 ```
 
-**Read:** 102/131 attacks are caught **only** by the custom corpus — the concrete §17
-evidence the set is worth maintaining. Eleven category-deepening batches (2026-05-19
-through 22) added 52 rules; 39 pure-GAP + 13 audited OVERLAP across batches, raising
-GAP 62→102 (+40). The most recent batch was data-driven from `scripts/audit-realgap`
+**Read:** 103/136 attacks are caught **only** by the custom corpus — the concrete §17
+evidence the set is worth maintaining. Twelve category-deepening batches (2026-05-19
+through 22) added 57 rules; 40 pure-GAP + 17 audited OVERLAP across batches, raising
+GAP 62→103 (+41). Batches 11-12 were data-driven from `scripts/audit-realgap`
 (top real-traffic exploit families ET catches that we didn't) — added ThinkPHP /
-GPON / WebLogic; our real-traffic fired-SID count rose from **14 → 18 distinct SIDs**
-on the same 3 MTA scan-and-probe captures. The 10 OVERLAPs split into ET-misclassify (6 — ET tags
+GPON / WebLogic / Netgear / Realtek / MVPower / D-Link / phpinfo-probe; our real-
+traffic fired-SID count rose **14 → 20 distinct SIDs** on the same 3 MTA scan-and-
+probe captures (+6 real-world attack classes now caught). The 10 OVERLAPs split into ET-misclassify (6 — ET tags
 `exec/eval/php-tag` as SQLi or generic when it's CVE-specific Java/SpEL/PHP/Node),
 ET-INFO-tier-posture (2 — Basic-auth-unencrypted, generic Host-anomaly), and
 scan-vs-brute classtype diff (2 — RDP and SSH brute-force rules where ET has
@@ -103,7 +104,7 @@ to retire, because that would re-introduce the dependency the corpus exists to
 avoid. A rule is retired only if it is a *generic, non-CVE-backbone* technique for
 which ET has a mature exact equivalent **and** there is no independence rationale.
 
-Result: **1 retired, 25 kept** (each with a recorded reason).
+Result: **1 retired, 32 kept** (each with a recorded reason).
 
 ### Retired
 

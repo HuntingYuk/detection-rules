@@ -23,3 +23,11 @@ alert http any any -> any any (msg:"WEB Exposure - /.svn/wc.db SVN repo probe [h
 # No benign client requests dotfile env configs over HTTP. Negative: a normal
 # /env/<something> API path -> no /.env fast_pattern hit -> silent.
 alert http any any -> any any (msg:"WEB Exposure - /.env or config backup probe [high]"; flow:established,to_server; http.uri.raw; content:"/.env"; nocase; fast_pattern; pcre:"/\/\.env(?:\.(?:bak|backup|local|production|prod|dev|old|orig|save|swp))?(?:[\?\s\x00]|$)/i"; classtype:attempted-recon; metadata: asset_category web-mixed, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170004_env-backup-exposure/poc.sh, tag exposure, created_at 2026_05_20, updated_at 2026_05_20, author huntingyuk; sid:9170004; rev:1;)
+# FP-reasoning: HIGH, plain. Variant 5 (9170005): phpinfo() debug-page probe
+# (sibling 9170001..4 — .git/.aws/.svn/.env). Scope http.uri.raw. fast_pattern
+# "phpinfo" (7B; combined with the standard probe filenames in pcre = attacker
+# -unique recon). pcre requires the canonical scanner paths: /phpinfo.php,
+# /info.php, /test.php, /_profiler/phpinfo (Symfony), /phpinfo.html. 48 real-
+# traffic hits in AUDIT-REALGAP. Negative: a benign /phpinfo-reference docs
+# URL → no fast_pattern hit OR pcre rejects → silent.
+alert http any any -> any any (msg:"WEB Exposure - phpinfo() debug page probe [high]"; flow:established,to_server; http.uri.raw; content:"phpinfo"; nocase; fast_pattern; pcre:"/\/(?:phpinfo(?:\.php|\.html)?|info\.php|test\.php|_profiler\/phpinfo|debug\.php)(?:[\?\#\s\x00]|$)/i"; classtype:attempted-recon; metadata: asset_category web-classic, owasp A05-Security-Misconfiguration, attack_target Server, mitre_tactic_id TA0007, mitre_tactic_name Discovery, mitre_technique_id T1083, mitre_technique_name File-and-Directory-Discovery, kill_chain Recon, confidence high, signature_severity Major, deployment Perimeter, network_mode plain, cve none, poc_ref tests/poc/9170005_phpinfo-probe/poc.sh, tag exposure, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9170005; rev:1;)
