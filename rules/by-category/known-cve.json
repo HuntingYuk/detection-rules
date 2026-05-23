@@ -1,6 +1,6 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-22T08:40:02Z",
+  "generated_at": "2026-05-23T14:20:40Z",
   "category": "known-cve",
   "rules": [
     {
@@ -2955,6 +2955,155 @@
         "attack": "Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813): server default `readonly=false` accept PUT method; PUT ke path dengan `/.` (path-equivalence trick) + header `Content-Range` ngebikin Tomcat nulis body ke partial path session file; saat session di-deserialize, gadget Java jalanin → RCE unauth.",
         "impact": "Remote Code Execution unauth di Tomcat — Java app server enterprise populer (recent CVE 2025).",
         "detects": "Metode PUT + URL path mengandung `/.` + header `Content-Range: bytes N-N/N` (tiga buffer: method + uri + header)."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300061,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Rejetto HFS template-exec RCE (CVE-2024-23692) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-23692",
+        "poc_ref": "tests/poc/9300061_rejetto-hfs/poc.sh",
+        "tag": "rejetto-hfs",
+        "created_at": "2026_05_23",
+        "updated_at": "2026_05_23",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "{.exec",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/\\{\\.(?:exec|set|file|comment)\\|[^\\r\\n}]{1,200}\\|\\}/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw"
+      ],
+      "poc_dir": "suricata/tests/poc/9300061_rejetto-hfs/",
+      "readme": "suricata/tests/poc/9300061_rejetto-hfs/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Rejetto HFS template-exec RCE (CVE-2024-23692) [high]\"; flow:established,to_server; http.uri.raw; content:\"{.exec\"; nocase; fast_pattern; pcre:\"/\\{\\.(?:exec|set|file|comment)\\|[^\\r\\n}]{1,200}\\|\\}/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-23692, poc_ref tests/poc/9300061_rejetto-hfs/poc.sh, tag rejetto-hfs, created_at 2026_05_23, updated_at 2026_05_23, author huntingyuk; sid:9300061; rev:1;)",
+      "description": {
+        "attack": "Rejetto HTTP File Server (HFS) 2.x unauth RCE (CVE-2024-23692): template engine bawaan nge-evaluate token `{.exec|<cmd>.|}` di parameter `search=` (dan lain). Penyerang kirim `?search=%00{.exec|cmd.|}` → cmd dijalankan di server.",
+        "impact": "Remote Code Execution tanpa auth di HFS — file-server populer di kalangan small business / power user, sering ke-expose ke internet.",
+        "detects": "Token template HFS `{.exec|...|}` (atau set/file/comment variant) di URL request."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300062,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Aviatrix Controller CloudxaaS pre-auth RCE (CVE-2024-50603) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-50603",
+        "poc_ref": "tests/poc/9300062_aviatrix-controller/poc.sh",
+        "tag": "aviatrix",
+        "created_at": "2026_05_23",
+        "updated_at": "2026_05_23",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/v1/api",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/(?:cloud_type|account_password|account_name|aws_iam_user_name|gcloud_project_credentials_filename)=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300062_aviatrix-controller/",
+      "readme": "suricata/tests/poc/9300062_aviatrix-controller/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Aviatrix Controller CloudxaaS pre-auth RCE (CVE-2024-50603) [high]\"; flow:established,to_server; http.uri.raw; content:\"/v1/api\"; nocase; fast_pattern; http.request_body; pcre:\"/(?:cloud_type|account_password|account_name|aws_iam_user_name|gcloud_project_credentials_filename)=[^&\\r\\n]{0,80}?[\\x60\\x24\\x7c\\x3b]/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-50603, poc_ref tests/poc/9300062_aviatrix-controller/poc.sh, tag aviatrix, created_at 2026_05_23, updated_at 2026_05_23, author huntingyuk; sid:9300062; rev:1;)",
+      "description": {
+        "attack": "Aviatrix Controller pre-auth OS command injection (CVE-2024-50603): endpoint `/v1/api` accept field `cloud_type`/`account_password`/`account_name` yang langsung di-concat ke shell call. Dieksploitasi 2025 oleh operator ransomware buat pivot dari cloud-mgmt console ke seluruh fleet.",
+        "impact": "RCE pre-auth di Aviatrix Controller → akses penuh ke cloud-network management dari banyak akun cloud sekaligus (high blast-radius).",
+        "detects": "POST ke `/v1/api` + field cloud_type/account_password/account_name/aws_iam_user_name/gcloud_project_credentials_filename berisi shell metachar (` $ | ;) — dua buffer."
+      },
+      "bench_status_§17": "GAP"
+    },
+    {
+      "sid": 9300063,
+      "rev": 1,
+      "enabled": true,
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache OFBiz screen-rendering groovyProgram RCE (CVE-2024-45195) [high]",
+      "classtype": "attempted-admin",
+      "category": "known-cve",
+      "metadata": {
+        "asset_category": "infra",
+        "owasp": "A06-Vulnerable-and-Outdated-Components",
+        "attack_target": "Server",
+        "mitre_tactic_id": "TA0001",
+        "mitre_tactic_name": "Initial-Access",
+        "mitre_technique_id": "T1190",
+        "mitre_technique_name": "Exploit-Public-Facing-Application",
+        "kill_chain": "Exploitation",
+        "confidence": "high",
+        "signature_severity": "Critical",
+        "deployment": "Perimeter",
+        "network_mode": "plain",
+        "cve": "CVE-2024-45195",
+        "poc_ref": "tests/poc/9300063_ofbiz-cve-2024-45195/poc.sh",
+        "tag": "ofbiz",
+        "created_at": "2026_05_23",
+        "updated_at": "2026_05_23",
+        "author": "huntingyuk"
+      },
+      "fast_pattern": {
+        "content": "/webtools/control/",
+        "nocase": true
+      },
+      "has_pcre": true,
+      "pcre": "/groovyProgram=[^&\\r\\n]{0,500}?(?:Runtime\\.getRuntime|ProcessBuilder|\\.execute\\(|\\.exec\\(|\\.getClass\\(\\)\\.forName|\\.invoke\\()/i",
+      "has_detection_filter": false,
+      "has_threshold": false,
+      "buffers": [
+        "http.uri.raw",
+        "http.request_body"
+      ],
+      "poc_dir": "suricata/tests/poc/9300063_ofbiz-cve-2024-45195/",
+      "readme": "suricata/tests/poc/9300063_ofbiz-cve-2024-45195/README.md",
+      "raw": "alert http any any -> any any (msg:\"KNOWN-CVE Apache OFBiz screen-rendering groovyProgram RCE (CVE-2024-45195) [high]\"; flow:established,to_server; http.uri.raw; content:\"/webtools/control/\"; nocase; fast_pattern; http.request_body; pcre:\"/groovyProgram=[^&\\r\\n]{0,500}?(?:Runtime\\.getRuntime|ProcessBuilder|\\.execute\\(|\\.exec\\(|\\.getClass\\(\\)\\.forName|\\.invoke\\()/i\"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-45195, poc_ref tests/poc/9300063_ofbiz-cve-2024-45195/poc.sh, tag ofbiz, created_at 2026_05_23, updated_at 2026_05_23, author huntingyuk; sid:9300063; rev:1;)",
+      "description": {
+        "attack": "Apache OFBiz screen-rendering RCE (CVE-2024-45195): auth check di-bypass dengan POST langsung ke endpoint render (`/webtools/control/ProgramExport`) + body `groovyProgram=` berisi Groovy gadget (Runtime.exec/ProcessBuilder/getClass loader chain). Beda dari 9300013 (CVE-2023-51467 OFBiz auth bypass via requirePasswordChange).",
+        "impact": "RCE pre-auth di Apache OFBiz ERP — bisa dieksploitasi tanpa kredensial.",
+        "detects": "POST ke `/webtools/control/...` + parameter `groovyProgram=` berisi gadget Groovy (Runtime.getRuntime/ProcessBuilder/.exec(/getClass.forName/.invoke) — dua buffer."
       },
       "bench_status_§17": "GAP"
     }

@@ -1,20 +1,20 @@
 {
   "$schema": "1.0",
-  "generated_at": "2026-05-22T08:40:02Z",
+  "generated_at": "2026-05-23T14:20:40Z",
   "source": "HuntingYuk detection-rules — scripts/gen-manifest",
   "corpus": {
-    "total": 145,
-    "active": 144,
+    "total": 149,
+    "active": 148,
     "deprecated": 1,
     "by_category": {
-      "access-control": 7,
+      "access-control": 8,
       "auth-bruteforce": 2,
       "cmdi": 10,
       "deserialization": 7,
       "dns-tunnel": 3,
       "info-leak": 7,
       "infra-bruteforce": 2,
-      "known-cve": 60,
+      "known-cve": 63,
       "l34-recon": 5,
       "misc": 1,
       "protocol-anomaly": 9,
@@ -31,24 +31,24 @@
       "A01-Broken-Access-Control": 14,
       "A02-Cryptographic-Failures": 1,
       "A03-Injection": 34,
-      "A05-Security-Misconfiguration": 7,
-      "A06-Vulnerable-and-Outdated-Components": 50,
+      "A05-Security-Misconfiguration": 8,
+      "A06-Vulnerable-and-Outdated-Components": 53,
       "A07-Identification-and-Authentication-Failures": 2,
       "A08-Software-and-Data-Integrity-Failures": 9,
       "A10-SSRF": 3,
       "none": 24
     },
     "by_confidence": {
-      "high": 112,
+      "high": 116,
       "medium": 32
     },
     "by_network_mode": {
       "any": 19,
-      "plain": 122,
+      "plain": 126,
       "tls-meta": 3
     },
     "bench_§17_summary": {
-      "GAP": 111,
+      "GAP": 115,
       "OVERLAP": 33,
       "unmeasured": 0
     }
@@ -781,6 +781,21 @@
       "cve": "none",
       "bench_status_§17": "GAP",
       "poc_dir": "suricata/tests/poc/9170007_apache-server-status/",
+      "ref": "rules/by-category/access-control.json"
+    },
+    {
+      "sid": 9170008,
+      "rev": 1,
+      "enabled": true,
+      "category": "access-control",
+      "file": "suricata/rules/plaintext/access-control.rules",
+      "msg": "WEB Exposure - dependency-manifest probe (composer/package/yarn/bower/Gemfile/pom/gradle) [high]",
+      "owasp": "A05-Security-Misconfiguration",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "none",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9170008_dep-manifest-probe/",
       "ref": "rules/by-category/access-control.json"
     },
     {
@@ -1906,6 +1921,51 @@
       "cve": "CVE-2025-24813",
       "bench_status_§17": "GAP",
       "poc_dir": "suricata/tests/poc/9300060_tomcat-cve-2025-24813/",
+      "ref": "rules/by-category/known-cve.json"
+    },
+    {
+      "sid": 9300061,
+      "rev": 1,
+      "enabled": true,
+      "category": "known-cve",
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Rejetto HFS template-exec RCE (CVE-2024-23692) [high]",
+      "owasp": "A06-Vulnerable-and-Outdated-Components",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "CVE-2024-23692",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9300061_rejetto-hfs/",
+      "ref": "rules/by-category/known-cve.json"
+    },
+    {
+      "sid": 9300062,
+      "rev": 1,
+      "enabled": true,
+      "category": "known-cve",
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Aviatrix Controller CloudxaaS pre-auth RCE (CVE-2024-50603) [high]",
+      "owasp": "A06-Vulnerable-and-Outdated-Components",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "CVE-2024-50603",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9300062_aviatrix-controller/",
+      "ref": "rules/by-category/known-cve.json"
+    },
+    {
+      "sid": 9300063,
+      "rev": 1,
+      "enabled": true,
+      "category": "known-cve",
+      "file": "suricata/rules/plaintext/known-cve.rules",
+      "msg": "KNOWN-CVE Apache OFBiz screen-rendering groovyProgram RCE (CVE-2024-45195) [high]",
+      "owasp": "A06-Vulnerable-and-Outdated-Components",
+      "confidence": "high",
+      "network_mode": "plain",
+      "cve": "CVE-2024-45195",
+      "bench_status_§17": "GAP",
+      "poc_dir": "suricata/tests/poc/9300063_ofbiz-cve-2024-45195/",
       "ref": "rules/by-category/known-cve.json"
     },
     {

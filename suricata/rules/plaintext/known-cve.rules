@@ -455,3 +455,33 @@ alert http any any -> any any (msg:"KNOWN-CVE Tuoshi/Belkin/DigiEver ntpserver p
 # requires Content-Range AND the path/uri has the `/.` equivalence marker.
 # Negative: a benign PUT with no Content-Range → pcre rejects.
 alert http any any -> any any (msg:"KNOWN-CVE Apache Tomcat partial-PUT session deserialization RCE (CVE-2025-24813) [high]"; flow:established,to_server; http.method; content:"PUT"; nocase; fast_pattern; http.uri.raw; content:"/."; http.header; pcre:"/Content-Range:\s*bytes\s+\d+-\d+\/\d+/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2025-24813, poc_ref tests/poc/9300060_tomcat-cve-2025-24813/poc.sh, tag tomcat, created_at 2026_05_22, updated_at 2026_05_22, author huntingyuk; sid:9300060; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-23692 Rejetto HTTP File Server (HFS)
+# 2.x unauth RCE — the built-in template engine evaluates `{.exec|cmd.|}`
+# tokens in `search=` (and similar) parameters. Mass-exploited 2024.
+# Clean-room from advisory. Scope http.uri.raw. fast_pattern "{.exec"
+# (6B; the HFS template-exec opener is attacker-unique). pcre confirms
+# the closing pipe + dot pattern of the template token. Negative: a docs
+# URL mentioning "{.exec" as text without the closing pipe → pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE Rejetto HFS template-exec RCE (CVE-2024-23692) [high]"; flow:established,to_server; http.uri.raw; content:"{.exec"; nocase; fast_pattern; pcre:"/\{\.(?:exec|set|file|comment)\|[^\r\n}]{1,200}\|\}/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-23692, poc_ref tests/poc/9300061_rejetto-hfs/poc.sh, tag rejetto-hfs, created_at 2026_05_23, updated_at 2026_05_23, author huntingyuk; sid:9300061; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-50603 Aviatrix Controller pre-auth
+# OS command injection via the CloudxaaSController /v1/api endpoint —
+# attacker-controlled fields like `cloud_type` / `account_password` are
+# concatenated into shell calls. Recent (exploited 2025 by ransomware ops
+# pivoting from cloud-mgmt). Clean-room from advisory. Two-buffer:
+# http.uri.raw "/v1/api" (fast_pattern; Aviatrix API endpoint targeted by
+# the exploit) + http.request_body pcre requires a known-injection field
+# + shell metachar. Negative: a benign /v1/api call (no metachar) → body
+# pcre rejects → silent.
+alert http any any -> any any (msg:"KNOWN-CVE Aviatrix Controller CloudxaaS pre-auth RCE (CVE-2024-50603) [high]"; flow:established,to_server; http.uri.raw; content:"/v1/api"; nocase; fast_pattern; http.request_body; pcre:"/(?:cloud_type|account_password|account_name|aws_iam_user_name|gcloud_project_credentials_filename)=[^&\r\n]{0,80}?[\x60\x24\x7c\x3b]/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-50603, poc_ref tests/poc/9300062_aviatrix-controller/poc.sh, tag aviatrix, created_at 2026_05_23, updated_at 2026_05_23, author huntingyuk; sid:9300062; rev:1;)
+# FP-reasoning: HIGH, plain. CVE-2024-45195 Apache OFBiz screen-rendering
+# bypass — auth checks circumvented by directly POSTing to
+# /webtools/control/ProgramExport (or similar render targets) with a
+# `groovyProgram=` body containing arbitrary Groovy. Different from
+# 9300013 (CVE-2023-51467 OFBiz auth bypass via requirePasswordChange).
+# Clean-room from advisory. Two-buffer: http.uri.raw
+# "/webtools/control/" (fast_pattern; OFBiz screen-render path family)
+# + http.request_body pcre requires groovyProgram + a dangerous Groovy
+# primitive (Runtime/ProcessBuilder/exec/getClass loader chain).
+# Negative: a benign /webtools/control POST without groovyProgram →
+# body pcre rejects.
+alert http any any -> any any (msg:"KNOWN-CVE Apache OFBiz screen-rendering groovyProgram RCE (CVE-2024-45195) [high]"; flow:established,to_server; http.uri.raw; content:"/webtools/control/"; nocase; fast_pattern; http.request_body; pcre:"/groovyProgram=[^&\r\n]{0,500}?(?:Runtime\.getRuntime|ProcessBuilder|\.execute\(|\.exec\(|\.getClass\(\)\.forName|\.invoke\()/i"; classtype:attempted-admin; metadata: asset_category infra, owasp A06-Vulnerable-and-Outdated-Components, attack_target Server, mitre_tactic_id TA0001, mitre_tactic_name Initial-Access, mitre_technique_id T1190, mitre_technique_name Exploit-Public-Facing-Application, kill_chain Exploitation, confidence high, signature_severity Critical, deployment Perimeter, network_mode plain, cve CVE-2024-45195, poc_ref tests/poc/9300063_ofbiz-cve-2024-45195/poc.sh, tag ofbiz, created_at 2026_05_23, updated_at 2026_05_23, author huntingyuk; sid:9300063; rev:1;)
